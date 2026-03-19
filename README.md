@@ -10,6 +10,7 @@ Personal Claude/Codex Skills repository for centralized management and version c
 |-------|---------------------|
 | [commit-pr-contract](skills/commit-pr-contract/) | 生成 commit message 与 PR 描述 / Generate commit messages and PR descriptions |
 | [linus-tech-review](skills/linus-tech-review/) | Linus Torvalds 风格技术方案评估 / Linus-style technical review |
+| [open-source-commit-pr](skills/open-source-commit-pr/) | 面向开源仓库的英文 commit/PR 写作 / Generate English commit messages and PR descriptions for open-source repositories |
 
 ## 使用方法 / Usage
 
