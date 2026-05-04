@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-decision-framing"
+  short_description: "中文决策框架与取舍分析"
+  default_prompt: "Use $dbx-decision-framing 帮我把这个真实决策拆成选项、风险、反证和下一步。"
