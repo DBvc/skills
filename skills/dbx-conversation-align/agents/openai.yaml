@@ -1,0 +1,3 @@
+interface:
+  display_name: "dbx-conversation-align"
+  short_description: "Conversation diagnosis and message repair"

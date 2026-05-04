@@ -12,15 +12,7 @@ Personal Claude/Codex Skills repository for centralized management and version c
 | [dbx-open-source-pr](skills/dbx-open-source-pr/) | 面向开源仓库的英文 commit/PR 写作 / Generate English commit messages and PR descriptions for open-source repositories |
 | [dbx-linus-review](skills/dbx-linus-review/) | Linus Torvalds 风格技术方案评估 / Linus-style technical review |
 | [dbx-skill-architect](skills/dbx-skill-architect/) | 场景优先的 skill 创建、评审、改进与评测 / Scenario-first skill architecture, critique, improvement, and eval design |
-
-## 草稿 Skills / Draft Skills
-
-这些目录仍在打磨中，暂时不加 `dbx-` 前缀。
-
-| Skill | 描述 / Description |
-|-------|---------------------|
-| [communication-alignment](skills/communication-alignment/) | 复杂沟通对齐、表达改写与冲突处理 / Align communication, rewrite messages, and handle conflicts |
-| [travel-guide-writer](skills/travel-guide-writer/) | 生成个性化旅游攻略与行程建议 / Write personalized travel guides and itineraries |
+| [dbx-conversation-align](skills/dbx-conversation-align/) | 对话卡点诊断、措辞改写与边界沟通 / Diagnose stuck conversations, rewrite risky messages, and plan boundaries |
 
 ## 使用方法 / Usage
 
@@ -47,12 +39,14 @@ ln -sf "$(pwd)/skills/dbx-pr-contract" ~/.codex/skills/
 ln -sf "$(pwd)/skills/dbx-open-source-pr" ~/.codex/skills/
 ln -sf "$(pwd)/skills/dbx-linus-review" ~/.codex/skills/
 ln -sf "$(pwd)/skills/dbx-skill-architect" ~/.codex/skills/
+ln -sf "$(pwd)/skills/dbx-conversation-align" ~/.codex/skills/
 
 # 或链接到 Cursor skills 目录
 ln -sf "$(pwd)/skills/dbx-pr-contract" ~/.cursor/skills/
 ln -sf "$(pwd)/skills/dbx-open-source-pr" ~/.cursor/skills/
 ln -sf "$(pwd)/skills/dbx-linus-review" ~/.cursor/skills/
 ln -sf "$(pwd)/skills/dbx-skill-architect" ~/.cursor/skills/
+ln -sf "$(pwd)/skills/dbx-conversation-align" ~/.cursor/skills/
 ```
 
 ## 创建新 Skill / Create New Skill
