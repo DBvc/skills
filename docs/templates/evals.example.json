@@ -1,0 +1,50 @@
+{
+  "skill_name": "dbx-example-skill",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "positive-primary-1",
+      "kind": "positive",
+      "prompt": "A realistic user request that should use the skill.",
+      "expected_behavior": "The agent should follow the skill workflow and produce the expected handoff-ready artifact.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_use_skill",
+            "value": "dbx-example-skill",
+            "required": true
+          }
+        ],
+        "process": [],
+        "output": [
+          {
+            "type": "must_contain_section",
+            "value": "Validation",
+            "required": true
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "near-miss-1",
+      "kind": "near_miss",
+      "prompt": "A neighboring task that should not use this full workflow.",
+      "expected_behavior": "The agent should avoid over-triggering and answer directly or route elsewhere.",
+      "checks": {
+        "trigger": [],
+        "process": [],
+        "output": [],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    }
+  ]
+}

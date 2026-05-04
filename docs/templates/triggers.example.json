@@ -1,0 +1,34 @@
+{
+  "skill_name": "dbx-example-skill",
+  "version": "0.1",
+  "cases": [
+    {
+      "id": "positive-explicit-1",
+      "kind": "positive",
+      "prompt": "请根据这个 diff 写一个 PR 描述。",
+      "expected_trigger": true,
+      "rationale": "Explicitly asks for the core task."
+    },
+    {
+      "id": "positive-implicit-1",
+      "kind": "positive",
+      "prompt": "这些 staged changes 准备提交，帮我整理一下提交信息。",
+      "expected_trigger": true,
+      "rationale": "Implicit commit/PR workflow."
+    },
+    {
+      "id": "negative-unrelated-1",
+      "kind": "negative",
+      "prompt": "解释一下 git commit 和 pull request 的区别。",
+      "expected_trigger": false,
+      "rationale": "Concept explanation, not artifact generation."
+    },
+    {
+      "id": "near-miss-1",
+      "kind": "near_miss",
+      "prompt": "帮我 review 这个 PR，不要写 commit message。",
+      "expected_trigger": false,
+      "rationale": "Adjacent code review task, but the skill's output artifact is explicitly excluded."
+    }
+  ]
+}
