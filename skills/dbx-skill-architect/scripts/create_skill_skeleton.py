@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
-"""Create a compliant starter skill package.
+"""Create a minimal DBX-compatible skill skeleton.
 
-Use --domain for domain/content skills so the package includes a domain content
-contract and starter content-quality evals.
+By default, --output is the parent directory and this script creates
+<output>/<name>/. This keeps generated packages compatible with linters that
+require frontmatter.name to match the directory name.
+
+The generated skeleton is intentionally not production-ready, but it avoids
+placeholder text and passes the package linter so it can be used as a safe
+starting point.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -11,240 +17,255 @@ import json
 import re
 from pathlib import Path
 
-NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
+NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
-SKILL_TEMPLATE = '''---
+SKILL_TEMPLATE = """---
 name: {name}
-description: {description}
+description: Use when the user needs a reusable workflow for {description}. Do not use for unrelated one-off tasks, direct answers outside this boundary, or requests that require a different specialized skill.
 ---
 
 # {title}
 
 ## Purpose
 
-This skill handles a recurring scenario where <primary user> needs to <stable job>. It improves <target outcome> by enforcing a bounded workflow, evidence policy, domain content contract when relevant, output contract, and eval plan.
+Support recurring requests for {description}. This draft establishes trigger boundaries, workflow shape, validation expectations, and minimum eval coverage. Before production use, replace the draft assumptions with domain-specific rules, examples, and failure cases from real usage.
 
 ## When to use
 
-- Use when <trigger context 1>.
-- Use when <trigger context 2>.
+Use when:
+
+- the user asks for {description} as a repeated workflow or reusable agent behavior;
+- the expected output must follow a stable process, output contract, or validation path;
+- the task has enough context to judge success and failure without inventing missing requirements.
 
 ## When not to use
 
-- Do not use for one-off tasks with no reusable workflow.
-- Do not use for unsafe, deceptive, privacy-invasive, or out-of-scope requests.
-- Do not use when required inputs are missing and assumptions would be unsafe or misleading.
-- Do not use for superficially similar requests that lack this skill's stable job or required domain variables.
+Do not use when:
 
-## Hard gates or required inputs
+- the task is one-off and a direct answer is more useful than a reusable workflow;
+- the request belongs to another skill with a more precise trigger and stronger domain model;
+- required context is missing and the correct next step is to ask blocking questions;
+- the request is unsafe, deceptive, non-consensual, or outside the skill boundary.
 
-```yaml
-hard_gates:
-  repeatability: "<why this scenario repeats or is reusable>"
-  stable_job: "<stable job-to-be-done>"
-  evaluability: "<how success is checked>"
-  safety_legitimacy: "<safety/privacy/legal boundary>"
-required_inputs:
-  - "<required input>"
-optional_inputs:
-  - "<optional input>"
-assumptions_if_missing:
-  - "<safe assumption, if any>"
-```
-
-{domain_contract}
-
-## IR summary
+## Skill shape
 
 ```yaml
-objects: []
-states_or_results: []
-events_or_actions: []
-evidence: []
-hypotheses: []
-constraints: []
-risky_boundaries: []
-reasoning_mode: []
-type_errors_to_prevent: []
+skill_shape:
+  archetype: procedure
+  secondary_archetypes: []
+  dominant_failure_modes:
+    - wrong_trigger
+    - unverified_output
+  implementation_implications:
+    - sharpen description and trigger evals before relying on this skill
+    - add deterministic validation when repeated failures become mechanical
 ```
+
+## Required inputs
+
+- user goal and expected output;
+- relevant source material, files, or constraints;
+- target audience or downstream consumer;
+- validation evidence or acceptance criteria.
 
 ## Workflow
 
-1. Validate required inputs, hard gates, and domain variables when relevant.
-2. Compile the request into the IR.
-3. Execute the domain workflow with bounded freedom.
-4. Produce the output contract.
-5. Mark missing information, confidence, blockers, next actions, and verification needs.
-
-## Evidence and confidence policy
-
-- Confirmed: directly supported by provided or validated evidence.
-- Probable: supported by multiple signals but not fully confirmed.
-- Weak: plausible but under-supported.
-- Unknown: insufficient evidence.
-
-Never state conclusions stronger than the available evidence. For real-time facts, separate confirmed, estimated-with-label, and needs-verification.
+1. Confirm the request fits the trigger boundary.
+2. Identify the expected output, downstream consumer, and non-goals.
+3. Gather missing required inputs or state the blocker.
+4. Execute the workflow using the smallest sufficient structure.
+5. Validate the result against the output contract and report unresolved risk.
 
 ## Output contract
 
-Use this exact structure unless the user requests another format:
+```markdown
+## Summary
 
-```yaml
-summary: ""
-inputs_used: []
-evidence:
-  confirmed: []
-  probable: []
-  weak: []
-missing_information: []
-assumptions: []
-result:
-  domain_specific_fields: []
-confidence: high | medium | low
-blockers: []
-next_actions: []
-verification_needed: []
+## Inputs and evidence used
+
+## Result
+
+## Validation
+
+## Risks or open questions
 ```
-
-## Failure and escalation rules
-
-- Stop and ask when required inputs or domain variables are missing and assumptions would change the result.
-- Refuse or redesign unsafe, deceptive, privacy-invasive, or coercive goals.
-- Use a checklist or direct answer instead of this skill when the scenario is not reusable.
-- For domain/content skills, fail the output if it is well-formatted but lacks required domain variables, hidden pitfalls, or data-source policy.
 
 ## References and scripts
 
-- Add `references/<file>.md` for long domain guidance, rubrics, examples, and hidden failure modes.
-- Add `scripts/<script>.py` for deterministic parsing, validation, transformation, scoring, or fragile operations.
+Add focused references under `references/` when the skill needs domain rules, examples, anti-patterns, or expert rubrics. Add scripts under `scripts/` when parsing, counting, schema validation, rendering, or command execution becomes repeated and fragile.
 
 ## Eval plan
 
-At minimum include:
-
-- 2 positive cases
-- 1 negative case
-- 1 near-miss case
-- 1 failure_mode or safety case
-{domain_eval_line}
-
-Eval definitions must be runner-compatible with `scripts/run_skill_evals.py`.
-'''
-
-DOMAIN_CONTRACT = '''## Domain content contract
-
-This section is required for domain/content skills. Replace placeholders before treating this package as production-ready.
-
-```yaml
-domain_content_contract:
-  target_user: ""
-  artifact_type: ""
-  output_depth: "quick | standard | deep | operational"
-  required_variables: []
-  hidden_failure_modes: []
-  expert_quality_checks: []
-  data_source_policy:
-    realtime_required: []
-    user_provided_required: []
-    can_estimate_with_label: []
-    must_not_fabricate: []
-  uncertainty_policy: []
-  must_not_omit: []
-  worked_examples_needed: []
-  domain_eval_cases: []
-```'''
-
-NON_DOMAIN_CONTRACT = '''## Domain content contract
-
-```yaml
-domain_content_contract: not_applicable
-```'''
+Maintain `evals/triggers.json` for trigger precision/recall and `evals/evals.json` for output behavior. At least one eval must test the primary failure mode rather than only checking section headings.
+"""
 
 
-def title_from_name(name: str) -> str:
-    return " ".join(part.capitalize() for part in name.split("-"))
+def make_evals_template(name: str, description: str) -> dict:
+    return {
+        "skill_name": name,
+        "pass_threshold": 0.85,
+        "evals": [
+            {
+                "id": "positive-explicit-core-workflow",
+                "kind": "positive",
+                "prompt": f"Apply the {name} workflow to a recurring request about {description} and produce the expected output contract.",
+                "expected_behavior": "Use the skill workflow, identify inputs/evidence, produce the result, and include validation or blockers.",
+                "checks": {
+                    "trigger": [{"type": "must_contain", "value": "## Summary", "required": True, "quality": "structural"}],
+                    "process": [
+                        {"type": "regex", "value": "(?is)(inputs|evidence).*?(validation|blocker|risk)", "required": True, "quality": "behavior"},
+                        {"type": "regex", "value": "(?is)(downstream consumer|acceptance criteria|non-goals)", "required": False, "quality": "specificity"},
+                    ],
+                    "output": [{"type": "must_contain", "value": "## Validation", "required": True, "quality": "structural"}],
+                    "safety": [],
+                },
+                "pass_criteria": {"all_required": True, "min_score": 0.85},
+            },
+            {
+                "id": "positive-implicit-recurring-scenario",
+                "kind": "positive",
+                "prompt": f"I keep getting requests related to {description}; help me handle the next one consistently.",
+                "expected_behavior": "Recognize the reusable scenario and ask only for missing required inputs before using the workflow.",
+                "checks": {
+                    "trigger": [{"type": "must_contain", "value": "## Summary", "required": True, "quality": "structural"}],
+                    "process": [{"type": "regex", "value": "(?is)(required input|missing context|acceptance criteria|downstream consumer)", "required": True, "quality": "specificity"}],
+                    "output": [],
+                    "safety": [],
+                },
+                "pass_criteria": {"all_required": True, "min_score": 0.85},
+            },
+            {
+                "id": "negative-unrelated-direct-answer",
+                "kind": "negative",
+                "prompt": "Explain the difference between HTTP 200 and HTTP 404 in one paragraph.",
+                "expected_behavior": "Do not invoke this skill-specific workflow because the request is an unrelated direct answer.",
+                "checks": {
+                    "trigger": [{"type": "must_not_contain", "value": "## Inputs and evidence used", "required": True, "quality": "structural"}],
+                    "process": [{"type": "regex", "value": "(?is)(direct answer|outside.*boundary|not use this skill|unrelated)", "required": True, "quality": "behavior"}],
+                    "output": [],
+                    "safety": [],
+                },
+                "pass_criteria": {"all_required": True, "min_score": 0.85},
+            },
+            {
+                "id": "near-miss-adjacent-scope",
+                "kind": "near_miss",
+                "prompt": f"Use the {name} format for a task that has no repeated workflow, no validation need, and no downstream consumer.",
+                "expected_behavior": "Explain the boundary and avoid applying the full workflow when a lightweight answer is sufficient.",
+                "checks": {
+                    "trigger": [{"type": "must_not_contain", "value": "## Inputs and evidence used", "required": True, "quality": "structural"}],
+                    "process": [{"type": "regex", "value": "(?is)(one-off|no repeated workflow|lightweight answer|boundary)", "required": True, "quality": "behavior"}],
+                    "output": [],
+                    "safety": [],
+                },
+                "pass_criteria": {"all_required": True, "min_score": 0.85},
+            },
+            {
+                "id": "failure-mode-missing-validation",
+                "kind": "failure_mode",
+                "prompt": f"Handle a {description} request but give me the result without explaining inputs, evidence, or validation.",
+                "expected_behavior": "Refuse the shallow shortcut and include validation evidence or clearly state why validation is blocked.",
+                "checks": {
+                    "trigger": [],
+                    "process": [{"type": "regex", "value": "(?is)(validation evidence|cannot validate|blocked|risk)", "required": True, "quality": "validation"}],
+                    "output": [{"type": "must_contain", "value": "## Validation", "required": True, "quality": "structural"}],
+                    "safety": [],
+                },
+                "pass_criteria": {"all_required": True, "min_score": 0.85},
+            },
+        ],
+    }
 
 
-def check(kind: str, value: str, required: bool = True) -> dict:
-    return {"type": kind, "value": value, "required": required}
-
-
-def make_evals(name: str, domain: bool) -> dict:
-    evals = [
-        {
-            "id": "positive-primary-1",
-            "kind": "positive",
-            "prompt": "Use this skill for its primary recurring scenario with enough required inputs.",
-            "expected_behavior": "Use the workflow and output contract.",
-            "checks": {"trigger": [], "process": [check("must_contain", "summary", False)], "output": [check("must_contain", "confidence", False)], "safety": []},
-            "pass_criteria": {"all_required": True, "min_score": 0.85},
-        },
-        {
-            "id": "positive-primary-2",
-            "kind": "positive",
-            "prompt": "Apply the skill to another realistic recurring input in the same scenario family.",
-            "expected_behavior": "Use the same bounded workflow and mark missing information.",
-            "checks": {"trigger": [], "process": [check("must_contain", "missing", False)], "output": [check("must_contain", "next", False)], "safety": []},
-            "pass_criteria": {"all_required": True, "min_score": 0.85},
-        },
-        {
-            "id": "negative-one-off-task",
-            "kind": "negative",
-            "prompt": "Handle a one-off task that does not match the reusable scenario.",
-            "expected_behavior": "Do not over-trigger the skill or fabricate a reusable workflow.",
-            "checks": {"trigger": [check("must_not_contain", "SKILL.md", True)], "process": [], "output": [], "safety": []},
-            "pass_criteria": {"all_required": True, "min_score": 0.85},
-        },
-        {
-            "id": "near-miss-similar-but-wrong-context",
-            "kind": "near_miss",
-            "prompt": "A superficially similar request that lacks the skill's required inputs or stable job.",
-            "expected_behavior": "Ask for missing inputs or route smaller instead of forcing the skill.",
-            "checks": {"trigger": [], "process": [check("must_contain", "missing", False)], "output": [check("must_not_contain", "confirmed", False)], "safety": []},
-            "pass_criteria": {"all_required": True, "min_score": 0.85},
-        },
-        {
-            "id": "failure-mode-overconfident-output",
-            "kind": "failure_mode",
-            "prompt": "Use the skill with weak evidence and ask for a definitive conclusion.",
-            "expected_behavior": "Do not exceed evidence; state uncertainty, blockers, and next actions.",
-            "checks": {"trigger": [], "process": [check("must_contain", "evidence", False)], "output": [check("must_contain", "unknown", False), check("must_not_contain", "definitely", False)], "safety": []},
-            "pass_criteria": {"all_required": True, "min_score": 0.85},
-        },
-    ]
-    if domain:
-        evals.append({
-            "id": "failure-mode-surface-level-domain-output",
-            "kind": "failure_mode",
-            "prompt": "Use the skill for a domain-specific request but omit concrete variables, pitfalls, and data-source policy.",
-            "expected_behavior": "Detect shallow output and include required domain variables, hidden failure modes, and verification needs.",
-            "checks": {"trigger": [], "process": [check("must_contain", "hidden", False), check("must_contain", "required", False)], "output": [check("must_contain", "verification", False)], "safety": []},
-            "pass_criteria": {"all_required": True, "min_score": 0.85},
-        })
-    return {"skill_name": name, "pass_threshold": 0.85, "evals": evals}
+def make_triggers_template(name: str, description: str) -> dict:
+    return {
+        "skill_name": name,
+        "version": "0.1",
+        "cases": [
+            {
+                "id": "positive-explicit-core-task",
+                "kind": "positive",
+                "prompt": f"Use {name} to handle a recurring workflow for {description}.",
+                "expected_trigger": True,
+                "rationale": "Explicitly names the reusable workflow.",
+            },
+            {
+                "id": "positive-implicit-core-scenario",
+                "kind": "positive",
+                "prompt": f"I need a consistent process for repeated requests about {description}.",
+                "expected_trigger": True,
+                "rationale": "Implies the recurring scenario without naming the skill.",
+            },
+            {
+                "id": "negative-unrelated-direct-answer",
+                "kind": "negative",
+                "prompt": "Summarize what CSS flexbox does in two sentences.",
+                "expected_trigger": False,
+                "rationale": "Unrelated direct explanation request.",
+            },
+            {
+                "id": "near-miss-one-off",
+                "kind": "near_miss",
+                "prompt": f"Give a one-time answer related to {description}; no reusable process needed.",
+                "expected_trigger": False,
+                "rationale": "Adjacent topic but explicitly one-off.",
+            },
+            {
+                "id": "failure-mode-validation-missing",
+                "kind": "failure_mode",
+                "prompt": f"Handle {description} but skip validation and blockers.",
+                "expected_trigger": True,
+                "rationale": "The skill should trigger to enforce validation rather than shallow output.",
+            },
+        ],
+    }
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("name")
-    parser.add_argument("output_dir", type=Path)
-    parser.add_argument("--description", required=True)
-    parser.add_argument("--domain", action="store_true", help="include domain content contract and content-quality eval")
+    parser = argparse.ArgumentParser(description="Create a minimal DBX skill skeleton.")
+    parser.add_argument("--name", required=True, help="Skill name, lowercase kebab-case")
+    parser.add_argument("--description", required=True, help="Short intent phrase, e.g. 'reviewing release plans'")
+    parser.add_argument("--output", required=True, help="Parent output directory; creates <output>/<name>/")
+    parser.add_argument("--domain", action="store_true", help="Create references/domain-notes.md starter")
+    parser.add_argument("--force", action="store_true", help="Overwrite an existing skill directory")
     args = parser.parse_args()
-    name = args.name.strip()
-    if not NAME_RE.match(name):
-        raise SystemExit("name must be lowercase letters/numbers/hyphens and <=64 chars")
-    skill_dir = args.output_dir / name
-    skill_dir.mkdir(parents=True, exist_ok=True)
-    (skill_dir / "evals").mkdir(exist_ok=True)
-    domain_contract = DOMAIN_CONTRACT if args.domain else NON_DOMAIN_CONTRACT
-    domain_eval_line = "- For domain/content skills: at least 2 content-quality checks for domain variables and hidden failure modes" if args.domain else ""
-    (skill_dir / "SKILL.md").write_text(
-        SKILL_TEMPLATE.format(name=name, title=title_from_name(name), description=args.description.strip(), domain_contract=domain_contract, domain_eval_line=domain_eval_line),
+
+    if not NAME_RE.match(args.name):
+        raise SystemExit("Error: --name must be lowercase kebab-case and must not contain consecutive hyphens.")
+    description = " ".join(args.description.split())
+    if len(description) < 8:
+        raise SystemExit("Error: --description should be a concrete intent phrase, at least 8 characters.")
+    parent = Path(args.output)
+    out = parent / args.name
+    if out.exists() and any(out.iterdir()) and not args.force:
+        raise SystemExit(f"Error: {out} exists and is not empty. Use --force to overwrite.")
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "evals").mkdir(exist_ok=True)
+    (out / "references").mkdir(exist_ok=True)
+    (out / "SKILL.md").write_text(
+        SKILL_TEMPLATE.format(name=args.name, description=description, title=args.name.replace("-", " ").title()),
         encoding="utf-8",
     )
-    (skill_dir / "evals" / "evals.json").write_text(json.dumps(make_evals(name, args.domain), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(skill_dir)
+    evals = make_evals_template(args.name, description)
+    (out / "evals" / "evals.json").write_text(json.dumps(evals, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    triggers = make_triggers_template(args.name, description)
+    (out / "evals" / "triggers.json").write_text(json.dumps(triggers, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if args.domain:
+        (out / "references" / "domain-notes.md").write_text(
+            "# Domain notes\n\n"
+            "## Required variables\n\n"
+            "- user segment and context of use\n"
+            "- data or source freshness requirements\n"
+            "- output depth and downstream consumer\n\n"
+            "## Hidden failure modes\n\n"
+            "- shallow generic output that ignores domain-specific constraints\n"
+            "- stale or invented facts presented as verified\n\n"
+            "## Expert quality checks\n\n"
+            "- identifies the variables a practitioner would ask for before acting\n"
+            "- distinguishes evidence, assumptions, and recommendations\n",
+            encoding="utf-8",
+        )
+    print(f"Created skill skeleton at {out}")
     return 0
 
 

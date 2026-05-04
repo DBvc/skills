@@ -1,17 +1,8 @@
-# Scenario to Skill
+# Scenario to skill conversion
 
-Use this reference when the user gives a scenario rather than a ready skill spec.
+Use this file when turning a recurring scenario into a package.
 
-## Contents
-
-- Scenario card
-- Domain discovery card
-- IR card
-- Lift and lower
-- Skill-worthiness test
-- Domain substance test
-
-## 1. Scenario card
+## Scenario card
 
 ```text
 Scenario name:
@@ -27,29 +18,11 @@ Non-goals:
 Success criteria:
 ```
 
-## 2. Domain discovery card
+A scenario is weak if it says only “help with X”. It becomes skill-worthy when the input family, output target, failure modes, and success checks are stable.
 
-Use this for domain/content skills.
+## IR extraction
 
-```text
-Target user:
-Artifact type:
-Output depth:
-Required variables:
-Hidden failure modes:
-Expert quality checks:
-Data-source policy:
-Uncertainty policy:
-Must-not-omit fields:
-Worked examples available:
-Domain eval cases:
-```
-
-If this card is mostly unknown, use `route: domain_discovery`.
-
-## 3. IR card
-
-IR means Intermediate Representation.
+Create an intermediate representation before writing instructions:
 
 ```text
 Objects:
@@ -64,55 +37,49 @@ Reasoning mode:
 Type errors to prevent:
 ```
 
-## 4. Lift and lower
+IR prevents a common failure: turning a status label into a causal explanation. Example: “the PR is messy” is a state, not a root cause. The skill should ask which changes, files, or review constraints make it messy.
 
-Use this pattern only for rules that change behavior:
+## Package architecture decision
+
+Choose the smallest viable package:
+
+```text
+Single SKILL.md
+  Good for short procedure skills with low domain depth and no fragile tooling.
+
+SKILL.md + references/
+  Good for domain knowledge, rubrics, examples, anti-patterns, and long templates.
+
+SKILL.md + scripts/
+  Good for parsing, validation, format conversion, scoring, command orchestration, or fragile operations.
+
+SKILL.md + assets/
+  Good for reusable templates, examples, visual resources, schemas, or static data.
+
+SKILL.md + evals/
+  Required for serious reusable skills in this repository.
+```
+
+## Principle extraction
+
+Do not list principles as decoration. Convert each important rule into behavior:
 
 ```text
 Domain rule -> meta rule -> root principle -> workflow step -> eval check
 ```
 
-Example:
+If a principle cannot change workflow, output, risk handling, domain substance, or evaluation, remove it.
 
-```text
-Domain rule: Do not treat "Flow cancelled" as the root cause.
-Meta rule: A terminal status label is not a causal explanation.
-Root principle: Description is not explanation.
-Workflow step: Backtrack to prior state, failing step, blocker, and evidence.
-Eval check: Output must include "terminal status is not root cause" and a missing-evidence field.
-```
+## Done criteria
 
-Domain/content example:
+A full package is done only when it has:
 
-```text
-Domain rule: A travel itinerary without transfer time, budget, and verification items is not executable.
-Meta rule: Domain artifacts require operational variables, not only narrative structure.
-Root principle: Formatted output is not useful output.
-Workflow step: Build a domain_content_contract before drafting the skill.
-Eval check: Travel eval must fail if no time/distance/budget/verification appears.
-```
-
-## 5. Skill-worthiness test
-
-Full skills need all hard gates:
-
-- repeatability
-- stable job
-- evaluability
-- safety/legitimacy
-
-If these fail, do not create a full skill. Use direct answer, checklist, mini-skill, or safer redesign.
-
-## 6. Domain substance test
-
-Domain/content full skills also need:
-
-- target user
-- output depth
-- domain variables
-- data-source policy
-- hidden failure modes
-- expert quality rubric
-- worked example
-
-If these are unknown, do not draft full package. Run domain discovery first.
+- valid `SKILL.md` frontmatter;
+- clear trigger and non-trigger boundaries;
+- hard gates or required inputs;
+- skill shape and dominant failure modes;
+- domain contract when relevant;
+- workflow and output contract;
+- references/scripts/assets map when present;
+- trigger evals or runner evals;
+- validation status or manual checks.

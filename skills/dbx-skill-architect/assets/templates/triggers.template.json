@@ -1,0 +1,41 @@
+{
+  "skill_name": "{skill_name}",
+  "version": "0.1",
+  "cases": [
+    {
+      "id": "positive-explicit-core-task",
+      "kind": "positive",
+      "prompt": "Use {skill_name} to handle a recurring workflow for {recurring_scenario}.",
+      "expected_trigger": true,
+      "rationale": "Explicitly names the reusable workflow."
+    },
+    {
+      "id": "positive-implicit-core-scenario",
+      "kind": "positive",
+      "prompt": "I need a consistent process for repeated requests about {recurring_scenario}.",
+      "expected_trigger": true,
+      "rationale": "Implies the recurring scenario without naming the skill."
+    },
+    {
+      "id": "negative-unrelated-direct-answer",
+      "kind": "negative",
+      "prompt": "Summarize what CSS flexbox does in two sentences.",
+      "expected_trigger": false,
+      "rationale": "Unrelated direct explanation request."
+    },
+    {
+      "id": "near-miss-one-off",
+      "kind": "near_miss",
+      "prompt": "Give a one-time answer related to {recurring_scenario}; no reusable process needed.",
+      "expected_trigger": false,
+      "rationale": "Adjacent topic but explicitly one-off."
+    },
+    {
+      "id": "failure-mode-validation-missing",
+      "kind": "failure_mode",
+      "prompt": "Handle {recurring_scenario} but skip validation and blockers.",
+      "expected_trigger": true,
+      "rationale": "The skill should trigger to enforce validation rather than shallow output."
+    }
+  ]
+}

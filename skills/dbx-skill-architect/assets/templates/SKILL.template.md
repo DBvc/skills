@@ -1,137 +1,74 @@
 ---
-name: {name}
-description: {description}
+name: {skill_name}
+description: Use when the user needs a reusable workflow for {recurring_scenario}. Do not use for unrelated one-off tasks or requests outside this skill boundary.
 ---
 
-# {title}
+# {Skill Title}
 
 ## Purpose
 
-This skill handles a recurring scenario where <primary user> needs to <stable job>. It improves <target outcome> by enforcing a bounded workflow, evidence policy, domain content contract when relevant, output contract, and eval plan.
+Support recurring requests for {recurring_scenario}. Replace the bracketed fields with concrete trigger boundaries, workflow details, failure modes, examples, and validation rules before treating the package as production-ready.
 
 ## When to use
 
-- Use when <trigger context 1>.
-- Use when <trigger context 2>.
+Use when:
+
+- the user asks for {recurring_scenario} as a repeated workflow;
+- the expected result has a stable output contract or validation path;
+- enough context exists to judge success without inventing missing requirements.
 
 ## When not to use
 
-- Do not use for one-off tasks with no reusable workflow.
-- Do not use for unsafe, deceptive, privacy-invasive, or out-of-scope requests.
-- Do not use when required inputs are missing and assumptions would be unsafe or misleading.
-- Do not use for superficially similar requests that lack this skill's stable job or required domain variables.
+Do not use when:
 
-## Hard gates or required inputs
+- the request is a one-off direct answer;
+- another skill has a more precise trigger;
+- required context is missing and blocking questions are needed;
+- the request is unsafe, deceptive, non-consensual, or outside this skill boundary.
 
-```yaml
-hard_gates:
-  repeatability: "<why this scenario repeats or is reusable>"
-  stable_job: "<stable job-to-be-done>"
-  evaluability: "<how success is checked>"
-  safety_legitimacy: "<safety/privacy/legal boundary>"
-required_inputs:
-  - "<required input>"
-optional_inputs:
-  - "<optional input>"
-assumptions_if_missing:
-  - "<safe assumption, if any>"
-```
-
-## Domain content contract
-
-Use this section for domain/content skills. If not applicable, state `not_applicable`.
+## Skill shape
 
 ```yaml
-domain_content_contract:
-  target_user: ""
-  artifact_type: ""
-  output_depth: "quick | standard | deep | operational"
-  required_variables: []
-  hidden_failure_modes: []
-  expert_quality_checks: []
-  data_source_policy:
-    realtime_required: []
-    user_provided_required: []
-    can_estimate_with_label: []
-    must_not_fabricate: []
-  uncertainty_policy: []
-  must_not_omit: []
-  worked_examples_needed: []
-  domain_eval_cases: []
+skill_shape:
+  archetype: procedure
+  secondary_archetypes: []
+  dominant_failure_modes:
+    - wrong_trigger
+    - unverified_output
+  implementation_implications:
+    - maintain trigger evals for near-miss cases
+    - add deterministic validation for repeated fragile steps
 ```
 
-## IR summary
+## Required inputs
 
-```yaml
-objects: []
-states_or_results: []
-events_or_actions: []
-evidence: []
-hypotheses: []
-constraints: []
-risky_boundaries: []
-reasoning_mode: []
-type_errors_to_prevent: []
-```
+- user goal and expected output;
+- source material, files, or constraints;
+- target audience or downstream consumer;
+- validation evidence or acceptance criteria.
 
 ## Workflow
 
-1. Validate required inputs, hard gates, and domain variables when relevant.
-2. Compile the request into the IR.
-3. Execute the domain workflow with bounded freedom.
-4. Produce the output contract.
-5. Mark missing information, confidence, blockers, next actions, and verification needs.
-
-## Evidence and confidence policy
-
-- Confirmed: directly supported by provided or validated evidence.
-- Probable: supported by multiple signals but not fully confirmed.
-- Weak: plausible but under-supported.
-- Unknown: insufficient evidence.
-
-Never state conclusions stronger than the available evidence. For real-time facts, separate confirmed, estimated-with-label, and needs-verification.
+1. Confirm the request fits this skill boundary.
+2. Identify the output, downstream consumer, and non-goals.
+3. Gather missing required inputs or state the blocker.
+4. Execute the workflow using the smallest sufficient structure.
+5. Validate the result and report unresolved risk.
 
 ## Output contract
 
-Use this exact structure unless the user requests another format:
+```markdown
+## Summary
 
-```yaml
-summary: ""
-inputs_used: []
-evidence:
-  confirmed: []
-  probable: []
-  weak: []
-missing_information: []
-assumptions: []
-result:
-  domain_specific_fields: []
-confidence: high | medium | low
-blockers: []
-next_actions: []
-verification_needed: []
+## Inputs and evidence used
+
+## Result
+
+## Validation
+
+## Risks or open questions
 ```
-
-## Failure and escalation rules
-
-- Stop and ask when required inputs or domain variables are missing and assumptions would change the result.
-- Refuse or redesign unsafe, deceptive, privacy-invasive, or coercive goals.
-- Use a checklist or direct answer instead of this skill when the scenario is not reusable.
-- For domain/content skills, fail the output if it is well-formatted but lacks required domain variables, hidden pitfalls, or data-source policy.
-
-## References and scripts
-
-- Add `references/<file>.md` for long domain guidance, rubrics, examples, and hidden failure modes.
-- Add `scripts/<script>.py` for deterministic parsing, validation, transformation, scoring, or fragile operations.
 
 ## Eval plan
 
-At minimum include:
-
-- 2 positive cases
-- 1 negative case
-- 1 near-miss case
-- 1 failure_mode or safety case
-- For domain/content skills: at least 2 content-quality checks for domain variables and hidden failure modes
-
-Eval definitions must be runner-compatible with `scripts/run_skill_evals.py`.
+Maintain `evals/triggers.json` for trigger precision/recall and `evals/evals.json` for output behavior. Each eval case should include at least one non-marker quality assertion.

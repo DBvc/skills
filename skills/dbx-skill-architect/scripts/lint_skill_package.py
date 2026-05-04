@@ -1,117 +1,134 @@
 #!/usr/bin/env python3
-"""Static lint for agent skill packages."""
+"""Lint an Agent Skill package with DBX-specific checks."""
+
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
 from pathlib import Path
-from typing import Any
 
-from eval_schema import validate_eval_data
+SCRIPT_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SCRIPT_DIR))
+from eval_schema import validate_eval_file  # noqa: E402
 
-NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
-
-
-def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
-    if not text.startswith("---\n"):
-        return {}, text
-    end = text.find("\n---", 4)
-    if end == -1:
-        return {}, text
-    fm: dict[str, str] = {}
-    for line in text[4:end].strip().splitlines():
-        if ":" in line:
-            k, v = line.split(":", 1)
-            fm[k.strip()] = v.strip()
-    return fm, text[end + 4:]
+NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
+PLACEHOLDER_PATTERNS = [
+    re.compile(r"(?m)^\s*-\s*\.\.\.\s*$"),
+    re.compile(r"(?i)\bdescribe the recurring scenario\b"),
+    re.compile(r"(?i)\bdescribe what the skill does\b"),
+    re.compile(r"(?i)\ba realistic prompt\b"),
+    re.compile(r"(?i)\btodo\b|\btbd\b"),
+    re.compile(r"procedure\s*\|\s*tool\s*\|\s*knowledge"),
+    re.compile(r"dominant_failure_modes:\s*\[\]\s*$", re.MULTILINE),
+    re.compile(r"implementation_implications:\s*\[\]\s*$", re.MULTILINE),
+]
 
 
-def lint(path: Path) -> dict[str, Any]:
+def placeholder_hits(text: str) -> list[str]:
+    hits: list[str] = []
+    for pattern in PLACEHOLDER_PATTERNS:
+        match = pattern.search(text)
+        if match:
+            hits.append(" ".join(match.group(0).split())[:80])
+    return hits
+
+
+def parse_frontmatter(text: str) -> tuple[dict[str, str], str | None]:
+    match = FRONTMATTER_RE.match(text)
+    if not match:
+        return {}, "SKILL.md must start with YAML frontmatter using separate --- lines"
+    fields: dict[str, str] = {}
+    for raw_line in match.group(1).splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if ":" not in line:
+            return fields, f"Invalid frontmatter line: {raw_line!r}"
+        key, value = line.split(":", 1)
+        fields[key.strip()] = value.strip().strip('"')
+    return fields, None
+
+
+def lint_skill(path: Path) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
-    if not path.exists():
-        return {"ok": False, "errors": [f"Path does not exist: {path}"], "warnings": []}
-    skill_files = list(path.rglob("SKILL.md"))
-    if len(skill_files) != 1:
-        errors.append(f"Expected exactly one SKILL.md, found {len(skill_files)}")
-        return {"ok": False, "errors": errors, "warnings": warnings}
-    text = skill_files[0].read_text(encoding="utf-8")
-    fm, body = parse_frontmatter(text)
-    name = fm.get("name", "")
-    desc = fm.get("description", "")
-    if not NAME_RE.match(name):
-        errors.append("frontmatter name must be lowercase ASCII letters/numbers/hyphens and <=64 chars")
-    if not desc:
-        errors.append("frontmatter description is required")
-    elif len(desc) > 1024:
-        errors.append("description exceeds 1024 chars")
-    body_lower = body.lower()
-    required_terms = {
-        "when not": "Non-use boundary is required",
-        "hard gates": "Hard gates are required",
-        "ir": "IR guidance is required",
-        "workflow": "Workflow guidance is required",
-        "output contract": "Output contract is required",
-        "eval": "Eval guidance is required",
-    }
-    for term, msg in required_terms.items():
-        if term not in body_lower:
-            errors.append(msg)
-    line_count = len(body.splitlines())
-    if line_count > 500:
-        warnings.append(f"SKILL.md body has {line_count} lines; ideal is under 500")
-    if "```yaml" not in body_lower and "```json" not in body_lower:
-        warnings.append("No schema-like block found")
-
-    if name == "dbx-skill-architect":
-        for term in (
-            "route:",
-            "operation:",
-            "compatibility matrix",
-            "needs_clarification",
-            "eval_artifact_present",
-            "eval kind single source",
-            "patch-first",
-            "runner-compatible",
-            "check_architect_output.py",
-        ):
-            if term not in body_lower:
-                errors.append(f"dbx-skill-architect missing required protocol term: {term}")
-        # Do not teach the model invented eval kinds inside the main skill body.
-        if 'invented alias as a `kind`' in body_lower:
-            errors.append('dbx-skill-architect should list canonical kinds, not invented aliases')
-
-    eval_path = path / "evals" / "evals.json"
-    if not eval_path.exists():
-        errors.append("Missing evals/evals.json")
-    else:
-        try:
-            data = json.loads(eval_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            errors.append(f"Invalid evals.json: {exc}")
-        else:
-            e, w = validate_eval_data(data if isinstance(data, dict) else {})
-            errors.extend(e)
-            warnings.extend(w)
-
+    skill_md = path / "SKILL.md"
+    if not skill_md.exists():
+        return [f"{path}: missing SKILL.md"], warnings
+    text = skill_md.read_text(encoding="utf-8")
+    fields, err = parse_frontmatter(text)
+    if err:
+        errors.append(err)
+    name = fields.get("name")
+    description = fields.get("description")
+    if not name:
+        errors.append("frontmatter.name is required")
+    elif not NAME_RE.match(name):
+        errors.append(f"frontmatter.name is invalid: {name!r}")
+    elif name != path.name:
+        errors.append(f"frontmatter.name {name!r} must match directory name {path.name!r}")
+    if not description:
+        errors.append("frontmatter.description is required")
+    elif len(description) > 1024:
+        errors.append("frontmatter.description exceeds 1024 characters")
+    elif "use" not in description.lower() and "when" not in description.lower():
+        warnings.append("description should say when to use the skill")
+    if text.count("```yaml") == 0:
+        warnings.append("SKILL.md should include a YAML contract or structured examples")
+    if len(text.splitlines()) > 500:
+        warnings.append("SKILL.md is over 500 lines; consider moving detail into references/")
+    if path.name != "dbx-skill-architect":
+        for hit in placeholder_hits(text):
+            errors.append(f"SKILL.md contains placeholder text: {hit!r}")
     refs = path / "references"
     if refs.exists():
-        for ref in refs.rglob("*.md"):
-            rel = ref.relative_to(path)
-            if len(rel.parts) > 3:
-                warnings.append(f"Deeply nested reference: {rel}")
-            ref_text = ref.read_text(encoding="utf-8")
-            if len(ref_text.splitlines()) > 300 and "contents" not in ref_text.lower():
-                warnings.append(f"Long reference without contents marker: {rel}")
-    return {"ok": not errors, "errors": errors, "warnings": warnings}
+        for ref in refs.glob("*.md"):
+            if not ref.read_text(encoding="utf-8").strip():
+                warnings.append(f"empty reference file: {ref.relative_to(path)}")
+    evals = path / "evals" / "evals.json"
+    if evals.exists():
+        result = validate_eval_file(evals, path.name)
+        errors.extend(result.errors)
+        warnings.extend(result.warnings)
+    else:
+        warnings.append("missing evals/evals.json")
+    triggers = path / "evals" / "triggers.json"
+    if not triggers.exists():
+        warnings.append("missing evals/triggers.json")
+    else:
+        try:
+            trigger_data = json.loads(triggers.read_text(encoding="utf-8"))
+            if trigger_data.get("skill_name") != path.name:
+                warnings.append("evals/triggers.json skill_name does not match directory")
+            if not isinstance(trigger_data.get("cases"), list) or not trigger_data["cases"]:
+                errors.append("evals/triggers.json cases must be a non-empty array")
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"evals/triggers.json invalid JSON: {exc}")
+    return errors, warnings
 
 
 def main() -> int:
-    path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.cwd()
-    result = lint(path)
-    print(json.dumps(result, ensure_ascii=False, indent=2))
-    return 0 if result["ok"] else 1
+    parser = argparse.ArgumentParser(description="Lint a DBX skill package.")
+    parser.add_argument("path", help="Skill package directory")
+    parser.add_argument("--format", choices=["text", "json"], default="text")
+    parser.add_argument("--fail-on-warnings", action="store_true")
+    args = parser.parse_args()
+    path = Path(args.path).resolve()
+    errors, warnings = lint_skill(path)
+    payload = {"ok": not errors and not (warnings and args.fail_on_warnings), "errors": errors, "warnings": warnings}
+    if args.format == "json":
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        status = "OK" if payload["ok"] else "ERROR"
+        print(f"Skill lint: {status} ({path})")
+        for err in errors:
+            print(f"ERROR: {err}")
+        for warning in warnings:
+            print(f"WARNING: {warning}")
+    return 0 if payload["ok"] else 1
 
 
 if __name__ == "__main__":

@@ -1,76 +1,54 @@
-# Domain Discovery / 领域发现
+# Domain discovery guide
 
-Use this reference when the user wants a domain/content skill, such as travel planning, news releases, repair diagnosis, relationship analysis, social content, sports prediction, investment framework, hiring rubrics, technical architecture, teaching material, or incident analysis.
+Use this file when hard gates likely pass but domain substance is unknown or weak.
 
-A domain skill is not production-ready merely because it has triggers, workflow, output contract, and evals. It must know what makes output **useful in that domain**.
+## When to route `domain_discovery`
 
-## Contents
+Route to `create/domain_discovery/ask_domain_questions` when the user asks for a domain/content skill but has not supplied enough information to make the output useful in real use.
 
-- Domain substance gates
-- Domain discovery questions
-- Failure knowledge extraction
-- Domain content contract
-- Examples across domains
-- Anti-surface checks
+Typical cases:
 
-## Domain substance gates
+- travel planning without traveler type, budget, season, constraints, pace, booking policy, or risk tolerance;
+- investment analysis without asset class, horizon, risk tolerance, data policy, and valuation framework;
+- relationship advice without consent boundaries, evidence strength, safety context, and communication goal;
+- architecture decision without system constraints, scale, team skills, lifecycle, failure modes, and migration path;
+- content marketing without audience, channel, brand voice, legal constraints, source facts, and review workflow.
 
-```yaml
-domain_substance_gates:
-  target_user_defined: pass | fail | unknown | not_applicable
-  output_depth_defined: pass | fail | unknown | not_applicable
-  domain_variables_identified: pass | fail | unknown | not_applicable
-  data_source_policy_defined: pass | fail | unknown | not_applicable
-  failure_knowledge_identified: pass | fail | unknown | not_applicable
-  expert_quality_rubric_defined: pass | fail | unknown | not_applicable
-  worked_example_available: pass | fail | unknown | not_applicable
-```
+## Domain substance questions
 
-If these are mostly `unknown`, route to `domain_discovery`, not `full_skill`.
+Ask 5 to 10 targeted questions. Prefer questions that uncover hidden variables and failure modes.
 
-## Core domain discovery questions
+Question families:
 
-Ask only the most relevant 5-10 questions. Do not dump all of them.
+1. **Target user**: Who uses the output? Under what constraints?
+2. **Artifact type**: What exactly should the skill produce?
+3. **Output depth**: quick, standard, deep, operational, or review-grade?
+4. **Required variables**: What inputs change the correct answer?
+5. **Data-source policy**: What must be current, cited, user-provided, estimated, or unknown?
+6. **Failure knowledge**: What plausible answer would fail in real use?
+7. **Expert rubric**: How would a domain expert judge quality?
+8. **Examples**: What good or bad examples exist?
+9. **Eval cases**: What cases would catch shallow but polished output?
+10. **Safety boundaries**: What should the skill refuse, redirect, or require approval for?
 
-1. Who will actually use the output, and in what situation?
-2. What artifact should the skill produce: checklist, memo, itinerary, diagnosis, script, report, plan, rubric, or decision table?
-3. What output depth is required: quick, standard, deep, or operational?
-4. What concrete variables must be present for the output to be useful?
-5. Which variables, if omitted, make the result look complete but fail in real use?
-6. What are the common novice mistakes, hidden costs, anti-patterns, or traps?
-7. What would a domain expert check first to judge quality?
-8. Which facts must be real-time, user-provided, cited, estimated with label, or marked unknown?
-9. Do you have one good sample and one bad sample?
-10. What 5 eval cases would expose surface-level answers?
+## Provisional domain content contract
 
-## Failure knowledge extraction
-
-Failure knowledge is the domain's negative expertise: things that look plausible but fail in reality.
-
-Ask:
-
-```text
-- What do beginners usually miss?
-- What looks efficient but creates hidden cost?
-- What sounds impressive but is not actionable?
-- What assumptions often break in real environments?
-- Which output fields are non-negotiable?
-- What must be verified before execution?
-- What mistakes create safety, privacy, money, legal, or reputation risk?
-```
-
-## Domain content contract
-
-For domain/content skills, produce this before drafting the final package:
+Use this when the user wants progress before full domain details are known:
 
 ```yaml
 domain_content_contract:
-  target_user: ""
-  artifact_type: ""
-  output_depth: "quick | standard | deep | operational"
-  required_variables: []
-  hidden_failure_modes: []
-  expert_quality_checks: []
+  target_user: "unknown"
+  artifact_type: "unknown"
+  output_depth: "unknown"
+  required_variables:
+    known: []
+    missing: []
+  hidden_failure_modes:
+    known: []
+    missing: []
+  expert_quality_checks:
+    known: []
+    missing: []
   data_source_policy:
     realtime_required: []
     user_provided_required: []
@@ -82,63 +60,32 @@ domain_content_contract:
   domain_eval_cases: []
 ```
 
-Weak contract smells:
+Label it as provisional. Do not present it as production-ready.
 
-- `required_variables` contains only generic terms like "context" or "quality".
-- `hidden_failure_modes` is empty or only repeats safety policy.
-- No distinction between real-time facts, estimates, assumptions, and unknowns.
-- No expert-quality checks.
-- Evals only check section headings, not usefulness.
+## Domain eval examples
 
-## Examples across domains
+Good domain evals test usefulness, not only format.
 
-### Travel itinerary planner
+Weak:
 
-Required variables might include dates, origin, destinations, budget, traveler type, mobility, transport preferences, hotel zone, time windows, distance/transfer time, weather sensitivity, reservations, ticketing, and backup options.
+```text
+The output includes a section called Risks.
+```
 
-Hidden failure modes might include holiday crowds, impossible transfer times, missing ticket reservations, underestimating walking/climbing, wrong hotel district, unverified opening hours, no rainy-day alternative, hidden transport costs, and vague budget handling.
+Stronger:
 
-Expert checks might include: day-by-day timing, transfer table, budget split, accommodation-zone logic, energy level, backup plans, real-time verification checklist.
+```text
+Given a travel itinerary for a user with limited mobility, the output must not recommend inaccessible transfers and must ask for mobility constraints if missing.
+```
 
-### News release writer
+Weak:
 
-Required variables might include announcement type, audience, facts, quotes, metrics, embargo, legal review, brand voice, boilerplate, and media target.
+```text
+The architecture decision contains Pros and Cons.
+```
 
-Hidden failure modes might include fabricated quotes, unverified metrics, vague headline, missing news hook, unsupported superlatives, legal/PR risk, and mixing ad copy with news release.
+Stronger:
 
-### Repair diagnosis
-
-Required variables might include device/model, symptoms, recent changes, tools available, safety boundary, observation steps, and stop conditions.
-
-Hidden failure modes might include replacing parts before diagnosis, unsafe disassembly, treating symptom as root cause, ignoring power/fuel/sensor basics, and lacking escalation criteria.
-
-### Relationship interpretation
-
-Required variables might include exact words, context, recent events, relationship pattern, user's goal, consent boundary, and desired communication style.
-
-Hidden failure modes might include mind-reading, manipulation, overfitting one message, ignoring context, and turning uncertainty into accusation.
-
-### Sports prediction
-
-Required variables might include objective, teams, date, injuries, lineup rotation, fixture congestion, home/away, odds baseline, style matchups, and uncertainty metric.
-
-Hidden failure modes might include overvaluing recent streaks, ignoring injuries/rotation, treating probability as certainty, and cherry-picking stats.
-
-### Technical architecture
-
-Required variables might include current pain, scale, constraints, migration path, rollback, ownership, interface boundaries, tests, and adoption plan.
-
-Hidden failure modes might include big-bang rewrite, premature abstraction, moving complexity to the wrong layer, missing migration cost, and optimizing local metrics.
-
-## Anti-surface checks
-
-A domain skill is surface-level if it:
-
-- produces generic advice that could fit any domain;
-- lacks concrete required variables;
-- lacks hidden failure modes;
-- has no data-source policy;
-- has no expert-quality rubric;
-- has no worked example;
-- evals only test headings and not domain usefulness;
-- avoids specifics entirely instead of separating confirmed / estimated / unknown.
+```text
+Given a migration proposal with unclear rollback path, the skill must flag irreversible risk and require a staged rollout or rollback criterion.
+```

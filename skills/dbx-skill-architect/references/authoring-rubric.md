@@ -1,43 +1,78 @@
-# Authoring Rubric
+# Skill authoring rubric
 
-Score each dimension from 0 to 2.
+Score each dimension from 1 to 5.
 
-## Core skill quality
+## 1. Reuse worthiness
 
-1. Scenario clarity: recurring user, context, stable job.
-2. Trigger precision: clear use and non-use cases.
-3. Hard gates: repeatability, stable job, evaluability, safety.
-4. IR quality: objects, states, events, evidence, hypotheses, constraints, risky boundaries.
-5. Workflow: ordered, bounded, no missing critical steps.
-6. Evidence discipline: distinguishes observation, evidence, inference, and assumption.
-7. Freedom control: scripts/templates/tools for fragile operations.
-8. Output contract: schema-like, handles confidence, blockers, missing information.
-9. Eval coverage: positive, negative, near-miss, failure_mode or safety.
-10. Runner compatibility: eval JSON validates with `run_skill_evals.py`.
-11. Maintainability: concise SKILL.md, shallow references, clear scripts.
-12. Regression posture: has captured-output or ablation plan.
+1: One-off prompt wrapped as a skill.
+3: Reusable but broad or loosely bounded.
+5: Clear recurring scenario with stable input family, output, and failures.
 
-## Domain/content quality
+## 2. Trigger accuracy
 
-Use these for domain/content skills. Score `not_applicable` only when the skill is not domain/content oriented.
+1: Description is generic or misleading.
+3: Core use is described, but near-miss cases are unclear.
+5: Should-trigger, should-not-trigger, and near-miss boundaries are obvious.
 
-13. Domain variables: concrete required variables are identified, not generic placeholders.
-14. Failure knowledge: hidden pitfalls, anti-patterns, novice traps, or hidden costs are captured.
-15. Data-source policy: separates real-time facts, user-provided facts, estimates, and unknowns.
-16. Expert quality rubric: defines how an expert would judge the output.
-17. Worked examples: includes good/bad or complete simulated examples.
-18. Content-quality evals: evals catch shallow but well-formatted output.
+## 3. Boundary and safety
 
-## Interpretation
+1: Unsafe or irreversible behavior is not controlled.
+3: Boundaries are named but not operational.
+5: Fail-closed gates, approval points, and safer alternatives are explicit.
 
-- 30-36: production candidate for domain/content skill
-- 24-29: good draft, needs hardening
-- 18-23: useful prompt, not yet a robust skill
-- below 18: redesign from scenario and domain discovery cards
+## 4. Skill shape fit
 
-For non-domain skills, use dimensions 1-12:
+1: Structure does not match the dominant failure mode.
+3: Shape is plausible but not used to guide architecture.
+5: Archetype and failure modes clearly determine instructions, references, scripts, assets, and evals.
 
-- 20-24: production candidate
-- 16-19: good draft, needs hardening
-- 10-15: useful prompt, not yet a skill
-- below 10: redesign from scenario card
+## 5. Domain substance
+
+1: Generic best practices and polished structure only.
+3: Some domain variables or examples are present.
+5: Required variables, hidden failure modes, data-source policy, expert rubric, examples, and domain evals are all concrete.
+
+## 6. Freedom calibration
+
+1: Everything is vague or everything is over-constrained.
+3: Some fragile steps are controlled.
+5: Fragile operations are tightened while judgment and creativity retain useful freedom.
+
+## 7. Tooling and validation
+
+1: Mechanical checks are left to the model.
+3: Some scripts or validation steps exist.
+5: Fragile, repeatable, or machine-checkable steps are scripted and documented.
+
+## 8. Output contract
+
+1: Output is unspecified or decorative.
+3: Required sections exist but evidence and handoff are weak.
+5: Output is directly usable by the next human, agent, or tool, with evidence and uncertainty policy.
+
+## 9. Eval quality
+
+1: No evals, or evals only check headings.
+3: Basic positive/negative cases.
+5: Trigger evals, near-miss cases, failure/safety cases, output checks, and baseline comparison plan.
+
+## 10. Context economy
+
+1: Main file is bloated and mixes everything.
+3: Some references exist but main file is still heavy.
+5: Main file guides runtime decisions; details are split into focused references, scripts, assets, and evals.
+
+## Production-ready threshold
+
+A production-ready skill should generally score:
+
+```text
+Reuse worthiness >= 4
+Trigger accuracy >= 4
+Boundary and safety >= 4
+Skill shape fit >= 4
+Eval quality >= 3
+Context economy >= 4
+```
+
+Tooling is required only when the dominant failure mode includes `fragile_operation`, `unverified_output`, or machine-checkable artifact quality.

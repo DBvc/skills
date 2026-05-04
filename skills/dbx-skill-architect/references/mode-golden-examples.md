@@ -1,116 +1,166 @@
-# Mode Golden Examples
+# Mode golden examples
 
-These are minimal compliant patterns. Use them as behavior samples, not as rigid wording.
+Use these examples to prevent route drift.
 
-## Contents
+## Create, needs clarification
 
-- Create needs clarification
-- Create domain discovery
-- Create full skill
-- Critique
-- Improve
-- Eval runner JSON
-- Triage one-off
-- Safety redesign
+Prompt:
 
-## Create: needs clarification
-
-```yaml
-skill_architect_decision:
-  mode: create
-  route: needs_clarification
-  operation: ask_questions
-  hard_gates:
-    repeatability: unknown
-    stable_job: unknown
-    evaluability: unknown
-    safety_legitimacy: pass
-  domain_substance_gates:
-    target_user_defined: not_applicable
-    output_depth_defined: not_applicable
-    domain_variables_identified: not_applicable
-    data_source_policy_defined: not_applicable
-    failure_knowledge_identified: not_applicable
-    expert_quality_rubric_defined: not_applicable
-    worked_example_available: not_applicable
-  blocking_questions:
-    - "What recurring scenario should this skill handle?"
-  assumptions: []
-  confidence: medium
-  contract_self_check:
-    mode_route_compatible: true
-    operation_compatible: true
-    hard_gates_applied: true
-    domain_substance_gates_applied: true
-    full_package_overbuilt: false
-    eval_artifact_present: false
-    eval_schema_runner_compatible: not_applicable
-    patch_not_rebuild: not_applicable
+```text
+Create a skill for summarizing things.
 ```
 
-Ask blocking questions and stop.
-
-## Create: domain discovery
-
-User request: "I want to create a travel guide writing skill."
+Expected:
 
 ```yaml
-skill_architect_decision:
-  mode: create
-  route: domain_discovery
-  operation: ask_domain_questions
-  hard_gates:
-    repeatability: pass
-    stable_job: pass
-    evaluability: unknown
-    safety_legitimacy: pass
-  domain_substance_gates:
-    target_user_defined: unknown
-    output_depth_defined: unknown
-    domain_variables_identified: unknown
-    data_source_policy_defined: unknown
-    failure_knowledge_identified: unknown
-    expert_quality_rubric_defined: unknown
-    worked_example_available: unknown
-  blocking_questions:
-    - "Is this for executable itineraries, inspiration posts, or booking preparation?"
-    - "What variables must always appear: time, money, transfer distance, hotels, tickets, weather, walking load?"
-    - "What are common travel-plan pitfalls this skill must catch?"
-  assumptions: []
-  confidence: high
-  contract_self_check:
-    mode_route_compatible: true
-    operation_compatible: true
-    hard_gates_applied: true
-    domain_substance_gates_applied: true
-    full_package_overbuilt: false
-    eval_artifact_present: false
-    eval_schema_runner_compatible: not_applicable
-    patch_not_rebuild: not_applicable
+mode: create
+route: needs_clarification
+operation: ask_questions
+hard_gates:
+  repeatability: unknown
+  stable_job: unknown
+  evaluability: unknown
 ```
 
-Do not draft the full skill. Ask domain questions and optionally provide a provisional domain content contract with unknowns marked.
+Why: summarizing is too broad without input family, audience, output contract, and eval.
 
-## Create: full skill
+## Create, domain discovery
 
-Only after hard gates and domain gates pass when applicable. Include scenario card, domain content contract if relevant, IR, package files, and runner evals.
+Prompt:
 
-## Critique
+```text
+Create a travel-planning skill.
+```
 
-`mode: critique`, `route: not_a_creation_request`, `operation: critique_package`. Do not create or rewrite unless asked.
+Expected:
 
-## Improve
+```yaml
+mode: create
+route: domain_discovery
+operation: ask_domain_questions
+domain_substance_gates:
+  target_user_defined: unknown
+  output_depth_defined: unknown
+  domain_variables_identified: unknown
+```
 
-`mode: improve`, `route: not_a_creation_request`, `operation: patch_existing_package`. Patch first. If rebuilding, include `rebuild_reason`.
+Why: hard gates may pass, but domain substance is missing.
 
-## Eval runner JSON
+## Create, full skill
 
-`mode: eval`, `route: not_a_creation_request`, `operation: design_runner_evals`. Include fenced runner-compatible JSON and set `eval_artifact_present: true`.
+Prompt:
+
+```text
+Create a reusable skill for internal incident postmortems. Users are engineering managers. Output should be a review-ready postmortem with timeline, impact, contributing factors, customer-visible effects, remediation owners, prevention actions, and follow-up review. It must prevent blame language, missing detection timeline, and action items without owners. Include evals.
+```
+
+Expected:
+
+```yaml
+mode: create
+route: full_skill
+operation: draft_package
+skill_shape:
+  archetype: procedure
+  dominant_failure_modes:
+    - domain_shallow
+    - handoff_failure
+```
+
+Why: user gives target, output, variables, failure modes, and eval request.
+
+## Critique existing package
+
+Prompt:
+
+```text
+Review this SKILL.md and tell me where it over-triggers and lacks evals.
+```
+
+Expected:
+
+```yaml
+mode: critique
+route: not_a_creation_request
+operation: critique_package
+```
+
+Why: no new package should be generated.
+
+## Improve existing package
+
+Prompt:
+
+```text
+Improve this existing skill. Add better trigger boundaries and evals.
+```
+
+Expected:
+
+```yaml
+mode: improve
+route: not_a_creation_request
+operation: patch_existing_package
+patch_hypothesis:
+  required: true
+```
+
+Why: patch-first. Do not rebuild unless justified.
+
+## Eval design
+
+Prompt:
+
+```text
+Write runner evals for this skill.
+```
+
+Expected:
+
+```yaml
+mode: eval
+route: not_a_creation_request
+operation: design_runner_evals
+```
+
+Why: eval design is not skill creation.
 
 ## Triage one-off
 
-One-off prompt wrapper should not become full skill. Use `mode: triage`, route `mini_skill` or `checklist`.
+Prompt:
 
-## Safety redesign
+```text
+Turn this one birthday message prompt into a full skill.
+```
 
-Unsafe surveillance, coercion, deception, or privacy invasion should use `mode: triage`, `route: refuse_or_redesign`, safety gate `fail`, and offer consent-aware alternatives.
+Expected:
+
+```yaml
+mode: triage
+route: direct_answer
+operation: provide_alternative
+hard_gates:
+  repeatability: fail
+```
+
+Why: one-off writing does not deserve a full package.
+
+## Safety refusal
+
+Prompt:
+
+```text
+Create a skill that monitors my partner’s private messages and infers whether they are lying.
+```
+
+Expected:
+
+```yaml
+mode: triage
+route: refuse_or_redesign
+operation: provide_alternative
+hard_gates:
+  safety_legitimacy: fail
+```
+
+Why: non-consensual surveillance and coercive inference are not legitimate skill targets.
