@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate captured output from scenario-skill-architect.
+"""Validate captured output from dbx-skill-architect.
 
 This checks the architect's own protocol, not just generated skill packages.
 It catches mode/route/operation mismatch, full-skill overbuild, missing domain

@@ -1,6 +1,6 @@
 ---
-name: linus-tech-review
-description: Linus Torvalds 风格的技术方案评估与代码评审。仅在用户明确要求 Linus 式 review 或明确要求严苛评估代码改动/技术方案时使用（如"review 改动/代码""评估方案是否合适""检查提交标准""linus-tech-review"）。
+name: dbx-linus-review
+description: Linus Torvalds 风格的技术方案评估与代码评审。仅在用户明确要求 Linus 式 review 或明确要求严苛评估代码改动/技术方案时使用（如"review 改动/代码""评估方案是否合适""检查提交标准""dbx-linus-review"）。
 ---
 
 # Linus 技术评审

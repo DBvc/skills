@@ -1,5 +1,5 @@
 {
-  "skill_name": "scenario-skill-architect",
+  "skill_name": "dbx-skill-architect",
   "pass_threshold": 0.9,
   "evals": [
     {

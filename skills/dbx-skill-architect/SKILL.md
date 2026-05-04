@@ -1,5 +1,5 @@
 ---
-name: scenario-skill-architect
+name: dbx-skill-architect
 description: Converts recurring scenarios into rigorous agent skill packages through fail-closed gates, IR, mode/route/operation contracts, domain discovery, domain substance gates, failure-knowledge extraction, content-quality rubrics, runner evals, and artifact validation. Use for scenario-first skill creation, critique, patch-first improvement, eval design, triage, and domain-skill discovery. Do not use for one-off writing, generic summarization, unsafe surveillance, or direct tasks. 中文：从重复场景设计/评审 skill；领域型 skill 必须先挖出领域变量、踩坑知识、数据策略和专家质量标准。
 ---
 

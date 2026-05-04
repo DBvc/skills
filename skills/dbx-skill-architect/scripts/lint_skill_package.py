@@ -64,7 +64,7 @@ def lint(path: Path) -> dict[str, Any]:
     if "```yaml" not in body_lower and "```json" not in body_lower:
         warnings.append("No schema-like block found")
 
-    if name == "scenario-skill-architect":
+    if name == "dbx-skill-architect":
         for term in (
             "route:",
             "operation:",
@@ -77,10 +77,10 @@ def lint(path: Path) -> dict[str, Any]:
             "check_architect_output.py",
         ):
             if term not in body_lower:
-                errors.append(f"scenario-skill-architect missing required protocol term: {term}")
+                errors.append(f"dbx-skill-architect missing required protocol term: {term}")
         # Do not teach the model invented eval kinds inside the main skill body.
         if 'invented alias as a `kind`' in body_lower:
-            errors.append('scenario-skill-architect should list canonical kinds, not invented aliases')
+            errors.append('dbx-skill-architect should list canonical kinds, not invented aliases')
 
     eval_path = path / "evals" / "evals.json"
     if not eval_path.exists():

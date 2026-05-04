@@ -1,0 +1,3 @@
+interface:
+  display_name: "dbx-linus-review"
+  short_description: "Linus-style technical review"

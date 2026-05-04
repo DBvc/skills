@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Single source of truth for scenario-skill-architect eval schema."""
+"""Single source of truth for dbx-skill-architect eval schema."""
 from __future__ import annotations
 
 from typing import Any

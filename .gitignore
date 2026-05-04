@@ -13,3 +13,7 @@
 # Build artifacts
 dist/
 *.skill
+
+# Python
+__pycache__/
+*.py[cod]
