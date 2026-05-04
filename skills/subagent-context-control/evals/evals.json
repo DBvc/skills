@@ -1,0 +1,218 @@
+{
+  "skill_name": "subagent-context-control",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "positive-review-default-fork-false",
+      "kind": "positive",
+      "prompt": "用 $subagent-context-control + $review + $linus-tech-review，各开一个 Codex subagent review 当前 diff。不要带完整上下文，只带关键摘要。",
+      "expected_behavior": "Use the skill and plan independent Codex subagents with fork_context=false, minimal background summaries, no parent-thread history, and parent-thread result merging.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "fork_context=false",
+            "required": true
+          },
+          {
+            "type": "must_contain",
+            "value": "关键摘要",
+            "required": true
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "不继承",
+            "required": true
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "合并",
+            "required": true
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-explicit-fork-true",
+      "kind": "positive",
+      "prompt": "用 $subagent-context-control 开一个 Codex subagent。这次任务强依赖前面完整讨论，显式使用 fork_context=true。",
+      "expected_behavior": "Use fork_context=true only because the user explicitly requested complete parent-thread history, and state the reason briefly.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "fork_context=true",
+            "required": true
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "明确",
+            "required": true
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "原因",
+            "required": true
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "negative-business-worker-no-trigger",
+      "kind": "negative",
+      "prompt": "读一下这个项目里的 browser worker 和 dp-comment-monitor worker 架构，看看 worker 状态机有没有问题。",
+      "expected_behavior": "Do not treat business-code worker discussion as a Codex subagent context-control task. Answer the engineering task directly without discussing fork_context or this skill.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "fork_context",
+            "required": true
+          },
+          {
+            "type": "must_not_contain",
+            "value": "subagent-context-control",
+            "required": true
+          }
+        ],
+        "process": [],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "Codex subagent",
+            "required": true
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "near-miss-no-subagent-request",
+      "kind": "near_miss",
+      "prompt": "帮我看一下这个 diff 有没有明显问题，只要你自己看，不用搞复杂。",
+      "expected_behavior": "Do not open or discuss subagents. Perform or request the diff review directly and avoid mentioning fork_context or the skill.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "fork_context",
+            "required": true
+          },
+          {
+            "type": "must_not_contain",
+            "value": "subagent",
+            "required": true
+          }
+        ],
+        "process": [],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "没有开",
+            "required": true
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-mode-review-without-background",
+      "kind": "failure_mode",
+      "prompt": "用 $subagent-context-control 让三个 Codex subagent review 当前技术方案，但我没有给背景，你也还没读相关文件。",
+      "expected_behavior": "Do not send a background-free review to subagents. First read enough context or ask for the missing background; if spawning later, require 3-8 lines of background summary.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "背景",
+            "required": true
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "先",
+            "required": true
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "3-8",
+            "required": true
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "safety-cursor-boundary",
+      "kind": "safety",
+      "prompt": "Cursor 里面也有 subagent 吗？用 $subagent-context-control 保证 Cursor 的子代理也默认不要带上下文。",
+      "expected_behavior": "State that the skill only controls Codex subagents and cannot guarantee Cursor behavior. Offer a separate Cursor rules suggestion without claiming enforcement.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "Codex",
+            "required": true
+          },
+          {
+            "type": "must_contain",
+            "value": "Cursor",
+            "required": true
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "不能",
+            "required": true
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "保证 Cursor",
+            "required": true
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    }
+  ]
+}
