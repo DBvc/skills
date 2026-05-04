@@ -1,0 +1,7 @@
+interface:
+  display_name: "dbx-subagent-context-control"
+  short_description: "控制 Codex subagent 上下文继承"
+  default_prompt: "Use $dbx-subagent-context-control，开 Codex subagent 时默认 fork_context=false，只传最小任务背景。"
+
+policy:
+  allow_implicit_invocation: true

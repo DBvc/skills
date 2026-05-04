@@ -13,6 +13,7 @@ Personal Claude/Codex Skills repository for centralized management and version c
 | [dbx-linus-review](skills/dbx-linus-review/) | Linus Torvalds 风格技术方案评估 / Linus-style technical review |
 | [dbx-skill-architect](skills/dbx-skill-architect/) | 场景优先的 skill 创建、评审、改进与评测 / Scenario-first skill architecture, critique, improvement, and eval design |
 | [dbx-conversation-align](skills/dbx-conversation-align/) | 对话卡点诊断、措辞改写与边界沟通 / Diagnose stuck conversations, rewrite risky messages, and plan boundaries |
+| [dbx-subagent-context-control](skills/dbx-subagent-context-control/) | Codex subagent 上下文继承控制 / Control Codex subagent context inheritance |
 
 ## 使用方法 / Usage
 
@@ -40,6 +41,7 @@ ln -sf "$(pwd)/skills/dbx-work-commit-pr" ~/.codex/skills/
 ln -sf "$(pwd)/skills/dbx-linus-review" ~/.codex/skills/
 ln -sf "$(pwd)/skills/dbx-skill-architect" ~/.codex/skills/
 ln -sf "$(pwd)/skills/dbx-conversation-align" ~/.codex/skills/
+ln -sf "$(pwd)/skills/dbx-subagent-context-control" ~/.codex/skills/
 
 # 或链接到 Cursor skills 目录
 ln -sf "$(pwd)/skills/dbx-open-source-commit-pr" ~/.cursor/skills/
@@ -47,6 +49,7 @@ ln -sf "$(pwd)/skills/dbx-work-commit-pr" ~/.cursor/skills/
 ln -sf "$(pwd)/skills/dbx-linus-review" ~/.cursor/skills/
 ln -sf "$(pwd)/skills/dbx-skill-architect" ~/.cursor/skills/
 ln -sf "$(pwd)/skills/dbx-conversation-align" ~/.cursor/skills/
+ln -sf "$(pwd)/skills/dbx-subagent-context-control" ~/.cursor/skills/
 ```
 
 ## 创建新 Skill / Create New Skill
