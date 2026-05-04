@@ -1,3 +1,0 @@
-interface:
-  display_name: "dbx-pr-contract"
-  short_description: "Contract-style commit and PR writing"

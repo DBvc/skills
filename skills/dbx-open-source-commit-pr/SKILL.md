@@ -1,5 +1,5 @@
 ---
-name: dbx-open-source-pr
+name: dbx-open-source-commit-pr
 description: Generate English commit messages and PR descriptions for public or open-source repositories. Use when the user asks to write, rewrite, or review a commit message or PR body for staged changes, working tree diffs, a specific patch, or a recent commit. Base the output on the final diff and changed files, not on conversational history, abandoned approaches, or internal company process details.
 ---
 

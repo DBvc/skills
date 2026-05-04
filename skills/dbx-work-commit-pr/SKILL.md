@@ -1,10 +1,10 @@
 ---
-name: dbx-pr-contract
+name: dbx-work-commit-pr
 description: |
-  用中文生成 commit message（title + body）与 PR 描述，明确区分"长期证据/可追溯性"的 commit 视角和"帮助 reviewer 理解与评审"的 PR 视角。适用于用户请求"写 commit message/写 PR 描述/根据改动生成 commit+PR"，并需遵守 `M-xxx(type): title` 格式与合同式 PR 四块结构；仅以用户提供的最终 diff、指定 commit、staged changes 或 working tree changes 作为内容边界，忽略聊天中的讨论过程、失败尝试、被否决方案与临时调试；可基于最终代码差异推断风险与评审关注点，不足时再询问。
+  用中文生成工作场景的 commit message（title + body）与 PR 描述，明确区分"长期证据/可追溯性"的 commit 视角和"帮助 reviewer 理解与评审"的 PR 视角。适用于用户请求"写 commit message/写 PR 描述/根据改动生成 commit+PR"，并需遵守 `M-xxx(type): title` 格式与合同式 PR 四块结构；仅以用户提供的最终 diff、指定 commit、staged changes 或 working tree changes 作为内容边界，忽略聊天中的讨论过程、失败尝试、被否决方案与临时调试；可基于最终代码差异推断风险与评审关注点，不足时再询问。
 ---
 
-# Commit/PR Contract
+# Work Commit/PR Contract
 
 ## 目标
 - 生成中文的 commit title/body 与 PR 描述
