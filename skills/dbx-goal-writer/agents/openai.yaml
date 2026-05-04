@@ -1,0 +1,6 @@
+interface:
+  display_name: "dbx-goal-writer"
+  short_description: "Create, start, or audit Codex /goal contracts."
+  default_prompt: "$dbx-goal-writer direct: describe the coding goal you want to make precise"
+policy:
+  allow_implicit_invocation: true

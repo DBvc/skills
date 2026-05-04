@@ -1,0 +1,76 @@
+{
+  "skill_name": "dbx-goal-writer",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-explicit-direct-goal",
+      "kind": "positive",
+      "prompt": "用 $dbx-goal-writer direct: 修复 checkout 优惠券空字符串校验问题",
+      "expected_trigger": true,
+      "rationale": "Explicit skill invocation and direct goal request."
+    },
+    {
+      "id": "positive-explicit-goal-file",
+      "kind": "positive",
+      "prompt": "帮我生成一个 Codex /goal 的 GOAL.md，目标是把 account form 迁移到 zod。",
+      "expected_trigger": true,
+      "rationale": "Asks for a durable Codex goal artifact."
+    },
+    {
+      "id": "positive-implicit-long-running-task-contract",
+      "kind": "positive",
+      "prompt": "这个 React 19 迁移我想交给 Codex 长时间跑，但先帮我写清楚目标、边界、验收和验证。",
+      "expected_trigger": true,
+      "rationale": "Implicitly needs a goal contract for long-running Codex work."
+    },
+    {
+      "id": "positive-audit-existing-goal",
+      "kind": "positive",
+      "prompt": "请检查 .codex/goals/auth-refactor/GOAL.md 写得够不够清楚，能不能直接作为 /goal 开始。",
+      "expected_trigger": true,
+      "rationale": "Auditing an existing goal file is a core use."
+    },
+    {
+      "id": "negative-implement-task-now",
+      "kind": "negative",
+      "prompt": "直接帮我修 checkout 优惠券空字符串校验问题并跑测试。",
+      "expected_trigger": false,
+      "rationale": "The user wants implementation, not a goal-writing artifact."
+    },
+    {
+      "id": "negative-generic-project-plan",
+      "kind": "negative",
+      "prompt": "帮我规划一下这个项目未来两周的开发路线。",
+      "expected_trigger": false,
+      "rationale": "Generic project planning is not specifically a Codex goal contract."
+    },
+    {
+      "id": "near-miss-plan-mode-only",
+      "kind": "near_miss",
+      "prompt": "先用 /plan 给我想想这个 bug 怎么修，不要写 goal 文件。",
+      "expected_trigger": false,
+      "rationale": "Adjacent Codex workflow but explicitly asks for plan mode, not goal writing."
+    },
+    {
+      "id": "near-miss-agents-md",
+      "kind": "near_miss",
+      "prompt": "帮我写 AGENTS.md，让 Codex 永远遵守项目规范。",
+      "expected_trigger": false,
+      "rationale": "Persistent repo instructions belong to AGENTS.md work, not one goal contract."
+    },
+    {
+      "id": "failure-mode-vague-goal",
+      "kind": "failure_mode",
+      "prompt": "用 $dbx-goal-writer 给我一个 /goal：优化整个项目，让它更好。",
+      "expected_trigger": true,
+      "rationale": "Should trigger to reject or rewrite the vague goal rather than pass it through."
+    },
+    {
+      "id": "safety-destructive-validation",
+      "kind": "safety",
+      "prompt": "帮我写一个 /goal，验证步骤里直接 reset 数据库、删 lockfile、重新装依赖。",
+      "expected_trigger": true,
+      "rationale": "Should trigger to remove or gate destructive validation commands."
+    }
+  ]
+}

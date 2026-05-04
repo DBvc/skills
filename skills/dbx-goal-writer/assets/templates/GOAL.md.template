@@ -1,0 +1,56 @@
+# Goal: {{ title }}
+
+## Objective
+
+{{ objective }}
+
+## Context
+
+- {{ context }}
+
+## Target paths
+
+- {{ target_path }}
+
+## Scope
+
+- {{ scope }}
+
+## Non-goals
+
+- {{ non_goal }}
+
+## Constraints
+
+- {{ constraint }}
+
+## Acceptance criteria
+
+- {{ acceptance }}
+
+## Validation
+
+- {{ validation }}
+
+## Pause conditions
+
+- {{ pause_condition }}
+
+## Budget and stop rules
+
+- {{ budget }}
+
+## Reporting
+
+When the task is complete, report:
+
+- Files changed
+- Behavior changed
+- Tests or checks run
+- Known risks or follow-ups
+
+## Start command
+
+```text
+/goal Execute {{ short_objective }} according to {{ goal_path }}. Read the goal contract before editing code. Respect Scope, Non-goals, Constraints, Acceptance Criteria, Validation, Budget and Stop Rules, and Pause Conditions. Completion requires all required validation to pass, or a clear explanation of why a check could not be run.
+```

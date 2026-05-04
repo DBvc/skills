@@ -19,6 +19,7 @@ python3 scripts/skill_inventory.py --root . --format markdown
 | `dbx-conversation-align` | procedure + decision + safety | Diagnose stuck conversations, rewrite risky messages, and plan boundaries. | L5 | Boundary and trigger precision are more important than output volume. | Add explicit trigger evals and compact/standard/full output modes. |
 | `dbx-decision-framing` | decision + gate | Frame high-impact decisions with gates, trade-offs, assumptions, and validation moves. | L5 | Can over-trigger for ordinary analysis if description or gates are too eager. | Add trigger evals focused on direct-answer vs quick/full decision boundaries. |
 | `dbx-subagent-context-control` | coordination + context | Control subagent context inheritance, review independence, and synthesis boundaries. | L5 | Harness-specific assumptions may reduce portability. | Add compatibility notes and captured examples for supported agent environments. |
+| `dbx-goal-writer` | procedure + tool + knowledge | Create, start, and audit Codex goal contracts with scope, validation, pause, and budget rules. | L5 | Codex `/goal` is feature-gated and under development, so syntax and controls may drift. | Add artifact fixture tests for `create_goal_artifact.py` and output evals for real repository scenarios. |
 
 ## Maturity Levels
 

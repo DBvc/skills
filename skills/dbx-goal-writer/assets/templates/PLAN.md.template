@@ -1,0 +1,17 @@
+# Plan: {{ title }}
+
+## Milestones
+
+1. Discover current behavior and relevant code paths.
+2. Propose the smallest safe implementation approach.
+3. Implement in small, reviewable steps.
+4. Update or add regression coverage.
+5. Run validation.
+6. Summarize results and risks.
+
+## Working rules
+
+- Keep changes inside declared scope.
+- Prefer local, reversible edits.
+- Avoid broad rewrites unless explicitly authorized.
+- Update STATUS.md after meaningful milestones.

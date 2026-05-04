@@ -1,0 +1,21 @@
+# Acceptance: {{ title }}
+
+The goal is complete only when all required criteria are satisfied.
+
+## Functional acceptance
+
+- {{ acceptance }}
+
+## Code acceptance
+
+- The implementation is scoped and reviewable.
+- No unrelated files are changed.
+- Public API, exported types, and user-visible behavior remain compatible unless explicitly allowed.
+
+## Validation acceptance
+
+- Required commands in VALIDATION.md pass, or failures are explained with evidence and next steps.
+
+## Review evidence
+
+The final report includes summary, changed files, validation results, known risks, and follow-ups.

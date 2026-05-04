@@ -15,6 +15,7 @@ Personal Claude/Codex Skills repository for centralized management and version c
 | [`dbx-conversation-align`](skills/dbx-conversation-align/) | 对话卡点诊断、措辞改写与边界沟通。Diagnose stuck conversations, rewrite risky messages, and plan boundaries. |
 | [`dbx-decision-framing`](skills/dbx-decision-framing/) | 高影响真实决策的分支门禁、取舍分析与验证动作。Frame high-impact decisions with gates, trade-offs, and validation steps. |
 | [`dbx-subagent-context-control`](skills/dbx-subagent-context-control/) | Codex subagent 上下文继承控制。Control Codex subagent context inheritance. |
+| [`dbx-goal-writer`](skills/dbx-goal-writer/) | Codex goal 合同生成、启动与审计。Create, start, and audit Codex goal contracts. |
 
 ## 仓库治理 / Repository Governance
 

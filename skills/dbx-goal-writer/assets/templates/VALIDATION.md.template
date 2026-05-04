@@ -1,0 +1,16 @@
+# Validation: {{ title }}
+
+## Required commands
+
+```bash
+{{ validation_commands }}
+```
+
+## Manual checks
+
+- Confirm changed behavior matches acceptance criteria.
+- Confirm no unrelated UI, API, or build behavior changed.
+
+## If validation cannot run
+
+Explain which command could not run, why, what evidence was collected instead, and what the next human action should be.
