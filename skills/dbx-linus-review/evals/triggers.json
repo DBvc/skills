@@ -1,0 +1,62 @@
+{
+  "skill_name": "dbx-linus-review",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-explicit-linus-review",
+      "kind": "positive",
+      "prompt": "用 dbx-linus-review 严格评审这个 diff，别客气，重点看数据结构和破坏性。",
+      "expected_trigger": true,
+      "rationale": "Explicit skill invocation and strict technical review."
+    },
+    {
+      "id": "positive-pragmatic-architecture-critique",
+      "kind": "positive",
+      "prompt": "这个缓存重构方案是否值得做？请做一次严苛的实用主义技术评估。",
+      "expected_trigger": true,
+      "rationale": "Strict pragmatic review of a technical plan."
+    },
+    {
+      "id": "positive-code-change-good-enough",
+      "kind": "positive",
+      "prompt": "检查这个提交够不够合并，重点看有没有过度设计、兼容性和真实风险。",
+      "expected_trigger": true,
+      "rationale": "Merge readiness review with pragmatic criteria."
+    },
+    {
+      "id": "negative-explain-linus-history",
+      "kind": "negative",
+      "prompt": "介绍一下 Linus Torvalds 是谁。",
+      "expected_trigger": false,
+      "rationale": "A factual biography request, not technical review."
+    },
+    {
+      "id": "negative-implement-code",
+      "kind": "negative",
+      "prompt": "帮我实现这个 React hook，不需要 review。",
+      "expected_trigger": false,
+      "rationale": "Implementation request, not review."
+    },
+    {
+      "id": "near-miss-normal-explanation",
+      "kind": "near_miss",
+      "prompt": "解释一下这段代码是怎么工作的，语气正常一点。",
+      "expected_trigger": false,
+      "rationale": "Normal explanation should not trigger strict review."
+    },
+    {
+      "id": "near-miss-ordinary-code-review",
+      "kind": "near_miss",
+      "prompt": "帮我普通 review 一下这个 PR，主要看看有没有明显 bug，语气正常就行。",
+      "expected_trigger": false,
+      "rationale": "Ordinary review without strict, Linus-style, pragmatic, good-enough, or merge-risk framing should use the normal review path."
+    },
+    {
+      "id": "failure-mode-no-artifact",
+      "kind": "failure_mode",
+      "prompt": "帮我严厉评估一下我的方案，但我还没写方案，你先凭经验骂一下。",
+      "expected_trigger": true,
+      "rationale": "Should trigger to refuse vibe-based findings and ask for artifact/scope."
+    }
+  ]
+}
