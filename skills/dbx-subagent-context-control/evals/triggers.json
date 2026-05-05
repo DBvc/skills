@@ -1,0 +1,69 @@
+{
+  "skill_name": "dbx-subagent-context-control",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-explicit-codex-subagents",
+      "kind": "positive",
+      "prompt": "用 Codex subagent 并行 review 当前 diff，默认不要继承父线程上下文。",
+      "expected_trigger": true,
+      "rationale": "Explicit Codex subagent context-control request."
+    },
+    {
+      "id": "positive-fork-context-false",
+      "kind": "positive",
+      "prompt": "开两个独立 reviewer，fork_context=false，只给最小背景摘要。",
+      "expected_trigger": true,
+      "rationale": "Explicit fork_context=false and independent reviewer setup."
+    },
+    {
+      "id": "positive-fork-context-true",
+      "kind": "positive",
+      "prompt": "这次子任务强依赖主线程完整讨论，请用 fork_context=true 开一个 Codex subagent。",
+      "expected_trigger": true,
+      "rationale": "Explicit fork_context=true exception."
+    },
+    {
+      "id": "positive-implicit-independent-reviewers",
+      "kind": "positive",
+      "prompt": "找两个独立 reviewer 并行看当前 diff，一个偏架构风险，一个偏实现细节，最后你合并结论。",
+      "expected_trigger": true,
+      "rationale": "Implicit independent reviewer delegation should use this skill to control context and result synthesis."
+    },
+    {
+      "id": "negative-business-worker",
+      "kind": "negative",
+      "prompt": "帮我看业务代码里的 browser worker 状态机有没有问题。",
+      "expected_trigger": false,
+      "rationale": "Business worker is not Codex subagent delegation."
+    },
+    {
+      "id": "negative-user-says-no-subagent",
+      "kind": "negative",
+      "prompt": "帮我自己看一下这个 diff，不用搞复杂，不要开 subagent。",
+      "expected_trigger": false,
+      "rationale": "User explicitly disables subagents."
+    },
+    {
+      "id": "near-miss-other-tool-subagent",
+      "kind": "near_miss",
+      "prompt": "Cursor 里的子代理也默认不要继承上下文，可以保证吗？",
+      "expected_trigger": false,
+      "rationale": "Cursor subagent behavior is outside this Codex-only skill; answering the boundary directly should not require triggering the skill."
+    },
+    {
+      "id": "near-miss-human-review-process",
+      "kind": "near_miss",
+      "prompt": "帮我设计团队人工 code review 流程，什么时候需要两个同事独立 review？",
+      "expected_trigger": false,
+      "rationale": "Human team review process is adjacent to independent review language but is not a Codex subagent delegation request."
+    },
+    {
+      "id": "failure-mode-background-missing",
+      "kind": "failure_mode",
+      "prompt": "让三个 Codex subagent review 当前技术方案，但我没有给背景，你也没读相关文件。",
+      "expected_trigger": true,
+      "rationale": "Should trigger to require background summary before delegation."
+    }
+  ]
+}
