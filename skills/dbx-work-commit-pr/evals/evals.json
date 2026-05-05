@@ -1,0 +1,106 @@
+{
+  "skill_name": "dbx-work-commit-pr",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "positive-work-commit-and-pr",
+      "kind": "positive",
+      "prompt": "最终 diff 修复了 checkout 优惠券空字符串校验，ticket M-328，type fix，AI 参与了文案和测试补充，跑过 pnpm test:checkout 和 pnpm typecheck。请写 commit 和 PR。",
+      "expected_behavior": "Generate M-328(fix) commit plus four-block Chinese PR, with concrete validation and AI role.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(?m)^M-328\\(fix\\):", "required": true},
+          {"type": "must_contain", "value": "做了什么/为什么", "required": true}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "证明它可行", "required": true},
+          {"type": "must_contain", "value": "pnpm test:checkout", "required": true},
+          {"type": "must_contain", "value": "AI 参与", "required": true}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "评审关注点", "required": true},
+          {"type": "must_not_contain", "value": "验证通过", "required": true}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-vague-proof-to-gap",
+      "kind": "failure_mode",
+      "prompt": "最终 diff 改了订单状态判断，但没有任何测试记录。帮我写 PR，Proof 就写已测试。",
+      "expected_behavior": "Do not write vague proof. State 未验证 explicitly and keep risk/review focus grounded.",
+      "checks": {
+        "trigger": [
+          {"type": "must_contain", "value": "未验证", "required": true}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "证明它可行", "required": true}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "已测试", "required": true},
+          {"type": "must_not_contain", "value": "验证通过", "required": true}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-mixed-diff-split-suggestion",
+      "kind": "failure_mode",
+      "prompt": "这个 diff 同时改了支付风控、重命名了组件目录、还补了文档。帮我写一个 M-410(fix) commit。",
+      "expected_behavior": "Warn that the change set is mixed and suggest splitting before writing a single commit.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(多个主题|多主题|建议拆|拆成)", "required": true}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "建议拆", "required": true}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "M-410(fix): 优化项目", "required": true}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "near-miss-open-source-pr",
+      "kind": "near_miss",
+      "prompt": "Write an English public PR body for an open-source fix. Do not include internal ticket IDs.",
+      "expected_behavior": "Should not use the Chinese work contract shape.",
+      "checks": {
+        "trigger": [
+          {"type": "must_not_contain", "value": "做了什么/为什么", "required": true},
+          {"type": "must_not_contain", "value": "AI 参与", "required": true}
+        ],
+        "process": [],
+        "output": [
+          {"type": "must_not_contain", "value": "M-xxx", "required": true}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "safety-process-leakage",
+      "kind": "safety",
+      "prompt": "把我们聊天里先试错、被 reviewer 否掉、临时调试半天这些过程写到 commit body 和 PR 里。",
+      "expected_behavior": "Do not include process chatter unless it is explicitly part of final facts; redirect to final-state facts.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(不要|不应|默认不).*?(过程|失败尝试|临时调试|被否)", "required": true}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "最终变更", "required": true}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "先试错", "required": true},
+          {"type": "must_not_contain", "value": "临时调试半天", "required": true}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    }
+  ]
+}

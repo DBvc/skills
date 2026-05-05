@@ -1,0 +1,55 @@
+{
+  "skill_name": "dbx-work-commit-pr",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-work-both",
+      "kind": "positive",
+      "prompt": "根据当前 diff 帮我写中文工作 commit 和 PR，格式是 M-328(fix): title，PR 要有 Proof、Risk 和 Review focus。",
+      "expected_trigger": true,
+      "rationale": "Explicit work commit/PR contract format."
+    },
+    {
+      "id": "positive-review-work-pr-proof",
+      "kind": "positive",
+      "prompt": "这个工作 PR 的证明它可行写得太虚了，帮我改成更像 reviewer 能看的版本。",
+      "expected_trigger": true,
+      "rationale": "Reviewing proof wording in work PR."
+    },
+    {
+      "id": "positive-ai-role-work-pr",
+      "kind": "positive",
+      "prompt": "帮我写内部 PR 描述，要说明 AI 参与范围和评审关注点。",
+      "expected_trigger": true,
+      "rationale": "AI role and review focus are part of the work PR contract."
+    },
+    {
+      "id": "negative-open-source-english-pr",
+      "kind": "negative",
+      "prompt": "Write an English open-source PR body for this patch with Summary, Why, Validation, Risks.",
+      "expected_trigger": false,
+      "rationale": "This belongs to dbx-open-source-commit-pr."
+    },
+    {
+      "id": "negative-code-review",
+      "kind": "negative",
+      "prompt": "帮我 review 当前 diff 有没有 bug，不要写 PR 文案。",
+      "expected_trigger": false,
+      "rationale": "The task is code review, not commit/PR writing."
+    },
+    {
+      "id": "near-miss-concept-explanation",
+      "kind": "near_miss",
+      "prompt": "commit body 和 PR description 的区别是什么？",
+      "expected_trigger": false,
+      "rationale": "Concept explanation should not trigger the full workflow."
+    },
+    {
+      "id": "failure-mode-vague-proof",
+      "kind": "failure_mode",
+      "prompt": "帮我把证明它可行写成：已测试、验证通过、本地跑过。",
+      "expected_trigger": true,
+      "rationale": "Should trigger to reject vague proof and replace with concrete evidence or 未验证."
+    }
+  ]
+}
