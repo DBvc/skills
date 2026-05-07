@@ -1,219 +1,102 @@
-# DBX Skill Repository Architecture
+# DBX Skill Architecture
 
-## 1. Goal
+This repository is organized as a governed skill collection, not a loose folder of prompts.
 
-This repository should evolve from “a folder of good skills” into “a governed skill system”. The system should make it easy to answer four questions:
-
-1. What skills exist?
-2. When should each skill trigger?
-3. How mature and reliable is each skill?
-4. How do we safely improve a skill without making it worse?
-
-## 2. Repository Layers
+## 1. Layers
 
 ```text
-.
-├── README.md                       # user-facing overview and install commands
-├── DBX_SKILL_STYLE_GUIDE.md        # writing and governance rules
-├── DBX_SKILL_INDEX.md              # human-maintained skill map
-├── docs/                           # deeper process docs and templates
-├── scripts/                        # repo-level validators and inventory tools
-└── skills/                         # runtime skills consumed by agents
+DBvc/skills/
+  README.md                    human overview and install entry
+  DBX_SKILL_STYLE_GUIDE.md      applied authoring rules
+  DBX_SKILL_INDEX.md            collection inventory and maturity map
+  SECURITY.md                   safety policy
+  docs/                         governance and design docs
+  scripts/                      repo-level validators and inventories
+  skills/                       runtime skill packages
+  .github/workflows/            lightweight validation automation
 ```
 
-Keep runtime skill files focused on execution. Put governance, maturity models, and release rituals at the repository root or under `docs/`.
+## 2. Theory vs Applied Repository
 
-## 3. Runtime Skill Package Shape
+`agent-skill-control-theory` explains the general ASCT model.
 
-```text
-skills/<skill-name>/
-├── SKILL.md
-├── references/
-├── scripts/
-├── assets/
-├── evals/
-└── README.md
-```
+`DBvc/skills` applies that model to a concrete personal skill collection.
 
-Only `SKILL.md` is mandatory by the Agent Skills format, but production DBX skills should usually include evals and targeted references. Scripts are optional and should appear only when they reduce real execution risk.
+Runtime skills should not contain the whole theory. They should contain only task-relevant activation, workflow, evidence, validation, and boundary rules.
 
-## 4. Project-Level Files
+## 3. Control Surface Mapping
 
-### `README.md`
+| Control surface | Repository layer |
+| --- | --- |
+| Activation | skill `description`, trigger evals, routing matrix, generated inventory. |
+| Intent | runtime mode routing, hard gates, direct/clarification branches. |
+| State | evidence policy, compatibility docs, state contracts, project memory if added. |
+| Trajectory | workflow steps, stop conditions, approval gates, skill graph. |
+| Execution | skill scripts, repo scripts, validators, CI. |
+| Completion | proof fields, validation sections, output checkers, release checklist. |
+| Evolution | patch hypotheses, evals, index, changelogs, compatibility updates, deprecation. |
 
-Audience: users installing or browsing the repository.
+## 4. Placement Architecture
 
-Must contain:
+Do not default to `SKILL.md`.
 
-- short repository purpose;
-- full stable skill list;
-- install commands;
-- local validation commands;
-- links to governance docs.
+Use `docs/DBX_PLACEMENT_GUIDE.md` before adding a non-trivial control.
 
-### `DBX_SKILL_STYLE_GUIDE.md`
+Typical placements:
 
-Audience: humans and agents modifying the repository.
+- `SKILL.md`: runtime task controller;
+- `references/`: long conditional knowledge;
+- `scripts/`: deterministic or fragile operations;
+- `assets/`: templates and reusable material;
+- `evals/`: regression behavior;
+- root docs: repository governance;
+- commands/hooks: host-specific macro workflows or lifecycle guards;
+- repo memory: persistent state;
+- routing matrix: collection-level activation and conflict rules.
 
-Must contain:
+## 5. Collection Architecture
 
-- creation gates;
-- skill shape and failure-mode model;
-- directory rules;
-- eval requirements;
-- maturity model;
-- patch hypothesis rule;
-- output visibility policy.
+As the collection grows, DBX needs collection-level discipline:
 
-### `DBX_SKILL_INDEX.md`
+- routing matrix;
+- skill graph;
+- install scope;
+- script inventory;
+- compatibility matrix;
+- deprecation policy;
+- collection-level evals.
 
-Audience: maintainers.
+See `docs/DBX_COLLECTION_DESIGN.md`.
 
-Must contain:
+## 6. Skill Lifecycle
 
-- every skill name;
-- primary use;
-- shape;
-- maturity estimate;
-- main risk;
-- next best improvement.
+1. Capture scenario.
+2. Map base-agent failure modes.
+3. Decide placement.
+4. Pass creation gates.
+5. Choose skill shape and dominant failure modes.
+6. Create minimal `SKILL.md`.
+7. Add references, scripts, assets only where they reduce failure.
+8. Add trigger/output evals and, when needed, process/safety/regression evals.
+9. Update `DBX_SKILL_INDEX.md` and routing docs.
+10. Release with validation.
+11. Evolve through patch hypotheses.
 
-### `docs/`
+## 7. Current Architectural Bias
 
-Audience: deeper maintenance.
+DBX intentionally favors:
 
-Good candidates:
+- narrow, explicit runtime skills;
+- strong trigger boundaries;
+- proof and evidence contracts;
+- deterministic checks for mechanical tasks;
+- low ceremony for simple skills;
+- repository-level governance outside runtime skills.
 
-- eval guide;
-- release checklist;
-- templates;
-- architecture notes;
-- changelog or decision logs.
+DBX intentionally avoids:
 
-### `scripts/`
-
-Audience: agents and maintainers.
-
-Scripts should validate structure, generate inventory, and check eval schemas. They should not depend on private local paths.
-
-## 5. Skill Lifecycle
-
-```text
-idea -> scenario card -> gates -> skeleton -> references/scripts/evals -> validation -> release -> regression
-```
-
-### Stage 1: Scenario card
-
-Do this before writing a full skill.
-
-```text
-Scenario name:
-Primary user:
-Context of use:
-Real job to be done:
-Typical inputs:
-Expected outputs:
-Recurring failure modes:
-Evidence sources:
-Hard constraints:
-Non-goals:
-Success criteria:
-```
-
-### Stage 2: Gates
-
-Create a full skill only if repeatability, stable job, evaluability, and safety pass. Domain/content skills must also have real domain substance.
-
-### Stage 3: Skeleton
-
-Minimum:
-
-```text
-skills/<name>/SKILL.md
-evals/evals.json
-```
-
-Optional but often useful:
-
-```text
-references/rubric.md
-references/examples.md
-scripts/validate_*.py
-assets/template.*
-```
-
-### Stage 4: Validation
-
-Run:
-
-```bash
-python3 scripts/validate_skills.py --root .
-python3 scripts/run_trigger_evals.py --root . --validate-only
-```
-
-### Stage 5: Release
-
-Use `docs/DBX_RELEASE_CHECKLIST.md`.
-
-## 6. Three Kinds of Change
-
-### Repo architecture changes
-
-Examples:
-
-- root docs;
-- validation scripts;
-- inventory structure;
-- release checklist;
-- CI workflow.
-
-Rule: should not change runtime behavior of any skill unless explicitly intended.
-
-### Architect skill changes
-
-Examples:
-
-- improving `dbx-skill-architect` routing;
-- adding shape/failure-mode analysis;
-- adding patch hypothesis;
-- changing eval schema rules.
-
-Rule: integrate lightly into `SKILL.md`, put deep material in references.
-
-### Individual skill changes
-
-Examples:
-
-- adding git diff script to commit/PR skills;
-- adding trigger evals;
-- rewriting a review rubric;
-- adding examples.
-
-Rule: patch-first. Preserve the existing skill identity unless a rebuild is justified.
-
-## 7. Dependency Policy
-
-Repository-level scripts should default to Python standard library only.
-
-A script may use external dependencies only when:
-
-- the dependency is pinned or documented;
-- the script is isolated;
-- the value is clearly higher than maintenance cost;
-- failure messages tell the agent what to install or run.
-
-## 8. Replacement Package Policy
-
-When producing a downloadable update package, prefer an overlay format:
-
-```text
-package-root/
-├── APPLY.md
-├── README.md
-├── DBX_SKILL_STYLE_GUIDE.md
-├── DBX_SKILL_INDEX.md
-├── docs/
-└── scripts/
-```
-
-The package can be copied over the repository root. If it changes a runtime skill, include the exact `skills/<name>/...` paths and document the affected files in `APPLY.md`.
+- turning every idea into a skill;
+- automatically adding host commands or hooks;
+- installing large catalogs without scope review;
+- embedding ASCT theory into every `SKILL.md`;
+- optimizing for public marketplace polish before personal reliability.

@@ -1,13 +1,15 @@
 # DBX Skills
 
-个人 Claude/Codex Skills 仓库，用于集中管理和版本控制。稳定技能统一使用 `dbx-` 前缀，避免和外部安装的 skills 产生命名歧义。
+个人 Claude/Codex Skills 仓库，用于集中管理和版本控制。
+稳定技能统一使用 `dbx-` 前缀，避免和外部安装的 skills 产生命名歧义。
 
-Personal Claude/Codex Skills repository for centralized management and version control. Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party skills.
+Personal Claude/Codex Skills repository for centralized management and version control.
+Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party skills.
 
-## 稳定 Skills / Stable Skills
+## Stable Skills
 
 | Skill | 描述 / Description |
-|---|---|
+| --- | --- |
 | [`dbx-open-source-commit-pr`](skills/dbx-open-source-commit-pr/) | 面向开源仓库的英文 commit/PR 写作。Generate English commit messages and PR descriptions for open-source repositories. |
 | [`dbx-work-commit-pr`](skills/dbx-work-commit-pr/) | 工作场景的中文合同式 commit/PR 写作。Contract-style commit messages and PR descriptions for work contexts. |
 | [`dbx-linus-review`](skills/dbx-linus-review/) | 严格、实用主义、证据驱动的技术方案评估。Strict pragmatic technical review. |
@@ -17,95 +19,109 @@ Personal Claude/Codex Skills repository for centralized management and version c
 | [`dbx-subagent-context-control`](skills/dbx-subagent-context-control/) | Codex subagent 上下文继承控制。Control Codex subagent context inheritance. |
 | [`dbx-goal-writer`](skills/dbx-goal-writer/) | Codex goal 合同生成、启动与审计。Create, start, and audit Codex goal contracts. |
 
-## 仓库治理 / Repository Governance
+## Repository Governance
 
-本仓库不只是 prompt collection，而是一组可复用、可评估、可演进的 agent work units。新增或修改 skill 时，优先遵守这些仓库级文件：
+This repository is not just a prompt collection. It is a set of reusable, evaluable, and evolvable agent work units.
 
-- [`DBX_SKILL_STYLE_GUIDE.md`](DBX_SKILL_STYLE_GUIDE.md): skill 写作、架构、评估和发布规范。
-- [`DBX_SKILL_INDEX.md`](DBX_SKILL_INDEX.md): 当前 skill 的用途、边界、成熟度和下一步改造方向。
-- [`docs/DBX_SKILL_ARCHITECTURE.md`](docs/DBX_SKILL_ARCHITECTURE.md): 仓库架构、目录约定和演进路线。
-- [`docs/DBX_EVAL_GUIDE.md`](docs/DBX_EVAL_GUIDE.md): trigger eval、output eval、人工 rubric 和 baseline 对照方法。
-- [`docs/DBX_RELEASE_CHECKLIST.md`](docs/DBX_RELEASE_CHECKLIST.md): 新增、修改、发布 skill 前的检查清单。
+DBX applies [Agent Skill Control Theory](https://github.com/DBvc/agent-skill-control-theory) as a practical skill-collection discipline. ASCT itself lives in the theory repository; this repository keeps only applied rules, routing policy, validation practice, and runtime skills.
 
-## 本地检查 / Local Checks
+Start here when creating or changing a skill:
+
+- [`DBX_SKILL_STYLE_GUIDE.md`](DBX_SKILL_STYLE_GUIDE.md): operational writing, architecture, eval, placement, and release rules.
+- [`DBX_SKILL_INDEX.md`](DBX_SKILL_INDEX.md): current skills, boundaries, maturity, routing notes, and next improvements.
+- [`docs/DBX_ASCT_ADOPTION.md`](docs/DBX_ASCT_ADOPTION.md): how this repo applies ASCT 0.3 without duplicating the theory repo.
+- [`docs/DBX_PLACEMENT_GUIDE.md`](docs/DBX_PLACEMENT_GUIDE.md): how to decide whether a control belongs in a skill, script, reference, command, hook, repo memory, or collection routing.
+- [`docs/DBX_COLLECTION_DESIGN.md`](docs/DBX_COLLECTION_DESIGN.md): collection-level routing, skill graph, conflicts, installation scope, safety, and deprecation.
+- [`docs/DBX_ROUTING_MATRIX.md`](docs/DBX_ROUTING_MATRIX.md): conflict resolution and chaining rules across DBX skills.
+- [`docs/DBX_EVAL_GUIDE.md`](docs/DBX_EVAL_GUIDE.md): trigger, process, output, safety, regression, and collection-level evals.
+- [`docs/DBX_STATEFUL_SKILLS.md`](docs/DBX_STATEFUL_SKILLS.md): state contracts for project memory, bootstrap, workflow state, and interaction modes.
+- [`docs/DBX_HOST_ARTIFACTS.md`](docs/DBX_HOST_ARTIFACTS.md): commands, hooks, `AGENTS.md`, `CLAUDE.md`, `llms.txt`, status lines, planning files, and portability rules.
+- [`docs/DBX_CODEX_COMPATIBILITY.md`](docs/DBX_CODEX_COMPATIBILITY.md): Codex feature drift and compatibility policy.
+- [`docs/DBX_RELEASE_CHECKLIST.md`](docs/DBX_RELEASE_CHECKLIST.md): release checklist for adding or changing skills.
+- [`SECURITY.md`](SECURITY.md): script, dependency, state, and third-party skill safety policy.
+
+## Local Checks
 
 ```bash
-# 检查所有 skill 的 frontmatter、目录结构、eval JSON 和索引一致性
+# Check frontmatter, directory structure, eval JSON, and index consistency.
 python3 scripts/validate_skills.py --root .
 
-# 生成当前 skills 的 Markdown 或 JSON inventory
+# Generate Markdown or JSON inventory.
 python3 scripts/skill_inventory.py --root . --format markdown
 python3 scripts/skill_inventory.py --root . --format json
 
-# 校验每个 skill 的 evals/triggers.json 结构
+# Validate evals/triggers.json files.
 python3 scripts/run_trigger_evals.py --root . --validate-only
 ```
 
-严格模式可以在发布前使用：
+Strict mode is useful before release, but do not enable it in CI until warnings are intentionally cleaned up:
 
 ```bash
 python3 scripts/validate_skills.py --root . --fail-on-warnings
 ```
 
-## 使用方法 / Usage
+## Usage
 
-### 使用 add-skill 安装（推荐）/ Install with add-skill (Recommended)
+### Install with add-skill
 
 ```bash
-# 安装所有 skills / Install all skills
+# Install all skills.
 npx add-skill dbvc/skills
 
-# 安装特定 skill / Install specific skill
+# Install one skill.
 npx add-skill dbvc/skills --skill dbx-open-source-commit-pr
 
-# 查看可用 skills / List available skills
+# List available skills.
 npx add-skill dbvc/skills --list
 ```
 
-### 手动安装 / Manual Install
+### Manual install
 
 ```bash
-# 克隆后链接到 Codex skills 目录
 git clone https://github.com/dbvc/skills.git
 cd skills
 
+# Codex
 for skill in skills/dbx-*; do
   ln -sf "$(pwd)/$skill" ~/.codex/skills/
 done
 
-# 或链接到 Cursor skills 目录
+# Cursor
 for skill in skills/dbx-*; do
   ln -sf "$(pwd)/$skill" ~/.cursor/skills/
 done
 ```
 
-## 创建新 Skill / Create New Skill
+## Creating a New Skill
 
-不要直接复制一个现有 skill 开始堆规则。先写 scenario card，再决定是否值得做成 full skill。
+Do not copy an existing skill and start stacking rules. Start with the scenario and failure map:
 
 ```text
 Scenario name:
 Primary user:
-Real job to be done:
+Task distribution:
 Typical inputs:
 Expected outputs:
-Recurring failure modes:
+Base-agent failure modes:
 Evidence sources:
 Hard constraints:
 Non-goals:
 Success criteria:
+Cost and risk budget:
 ```
 
-最小要求：
+Minimum expectations:
 
-1. `skills/<skill-name>/SKILL.md` 必须包含合法 YAML frontmatter，且 `name` 和目录名一致。
-2. `description` 必须说明 “做什么” 和 “什么时候用”。
-3. full skill 必须有 `evals/evals.json` 或明确说明为什么暂时没有。
-4. 脆弱、重复、可机械验证的步骤优先放进 `scripts/`。
-5. 长知识、rubric、examples 和 gotchas 优先放进 `references/`，不要把主 `SKILL.md` 写成一团上下文年糕。
+1. `skills/<name>/SKILL.md` has valid YAML frontmatter and `name` matches the directory.
+2. `description` explains capability and trigger context, including near-miss boundaries.
+3. Full skills have `evals/triggers.json` and `evals/evals.json`, or a written reason for deferring one.
+4. Fragile, repeatable, mechanical, or checkable work belongs in `scripts/`, not prose.
+5. Long knowledge, rubrics, examples, and gotchas belong in `references/`, not in a swollen `SKILL.md`.
+6. Before adding a control, decide placement: skill, reference, script, asset, repo memory, command, hook, collection routing, or global instruction.
 
-## 相关资源 / Resources
+## Related Resources
 
+- [Agent Skill Control Theory](https://github.com/DBvc/agent-skill-control-theory)
 - [Agent Skills Specification](https://agentskills.io/specification)
 - [Agent Skills Evaluation Guide](https://agentskills.io/skill-creation/evaluating-skills)
 - [Agent Skills Scripts Guide](https://agentskills.io/skill-creation/using-scripts)

@@ -1,182 +1,188 @@
-# DBX Skill Evaluation Guide
+# DBX Eval Guide
 
-## 1. Evaluation Philosophy
+Evaluation in DBX asks whether a skill changed behavior in the intended direction, on the intended task distribution, without unacceptable cost or risk.
 
-A skill is not better because it is longer, stricter, or more elegant. It is better if it improves real task outcomes under realistic prompts without unacceptable trigger, token, time, safety, or maintenance cost.
+A skill is not better because it is longer, stricter, or more elegant. It is better only if it produces net reliability gain.
 
-Evaluate three things separately:
+## 1. SkillValue Frame
 
-1. Trigger behavior: should the skill activate?
-2. Process behavior: did the agent follow the right workflow after activation?
-3. Output behavior: is the result useful, grounded, safe, and handoff-ready?
-
-## 2. Trigger Evals
-
-File:
+Use this as a decision frame, not a precise formula:
 
 ```text
-skills/<skill-name>/evals/triggers.json
+SkillValue = expected_success_delta - added_cost - added_risk
 ```
 
-Recommended schema:
+Costs include:
+
+- context cost;
+- tool/runtime cost;
+- user-friction cost;
+- maintenance cost;
+- trigger conflict cost.
+
+Risks include:
+
+- safety risk;
+- privacy risk;
+- external side effects;
+- over-trigger;
+- stale state;
+- host compatibility drift.
+
+## 2. Five Eval Targets
+
+| Eval type | Question |
+| --- | --- |
+| Trigger | Does the skill activate when it should and stay silent when it should not? |
+| Process | After activation, does the agent follow the intended trajectory? |
+| Output | Is the final result useful, grounded, and correctly shaped? |
+| Safety | Does the skill respect safety, privacy, approvals, and external side effects? |
+| Regression | Do historical failures stay fixed after changes? |
+
+Most skills start with trigger and output evals. Mature or risky skills add process, safety, and regression evals.
+
+## 3. Baseline Comparison
+
+Compare against at least one baseline when changing a serious skill:
+
+- no skill;
+- old skill;
+- lighter version;
+- competing skill;
+- human checklist.
+
+Ask:
+
+```text
+What does this skill improve that the base agent did not already do reliably?
+```
+
+If the base agent already does the task reliably, the skill may add cost without value.
+
+## 4. Trigger Evals
+
+Trigger evals should include:
+
+- positive explicit cases;
+- positive implicit cases;
+- negative cases;
+- near-miss cases;
+- adjacent skill conflicts;
+- unsafe or out-of-scope cases.
+
+Near-miss cases are the most valuable. Obvious positives only prove the skill recognizes itself when shouted at.
+
+Example:
 
 ```json
 {
-  "skill_name": "dbx-example",
-  "version": "0.1",
-  "cases": [
+  "near_miss": [
     {
-      "id": "positive-explicit-1",
-      "kind": "positive",
-      "prompt": "帮我根据这个 diff 写 PR 描述",
-      "expected_trigger": true,
-      "rationale": "Explicit request for the skill's core task."
+      "prompt": "This button is broken in production. Find the root cause.",
+      "expected": "do_not_activate",
+      "prefer": "future frontend-debug skill, not code review"
     }
   ]
 }
 ```
 
-Allowed `kind` values:
+## 5. Process Evals
 
-```text
-positive
-negative
-near_miss
-failure_mode
-safety
-```
+Process evals check whether the agent followed the critical path.
 
-Minimum coverage:
+Examples:
 
-| Kind | Minimum | Purpose |
-|---|---:|---|
-| positive | 4 | explicit and implicit true triggers |
-| negative | 2 | unrelated tasks |
-| near_miss | 2 | adjacent tasks that should not trigger |
-| failure_mode | 1 | known ambiguity or tricky wording |
-| safety | 1 when relevant | unsafe or boundary-sensitive requests |
+| Skill type | Process checks |
+| --- | --- |
+| Debug | Establish pass/fail loop before patching; form falsifiable hypothesis; avoid patch stacking. |
+| Artifact | Use intended toolchain; validate output; inspect rendered output when needed. |
+| Release | Confirm target branch/version/artifacts/approval before external side effects. |
+| Decision | Separate facts, assumptions, judgments, unknowns; propose reversible tests. |
+| Conversation | Separate observation from motive inference; respect safety and consent boundaries. |
+| Skill architect | Route correctly; fail closed on hard gates; require concrete artifacts and evals. |
 
-## 3. Output Evals
+Process evals matter because the final answer can look good even when the path was unsafe.
 
-File:
+## 6. Output Evals
 
-```text
-skills/<skill-name>/evals/evals.json
-```
+Output evals check final quality:
 
-Recommended schema:
+- task correctness;
+- evidence quality;
+- unsupported claims;
+- severity or confidence calibration;
+- actionability;
+- adherence to output contract;
+- clarity;
+- known limitations;
+- validation/proof quality.
 
-```json
-{
-  "skill_name": "dbx-example",
-  "pass_threshold": 0.85,
-  "evals": [
-    {
-      "id": "positive-primary-1",
-      "kind": "positive",
-      "prompt": "Realistic user task here.",
-      "expected_behavior": "What a successful run should do.",
-      "checks": {
-        "trigger": [],
-        "process": [],
-        "output": [],
-        "safety": []
-      },
-      "pass_criteria": {
-        "all_required": true,
-        "min_score": 0.85
-      }
-    }
-  ]
-}
-```
+Avoid marker-only evals. A check that only looks for `## Summary` or `evals/evals.json` is structural, not substantive.
 
-Good checks are specific:
+Every serious output eval should include at least one behavior, evidence, safety, validation, or domain-specific assertion.
 
-- detects mixed diff and stops before drafting;
-- separates fact, assumption, and judgment;
-- includes exact validation evidence or says not run;
-- refuses unsafe surveillance request;
-- produces a handoff-ready review finding with evidence.
+## 7. Safety Evals
 
-Weak checks are vague or brittle:
+Safety evals should cover:
 
-- “output is good”;
-- “uses exactly this phrase” when wording is not essential;
-- only checks headings but not usefulness.
+- destructive commands;
+- credential exposure;
+- network access;
+- external write actions;
+- privacy-sensitive files;
+- unsafe user intent;
+- prompt injection in references or input files;
+- cross-skill activation risks;
+- stale state or unsafe memory writes.
 
-## 4. Baseline Comparison
+A safety eval does not merely ask whether the final answer is polite. It asks whether the skill’s control surfaces can produce unsafe behavior.
 
-When improving a skill, compare:
+## 8. Regression Evals
 
-```text
-old skill -> new skill
-```
-
-When creating a new skill, compare:
-
-```text
-no skill -> with skill
-```
+Every important historical failure should become a regression case.
 
 Record:
 
-```json
-{
-  "case_id": "positive-primary-1",
-  "old_score": 0.62,
-  "new_score": 0.84,
-  "token_delta": "+18%",
-  "time_delta": "+7%",
-  "regression": false,
-  "notes": "New version caught mixed scope and refused to fabricate validation."
-}
+```yaml
+regression_case:
+  original_prompt: ""
+  expected_activation: ""
+  expected_process_behavior: []
+  expected_output_properties: []
+  known_bad_behavior: ""
+  fix_introduced: ""
+  rollback_condition: ""
 ```
 
-A skill can spend more tokens if it buys real reliability. It should not spend more tokens just to sound more structured.
+## 9. Collection-Level Evals
 
-## 5. Human Rubric
+When adding, renaming, deprecating, or routing skills, evaluate the collection:
 
-Use human rubric for quality that cannot be fully scripted:
+- routing correctness;
+- conflict resolution;
+- cross-skill handoff;
+- install subset behavior;
+- host compatibility;
+- performance with many installed skills;
+- regression when a skill is added or removed.
 
-- code review usefulness;
-- decision quality;
-- relationship communication safety;
-- visual taste;
-- domain expertise;
-- writing voice.
-
-Rubric template:
+Example collection eval:
 
 ```text
-Score 5: Excellent. Specific criteria.
-Score 4: Good, minor gaps.
-Score 3: Acceptable but shallow or incomplete.
-Score 2: Misleading, brittle, or low value.
-Score 1: Unsafe, wrong, or unusable.
+Prompt: "Review this diff and write a PR description."
+Expected: dbx-linus-review first, then appropriate commit/PR skill.
+Known bad behavior: commit/PR skill writes polished text before review surfaces blockers.
 ```
 
-Require evidence for every score. A review without evidence is just a weather report from inside a cave.
+## 10. Evaluation Before Expansion
 
-## 6. Regression Set
+Before adding more instructions, ask:
 
-Every skill should preserve a small regression set:
-
-- one primary success case;
-- one common edge case;
-- one near-miss case;
-- one safety or boundary case when relevant;
-- one historical failure that motivated an improvement.
-
-## 7. Commands
-
-```bash
-# Validate trigger eval schema
-python3 scripts/run_trigger_evals.py --root . --validate-only
-
-# Emit a Markdown pack for manual or agent-based trigger testing
-python3 scripts/run_trigger_evals.py --root . --emit-agent-pack trigger-eval-pack.md
-
-# Validate skill structure and output eval JSON shape
-python3 scripts/validate_skills.py --root .
+```text
+Which eval is failing?
+Which failure mode does the new instruction target?
+What cost does it add?
+How will we know it helped?
 ```
+
+Do not expand `SKILL.md` merely because a rule sounds wise.
