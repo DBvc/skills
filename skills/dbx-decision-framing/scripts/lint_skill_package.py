@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import json
-import sys
+import argparse
 from pathlib import Path
 
 EXPECTED_NAME = "dbx-decision-framing"
@@ -106,7 +106,11 @@ def validate_evals(evals_path: Path, errors: list[str], warnings: list[str]) -> 
 
 
 def main() -> int:
-    root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.cwd()
+    parser = argparse.ArgumentParser(description="Validate the dbx-decision-framing skill package.")
+    parser.add_argument("root", nargs="?", default=".", help="Skill package root. Defaults to current directory.")
+    args = parser.parse_args()
+
+    root = Path(args.root)
     errors: list[str] = []
     warnings: list[str] = []
 

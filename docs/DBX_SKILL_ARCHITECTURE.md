@@ -13,8 +13,9 @@ DBvc/skills/
   docs/                         governance and design docs
   scripts/                      repo-level validators and inventories
   skills/                       runtime skill packages
-  .github/workflows/            lightweight validation automation
 ```
+
+Optional CI or host artifacts, such as `.github/workflows/`, belong at the repository layer when present.
 
 ## 2. Theory vs Applied Repository
 

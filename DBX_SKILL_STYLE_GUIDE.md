@@ -146,8 +146,9 @@ DBX_SKILL_INDEX.md
 SECURITY.md
 docs/
 scripts/
-.github/workflows/
 ```
+
+Optional CI or host artifacts such as `.github/workflows/`, commands, hooks, and repo instructions also live at repository level when present.
 
 Host-specific artifacts may exist when the host supports them:
 
