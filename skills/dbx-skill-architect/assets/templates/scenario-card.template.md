@@ -11,3 +11,6 @@ Evidence sources: {evidence_sources}
 Hard constraints: {hard_constraints}
 Non-goals: {non_goals}
 Success criteria: {success_criteria}
+Baseline behavior: {baseline_behavior}
+Expected success delta: {expected_success_delta}
+Added cost and risk: {added_cost_and_risk}

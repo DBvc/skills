@@ -91,7 +91,7 @@
       "id": "positive-create-full-tool-skill-with-scripts",
       "kind": "positive",
       "prompt": "Create a reusable skill for validating JSON configuration files in a repo. It should detect schema mistakes, show exact errors, and be usable by agents repeatedly.",
-      "expected_behavior": "Create a full tool/procedure package with scripts, CLI contract, fixtures or sample cases, exit-code semantics, and validation commands rather than prose-only instructions.",
+      "expected_behavior": "Create a full tool/procedure package with control-surface mapping, a SkillValue check, scripts, CLI contract, fixtures or sample cases, exit-code semantics, and validation commands rather than prose-only instructions.",
       "checks": {
         "trigger": [
           {
@@ -131,6 +131,24 @@
             "value": "unverified_output",
             "required": true,
             "quality": "behavior"
+          },
+          {
+            "type": "must_contain",
+            "value": "control_surface_map",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "must_contain",
+            "value": "skill_value_check",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(execution|completion).*?(script|validator|validation|proof)",
+            "required": true,
+            "quality": "behavior"
           }
         ],
         "output": [
@@ -164,7 +182,7 @@
       "id": "positive-improve-requires-specific-patch-hypothesis",
       "kind": "positive",
       "prompt": "Improve this existing writing skill because it over-triggers on generic editing requests and its evals only check section headings.",
-      "expected_behavior": "Use improve mode with a patch hypothesis that names target failures, target files, exact edit units, acceptance evals, expected cost, and rollback conditions.",
+      "expected_behavior": "Use improve mode with a patch hypothesis, control-surface delta, and SkillValue check that names target failures, target files, exact edit units, acceptance evals, expected cost, and rollback conditions.",
       "checks": {
         "trigger": [
           {
@@ -210,6 +228,24 @@
             "value": "(?is)(target_files|files changed|target file).*?(exact_edit_units|exact edit|replacement block).*?(acceptance_tests|acceptance eval)",
             "required": true,
             "quality": "specificity"
+          },
+          {
+            "type": "must_contain",
+            "value": "skill_value_check",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(control surface delta|control_surface_map|Activation|Intent|State|Trajectory|Execution|Completion|Evolution)",
+            "required": true,
+            "quality": "specificity"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(baseline|old skill|lighter checklist|doing nothing|rebuild).*?(cost|risk|net value|success)",
+            "required": true,
+            "quality": "validation"
           }
         ],
         "output": [
@@ -237,7 +273,7 @@
       "id": "positive-critique-shape-and-failure-modes",
       "kind": "positive",
       "prompt": "Review this skill package for architectural quality and tell me what to patch without rewriting it.",
-      "expected_behavior": "Critique the existing package, identify its dominant failure modes, and propose ordered patch hypotheses instead of generating a replacement package.",
+      "expected_behavior": "Critique the existing package, identify dominant failure modes, review control surfaces and SkillValue, and propose ordered patch hypotheses instead of generating a replacement package.",
       "checks": {
         "trigger": [
           {
@@ -283,6 +319,18 @@
             "value": "(?is)(wrong_trigger|context_bloat|domain_shallow|unverified_output|handoff_failure)",
             "required": true,
             "quality": "specificity"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(Activation|Intent|State|Trajectory|Execution|Completion|Evolution|control surface).*?(missing|weak|overbuilt|misplaced|strong)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(SkillValue|baseline|success gain|added cost|added risk|net value)",
+            "required": true,
+            "quality": "validation"
           }
         ],
         "output": [
@@ -316,7 +364,7 @@
       "id": "positive-eval-design-canonical-schema",
       "kind": "positive",
       "prompt": "Design runner evals for this skill. I want cases that catch shallow outputs, not just headings.",
-      "expected_behavior": "Produce runner-compatible evals using canonical kinds and include non-marker quality checks for behavior, artifacts, specificity, safety, or validation.",
+      "expected_behavior": "Produce runner-compatible evals using canonical kinds and include non-marker quality checks for behavior, artifacts, specificity, control-surface behavior, baseline/SkillValue comparison, safety, or validation.",
       "checks": {
         "trigger": [
           {
@@ -354,6 +402,18 @@
           {
             "type": "regex",
             "value": "(?is)(quality.*(behavior|artifact|specificity|domain|safety|validation)|non-marker|marker-only)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(control.?surface|Activation|Intent|State|Trajectory|Execution|Completion|Evolution)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(baseline|SkillValue|old skill|base agent|captured output)",
             "required": true,
             "quality": "validation"
           }

@@ -27,6 +27,30 @@ Do not use it to wrap one-off prompts into full skills.
 
 ## Key mechanisms
 
+### Control surfaces and SkillValue
+
+Create, critique, improve, and eval work should map the proposal to ASCT control surfaces and compare it against a baseline:
+
+```yaml
+control_surface_map:
+  activation: strong
+  intent: light
+  state: light
+  trajectory: strong
+  execution: none
+  completion: light
+  evolution: strong
+
+skill_value_check:
+  baseline: base_agent | old_skill | lighter_version | competing_skill | human_checklist
+  expected_success_delta: ""
+  added_cost: []
+  added_risk: []
+  net_value: positive | uncertain | negative
+```
+
+If a lighter checklist or direct answer has better net value, do not produce a full skill package.
+
 ### Skill shape
 
 The opening contract includes:

@@ -40,6 +40,48 @@ skill_shape:
     - add deterministic validation for repeated fragile steps
 ```
 
+## Control surface map
+
+```yaml
+control_surface_map:
+  activation:
+    strength: strong
+    mechanism: "frontmatter description, when-not-to-use boundary, trigger evals"
+  intent:
+    strength: light
+    mechanism: "required inputs, blocker handling, non-goals"
+  state:
+    strength: light
+    mechanism: "source material and evidence requirements"
+  trajectory:
+    strength: light
+    mechanism: "workflow and stop conditions"
+  execution:
+    strength: none
+    mechanism: "add scripts only if deterministic or fragile work appears"
+  completion:
+    strength: light
+    mechanism: "validation and risks/open questions"
+  evolution:
+    strength: light
+    mechanism: "trigger evals, output evals, patch hypotheses"
+```
+
+## SkillValue check
+
+```yaml
+skill_value_check:
+  baseline: base_agent
+  expected_success_delta: "Replace with the behavior this skill makes more reliable."
+  added_cost:
+    - context
+    - maintenance
+  added_risk:
+    - wrong trigger
+    - over-control
+  net_value: uncertain
+```
+
 ## Required inputs
 
 - user goal and expected output;

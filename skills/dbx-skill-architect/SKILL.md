@@ -30,6 +30,21 @@ skill_architect_decision:
     secondary_archetypes: []
     dominant_failure_modes: []
     implementation_implications: []
+  control_surface_map:
+    activation: none | light | strong | not_applicable
+    intent: none | light | strong | not_applicable
+    state: none | light | strong | not_applicable
+    trajectory: none | light | strong | not_applicable
+    execution: none | light | strong | not_applicable
+    completion: none | light | strong | not_applicable
+    evolution: none | light | strong | not_applicable
+    notes: []
+  skill_value_check:
+    baseline: base_agent | old_skill | lighter_version | competing_skill | human_checklist | none | not_applicable
+    expected_success_delta: ""
+    added_cost: []
+    added_risk: []
+    net_value: positive | uncertain | negative | not_applicable
   hard_gates:
     repeatability: pass | fail | unknown | not_applicable
     stable_job: pass | fail | unknown | not_applicable
@@ -61,6 +76,8 @@ skill_architect_decision:
     operation_compatible: true | false
     hard_gates_applied: true | false
     skill_shape_used_for_architecture: true | false | not_applicable
+    control_surface_map_used: true | false | not_applicable
+    skill_value_checked: true | false | not_applicable
     domain_substance_gates_applied: true | false | not_applicable
     patch_hypothesis_present_when_needed: true | false | not_applicable
     full_package_overbuilt: true | false
@@ -69,7 +86,7 @@ skill_architect_decision:
     patch_not_rebuild: true | false | not_applicable
 ```
 
-Use `not_applicable` rather than fake precision. If the task is only an explanatory question about skill methodology, answer directly and do not force the contract.
+Use `not_applicable` rather than fake precision. Keep `control_surface_map` qualitative: mark only the surfaces that the proposed skill actually needs to control. Keep `skill_value_check` comparative: if the baseline agent or a lighter checklist is enough, do not create a full package. If the task is only an explanatory question about skill methodology, answer directly and do not force the contract.
 
 ### 1. Choose mode by the actual work
 
@@ -182,6 +199,15 @@ A proposal is not an improvement until it names what failure it prevents, which 
 
 The main `SKILL.md` should guide runtime decisions. Do not paste long taxonomies, repository analysis, examples, or philosophy into the main file unless they change routing, gates, workflow, output, or eval behavior. Put extended material in `references/` and templates in `assets/`.
 
+### 7. Apply ASCT without theory dumping
+
+This skill is an ASCT practice tool, not an ASCT lecture. For create, critique, improve, and eval work, make the control logic explicit enough to guide architecture:
+
+- Use `control_surface_map` to decide which of Activation, Intent, State, Trajectory, Execution, Completion, and Evolution need real control.
+- Use `skill_value_check` to compare the proposed skill or patch against a baseline: base agent, old skill, lighter checklist, competing skill, or human checklist.
+- If expected success gain is unclear or cost/risk dominates, choose `needs_clarification`, `checklist`, `mini_skill`, or `direct_answer` instead of `full_skill`.
+- Do not add a reference, script, asset, eval, hook, command, or state file unless it maps to a failure mode and a control surface.
+
 ## Mode-specific contracts
 
 ### `create`
@@ -195,16 +221,19 @@ If route is `domain_discovery`, output:
 1. **Why domain discovery is required**: the missing domain gates.
 2. **Domain discovery questions**: 5 to 10 targeted questions.
 3. **Provisional domain content contract**: unknowns marked clearly.
-4. **Production-ready criteria**: exact information, examples, or eval cases needed.
+4. **Control-surface unknowns**: which control surfaces cannot be designed yet.
+5. **Production-ready criteria**: exact information, examples, or eval cases needed.
 
 If route is `full_skill`, output:
 
 1. **Scenario card**: user, context, stable job, inputs, outputs, failures, evidence, constraints, non-goals, success criteria.
 2. **Skill shape**: archetype, secondary archetypes, dominant failure modes, implementation implications.
-3. **Domain content contract** when relevant.
-4. **IR summary**: objects, states/results, events/actions, evidence, hypotheses, constraints, risky boundaries, output contract, reasoning mode.
-5. **Smallest viable architecture**: `SKILL.md`, `references/`, `scripts/`, `assets/`, `evals/`, and tool notes.
-6. **Copy-ready package**: provide actual fenced file blocks, not filename markers. Use this format for every generated file:
+3. **Control surface map**: which surfaces are controlled, how, and which are intentionally light or absent.
+4. **SkillValue check**: baseline, expected success gain, added cost, added risk, and why the net value is positive.
+5. **Domain content contract** when relevant.
+6. **IR summary**: objects, states/results, events/actions, evidence, hypotheses, constraints, risky boundaries, output contract, reasoning mode.
+7. **Smallest viable architecture**: `SKILL.md`, `references/`, `scripts/`, `assets/`, `evals`, and tool notes. Explain why each non-empty artifact belongs in that placement.
+8. **Copy-ready package**: provide actual fenced file blocks, not filename markers. Use this format for every generated file:
 
    ````markdown
    ### `skills/example-skill/SKILL.md`
@@ -223,7 +252,7 @@ If route is `full_skill`, output:
    ````
 
    Serious reusable packages must include real file bodies for `SKILL.md`, `evals/evals.json`, and `evals/triggers.json`. Do not write “will provide” or merely list the filenames.
-7. **Quality gates**: lint, eval schema, content rubric, artifact-body validation, unresolved blockers.
+9. **Quality gates**: lint, eval schema, content rubric, artifact-body validation, unresolved blockers.
 
 #### Shape-specific done criteria for full packages
 
@@ -242,12 +271,13 @@ Required sections:
 
 1. **Executive verdict**: score, biggest risks, highest-leverage fixes.
 2. **Trigger and boundary review**: over-trigger, under-trigger, near-miss, unsafe use.
-3. **Skill shape review**: whether structure matches archetype and dominant failure modes.
-4. **IR and workflow review**: type errors, missing steps, evidence/confidence policy.
-5. **Domain substance review** when relevant.
-6. **Output contract review**: schema strength, evidence handling, blockers, handoff quality.
-7. **Eval review**: trigger evals, runner evals, human rubric, baseline comparison.
-8. **Patch hypotheses**: ordered changes with expected benefit, cost, acceptance tests, and rollback conditions.
+3. **Control surface review**: missing, weak, overbuilt, or misplaced Activation, Intent, State, Trajectory, Execution, Completion, and Evolution controls.
+4. **Skill shape review**: whether structure matches archetype and dominant failure modes.
+5. **IR and workflow review**: type errors, missing steps, evidence/confidence policy.
+6. **Domain substance review** when relevant.
+7. **Output contract review**: schema strength, evidence handling, blockers, handoff quality.
+8. **Eval and SkillValue review**: trigger evals, runner evals, human rubric, baseline comparison, expected success gain, added cost, and added risk.
+9. **Patch hypotheses**: ordered changes with expected benefit, cost, acceptance tests, and rollback conditions.
 
 Do not output a replacement package unless the user explicitly asks for one.
 
@@ -258,11 +288,13 @@ Route must be `not_a_creation_request`.
 Required sections:
 
 1. **Patch intent**: target failures and expected improvements.
-2. **Patch hypothesis**: benefit, cost, acceptance tests, rollback conditions.
-3. **Concrete edits**: files changed and why.
-4. **Before/after snippets or replacement files**.
-5. **Validation**: lint/eval/content-quality status when tools are available; otherwise `not_run` plus manual checks.
-6. **Regression plan**: old behavior that must remain stable.
+2. **Control surface delta**: which control surfaces the patch strengthens, weakens, or leaves unchanged.
+3. **SkillValue check**: why patching has better net value than doing nothing, using a lighter checklist, or rebuilding.
+4. **Patch hypothesis**: benefit, cost, acceptance tests, rollback conditions.
+5. **Concrete edits**: files changed and why.
+6. **Before/after snippets or replacement files**.
+7. **Validation**: lint/eval/content-quality status when tools are available; otherwise `not_run` plus manual checks.
+8. **Regression plan**: old behavior that must remain stable.
 
 Concrete edits must name target file(s) and exact edit units, such as “replace frontmatter description”, “add two near-miss trigger cases”, “move long rubric from `SKILL.md` to `references/rubric.md`”, or “tighten `scripts/eval_schema.py` to reject marker-only checks”. Avoid vague edit units such as “improve docs”, “make evals better”, or “add quality gates”.
 
@@ -319,7 +351,7 @@ Minimal runner-compatible schema:
 }
 ```
 
-Minimum coverage: 2 positive, 1 negative, 1 near_miss, and 1 `failure_mode` or `safety`. Every eval case must include at least one required non-marker quality assertion with `quality` set to `behavior`, `artifact`, `specificity`, `domain`, `safety`, or `validation`. Section headings, file names, route markers, and directory names are structural checks only; they cannot be the only required check. Domain/content skills must test domain variables and hidden failure modes, not just section headings.
+Minimum coverage: 2 positive, 1 negative, 1 near_miss, and 1 `failure_mode` or `safety`. Every eval case must include at least one required non-marker quality assertion with `quality` set to `behavior`, `artifact`, `specificity`, `domain`, `safety`, or `validation`. Section headings, file names, route markers, and directory names are structural checks only; they cannot be the only required check. Domain/content skills must test domain variables and hidden failure modes, not just section headings. For serious creation or improvement evals, include at least one assertion about control-surface behavior or baseline/SkillValue comparison.
 
 ### `triage`
 
@@ -371,6 +403,10 @@ domain_content_contract:
 ```
 
 A domain contract is weak if required variables are generic, hidden failure modes are empty, data-source policy ignores unstable facts, or evals only test structure.
+
+### Control surfaces and SkillValue
+
+Use the `control_surface_map` and `skill_value_check` fields from the opening contract. Keep them short. Map only the controls that change architecture or routing, and compare against a real baseline before recommending a full package or non-trivial patch. If net value is uncertain, prefer a patch plan, eval plan, checklist, or clarification. For expanded examples, use `assets/templates/SKILL.template.md` and `references/eval-playbook.md`.
 
 ### IR
 
