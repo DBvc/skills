@@ -2,7 +2,7 @@
 
 A scenario-first skill architect for creating, critiquing, improving, evaluating, and triaging reusable agent skill packages.
 
-This package keeps the fail-closed and domain-substance model, then adds practical hardening against the most common skill-authoring failure: **format-valid but content-empty output**.
+This package keeps the fail-closed and domain-substance model, then aligns the runtime controller with ASCT 0.3 placement, host-artifact, collection, and SkillValue discipline without turning `SKILL.md` into a theory document.
 
 ## Best use
 
@@ -12,18 +12,10 @@ Use for:
 - critiquing an existing skill;
 - patch-first skill improvement;
 - designing runner-compatible evals;
-- triaging one-off, unsafe, or underspecified skill requests;
-- discovering domain substance before building domain/content skills.
+- triaging one-off, unsafe, misplaced, or underspecified skill requests;
+- deciding whether a control belongs in a skill, script, reference, hook, command, repo memory, or routing matrix.
 
 Do not use it to wrap one-off prompts into full skills.
-
-## Key routes
-
-- `full_skill`: hard gates pass, and domain gates pass when applicable.
-- `mini_skill`: lightweight reusable wrapper.
-- `needs_clarification`: hard gates are unknown and blocking questions are required.
-- `domain_discovery`: hard gates may pass, but domain substance is unknown or weak.
-- `checklist`, `direct_answer`, `refuse_or_redesign`: triage alternatives.
 
 ## Key mechanisms
 
@@ -40,7 +32,6 @@ control_surface_map:
   execution: none
   completion: light
   evolution: strong
-
 skill_value_check:
   baseline: base_agent | old_skill | lighter_version | competing_skill | human_checklist
   expected_success_delta: ""
@@ -49,44 +40,15 @@ skill_value_check:
   net_value: positive | uncertain | negative
 ```
 
-If a lighter checklist or direct answer has better net value, do not produce a full skill package.
+If a lighter checklist, script, reference, direct answer, or host artifact has better net value, do not produce a full skill package.
 
-### Skill shape
+### Placement before prose
 
-The opening contract includes:
-
-```yaml
-skill_shape:
-  archetype: procedure | tool | knowledge | taste | decision | research | coordination | meta | hybrid | unknown | not_applicable
-  secondary_archetypes: []
-  dominant_failure_modes: []
-  implementation_implications: []
-```
-
-Use this to decide whether the package needs scripts, references, assets, trigger evals, output evals, human rubrics, or safety gates.
-
-### Patch hypothesis
-
-Improvement mode requires concrete patch hypotheses:
-
-```yaml
-patch_hypothesis:
-  required: true
-  target_failures: []
-  target_files: []
-  exact_edit_units: []
-  proposed_change: ""
-  expected_benefit: ""
-  expected_cost: ""
-  acceptance_tests: []
-  rollback_conditions: []
-```
-
-This prevents decorative changes from being called improvements.
+The opening contract now includes a `placement_decision` block. This prevents ASCT 0.3 placement errors, especially writing scripts, hooks, global rules, or repo memory into `SKILL.md` prose.
 
 ### Artifact-body validation
 
-For `full_skill`, the checker now expects copy-ready fenced file blocks, not filename markers. It parses:
+For `full_skill`, the checker expects copy-ready fenced file blocks, not filename markers. It parses:
 
 - `SKILL.md` frontmatter and body;
 - `evals/evals.json` with schema and eval-quality checks;
@@ -102,44 +64,27 @@ From the skill root:
 python3 scripts/lint_skill_package.py .
 python3 scripts/run_skill_evals.py evals/evals.json --validate-only
 python3 scripts/check_architect_output.py captured-output.md
-python3 scripts/create_skill_skeleton.py --name example-skill --description "reviewing release plans" --output /tmp/dbx-skeleton-test
+python3 scripts/run_skill_evals.py evals/evals.json --outputs-dir /tmp/dbx-architect-outputs
+python3 scripts/run_skill_evals.py evals/evals.json --captured-output /tmp/one-output.md --case-id positive-create-full-tool-skill-with-scripts
+python3 scripts/create_skill_skeleton.py --name example-skill --description "Use when reviewing recurring release plans that need validation, handoff, and rollback criteria." --output /tmp/dbx-skeleton-test
 ```
 
-The eval runner validates schema and can score saved outputs. It does not call an LLM.
+The eval runner validates schema and can score saved outputs. Use `--outputs-dir` for per-case files named `<eval-id>.md` or `--captured-output` with an explicit `--case-id`. It refuses to score one captured output against every eval case. It does not call an LLM.
 
-## Files
+## Files touched by this update
 
 ```text
 SKILL.md
 README.md
 CHANGELOG.md
-references/
-  skill-archetypes.md
-  improvement-validation.md
-  scenario-to-skill.md
-  domain-discovery.md
-  domain-starter-packs.md
-  authoring-rubric.md
-  content-quality-rubric.md
-  eval-playbook.md
-  mode-golden-examples.md
-  worked-examples.md
-  zh-CN-guide.md
-scripts/
-  lint_skill_package.py
-  run_skill_evals.py
-  eval_schema.py
-  check_architect_output.py
-  create_skill_skeleton.py
-evals/
-  evals.json
-  triggers.json
-assets/templates/
-  SKILL.template.md
-  evals.template.json
-  triggers.template.json
-  scenario-card.template.md
-  patch-hypothesis.template.md
-agents/
-  openai.yaml
+references/asct-0.3-application.md
+references/placement-and-host-artifacts.md
+assets/templates/placement-decision.template.md
+evals/evals.json
+evals/triggers.json
+scripts/eval_schema.py
+scripts/run_skill_evals.py
+scripts/check_architect_output.py
+scripts/lint_skill_package.py
+scripts/create_skill_skeleton.py
 ```

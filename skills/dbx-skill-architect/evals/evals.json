@@ -91,7 +91,7 @@
       "id": "positive-create-full-tool-skill-with-scripts",
       "kind": "positive",
       "prompt": "Create a reusable skill for validating JSON configuration files in a repo. It should detect schema mistakes, show exact errors, and be usable by agents repeatedly.",
-      "expected_behavior": "Create a full tool/procedure package with control-surface mapping, a SkillValue check, scripts, CLI contract, fixtures or sample cases, exit-code semantics, and validation commands rather than prose-only instructions.",
+      "expected_behavior": "Create a full tool/procedure package with control-surface mapping, SkillValue check, placement decision, scripts, CLI contract, fixtures or sample cases, exit-code semantics, and validation commands rather than prose-only instructions.",
       "checks": {
         "trigger": [
           {
@@ -140,6 +140,12 @@
           },
           {
             "type": "must_contain",
+            "value": "placement_decision",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "must_contain",
             "value": "skill_value_check",
             "required": true,
             "quality": "structural"
@@ -179,10 +185,65 @@
       }
     },
     {
+      "id": "positive-placement-not-full-skill",
+      "kind": "positive",
+      "prompt": "I want a skill that runs a pre-commit hook to reject invalid JSON before every commit. Should this be a skill?",
+      "expected_behavior": "Use triage/checklist or create/needs_clarification rather than full_skill, because the main control is a hook or script plus optional documentation, not runtime prose.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_start_with",
+            "value": "```yaml",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "must_contain",
+            "value": "placement_decision",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(?is)(primary_controller: (hook|script)|hook|pre-commit|script).*?(not.*full skill|smaller controller|placement)",
+            "required": true,
+            "quality": "placement"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(SkillValue|baseline|cost|risk|lighter)",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "route: full_skill",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(script|hook|validation command|repo policy)",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
       "id": "positive-improve-requires-specific-patch-hypothesis",
       "kind": "positive",
       "prompt": "Improve this existing writing skill because it over-triggers on generic editing requests and its evals only check section headings.",
-      "expected_behavior": "Use improve mode with a patch hypothesis, control-surface delta, and SkillValue check that names target failures, target files, exact edit units, acceptance evals, expected cost, and rollback conditions.",
+      "expected_behavior": "Use improve mode with a patch hypothesis, control-surface delta, placement decision, and SkillValue check that names target failures, target files, exact edit units, acceptance evals, expected cost, and rollback conditions.",
       "checks": {
         "trigger": [
           {
@@ -231,15 +292,15 @@
           },
           {
             "type": "must_contain",
-            "value": "skill_value_check",
+            "value": "placement_decision",
             "required": true,
             "quality": "structural"
           },
           {
-            "type": "regex",
-            "value": "(?is)(control surface delta|control_surface_map|Activation|Intent|State|Trajectory|Execution|Completion|Evolution)",
+            "type": "must_contain",
+            "value": "skill_value_check",
             "required": true,
-            "quality": "specificity"
+            "quality": "structural"
           },
           {
             "type": "regex",
@@ -273,7 +334,7 @@
       "id": "positive-critique-shape-and-failure-modes",
       "kind": "positive",
       "prompt": "Review this skill package for architectural quality and tell me what to patch without rewriting it.",
-      "expected_behavior": "Critique the existing package, identify dominant failure modes, review control surfaces and SkillValue, and propose ordered patch hypotheses instead of generating a replacement package.",
+      "expected_behavior": "Critique the existing package, identify dominant failure modes, review control surfaces, placement, and SkillValue, and propose ordered patch hypotheses instead of generating a replacement package.",
       "checks": {
         "trigger": [
           {
@@ -310,6 +371,12 @@
           },
           {
             "type": "regex",
+            "value": "(?is)(placement|misplaced|script|reference|SKILL.md|hook|command)",
+            "required": true,
+            "quality": "placement"
+          },
+          {
+            "type": "regex",
             "value": "(?is)(highest-leverage|patch hypothesis|acceptance test|rollback)",
             "required": true,
             "quality": "behavior"
@@ -319,12 +386,6 @@
             "value": "(?is)(wrong_trigger|context_bloat|domain_shallow|unverified_output|handoff_failure)",
             "required": true,
             "quality": "specificity"
-          },
-          {
-            "type": "regex",
-            "value": "(?is)(Activation|Intent|State|Trajectory|Execution|Completion|Evolution|control surface).*?(missing|weak|overbuilt|misplaced|strong)",
-            "required": true,
-            "quality": "behavior"
           },
           {
             "type": "regex",
@@ -364,7 +425,7 @@
       "id": "positive-eval-design-canonical-schema",
       "kind": "positive",
       "prompt": "Design runner evals for this skill. I want cases that catch shallow outputs, not just headings.",
-      "expected_behavior": "Produce runner-compatible evals using canonical kinds and include non-marker quality checks for behavior, artifacts, specificity, control-surface behavior, baseline/SkillValue comparison, safety, or validation.",
+      "expected_behavior": "Produce runner-compatible evals using canonical kinds and include non-marker quality checks for behavior, artifacts, specificity, placement, control-surface behavior, baseline/SkillValue comparison, safety, or validation.",
       "checks": {
         "trigger": [
           {
@@ -401,7 +462,7 @@
           },
           {
             "type": "regex",
-            "value": "(?is)(quality.*(behavior|artifact|specificity|domain|safety|validation)|non-marker|marker-only)",
+            "value": "(?is)(quality.*(behavior|artifact|specificity|domain|safety|validation|placement)|non-marker|marker-only)",
             "required": true,
             "quality": "validation"
           },
@@ -440,10 +501,10 @@
       }
     },
     {
-      "id": "negative-one-off-birthday-message",
+      "id": "negative-one-off-birthday-skill-wrapper",
       "kind": "negative",
-      "prompt": "Help me write a birthday message for my friend today.",
-      "expected_behavior": "Do not create a full skill. Treat it as one-off and either answer directly or explain why it is not skill-worthy.",
+      "prompt": "I want to turn writing one-off birthday greetings into a reusable full skill package. Please create the skill.",
+      "expected_behavior": "Do not create a full skill for a low-value generic wrapper. Route to triage with a direct answer, checklist, or mini-skill alternative, and explain what would make the workflow skill-worthy.",
       "checks": {
         "trigger": [
           {
@@ -457,26 +518,32 @@
             "value": "mode: triage",
             "required": true,
             "quality": "structural"
+          },
+          {
+            "type": "regex",
+            "value": "route: (direct_answer|checklist|mini_skill)",
+            "required": true,
+            "quality": "structural"
           }
         ],
         "process": [
           {
             "type": "must_contain",
-            "value": "repeatability: fail",
+            "value": "repeatability",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(low value|generic|one-off|not skill-worthy|checklist|direct answer|mini-skill)",
             "required": true,
             "quality": "behavior"
           },
           {
             "type": "regex",
-            "value": "(?is)(one-off|not reusable|not a full skill|direct answer)",
+            "value": "(?is)(what would make it skill-worthy|skill-worthy|recurring workflow|stable job|evaluation criteria)",
             "required": true,
-            "quality": "behavior"
-          },
-          {
-            "type": "regex",
-            "value": "(?is)(what would make it skill-worthy|reusable routine|stable job)",
-            "required": false,
-            "quality": "behavior"
+            "quality": "specificity"
           }
         ],
         "output": [
@@ -494,7 +561,7 @@
           },
           {
             "type": "regex",
-            "value": "(?is)(birthday message|direct answer|not skill-worthy|one-off)",
+            "value": "(?is)(direct answer|checklist|mini-skill|birthday greeting|not.*full skill)",
             "required": true,
             "quality": "behavior"
           }

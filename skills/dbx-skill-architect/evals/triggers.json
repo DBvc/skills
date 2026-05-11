@@ -1,6 +1,5 @@
 {
   "skill_name": "dbx-skill-architect",
-  "version": "7.1",
   "cases": [
     {
       "id": "positive-explicit-create-skill",
@@ -12,7 +11,7 @@
     {
       "id": "positive-critique-existing-skill",
       "kind": "positive",
-      "prompt": "请评审这个 SKILL.md，重点看触发边界、eval 和输出契约。",
+      "prompt": "请评审这个 SKILL.md，重点看触发边界、eval、placement 和输出契约。",
       "expected_trigger": true,
       "rationale": "Critiquing an existing skill is a core use."
     },
@@ -29,6 +28,13 @@
       "prompt": "帮这个 skill 设计 positive、negative、near_miss 和 failure_mode evals。",
       "expected_trigger": true,
       "rationale": "Eval design is a core use."
+    },
+    {
+      "id": "positive-placement-decision",
+      "kind": "positive",
+      "prompt": "这个控制应该写进 SKILL.md，还是做成 hook、script 或 AGENTS.md？帮我判断。",
+      "expected_trigger": true,
+      "rationale": "Placement decision is part of skill architecture."
     },
     {
       "id": "negative-direct-code-review",
