@@ -33,6 +33,7 @@ Maturity values below reflect current repository artifacts. All current stable s
 | `dbx-work-commit-pr` | Internal/work commit and PR contract writing. | procedure + org workflow | L5 | Team-specific format and proof policy may not transfer. | Use for internal work artifacts; not for OSS PRs. | Parameterize team format in reference/config if reused outside current workflow. |
 | `dbx-linus-review` | Strict pragmatic technical review. | review/procedure | L5 | Persona naming can invite tone drift; findings must stay evidence-based. | Precedes commit/PR skills when review and PR writing are both requested. | Consider eventual alias/name migration to `dbx-strict-pragmatic-review`; keep compatibility. |
 | `dbx-skill-architect` | Create, critique, improve, evaluate, and triage skills. | meta | L5 | Context cost and over-engineering. | Precedes full skill creation; should not trigger for one-off prompt polish. | Add baseline comparison cases for old/no-skill skill-design outputs. |
+| `dbx-skill-portfolio-auditor` | Audit installed skill portfolios and recommend global, project, explicit-only, disable, uninstall, or merge placement. | meta + collection workflow + tool | L5 | Usage evidence and privacy boundaries can be weak if the user does not provide data. | Explicit/manual trigger for portfolio optimization; routes single-skill creation or critique to `dbx-skill-architect`. | Add baseline comparison with a real local portfolio audit after first use. |
 | `dbx-conversation-align` | Diagnose stuck conversations and rewrite risky messages. | communication + safety + decision-lite | L5 | Over-triggering simple rewrites; over-structuring user-visible output. | Competes with `dbx-decision-framing`; use for wording, boundaries, relationship risk. | Add compact-output policy and near-miss evals for simple proofreading. |
 | `dbx-decision-framing` | Frame high-impact real decisions. | decision | L5 | YAML/user-visible ceremony and over-analysis for low-stakes tasks. | Use before `dbx-goal-writer` when the task itself is not yet decided. | Hide boundary YAML by default for lightweight decisions; preserve internal self-check. |
 | `dbx-subagent-context-control` | Control Codex subagent context inheritance. | coordination + host-specific | L5 | Codex feature drift and host portability. | Supports `dbx-goal-writer` only when Codex subagents or `fork_context` are explicit. | Keep `docs/DBX_CODEX_COMPATIBILITY.md` current. |
@@ -47,6 +48,7 @@ Important relationships:
 - `dbx-linus-review` precedes commit/PR skills when review and PR writing are both requested.
 - `dbx-decision-framing` precedes `dbx-goal-writer` when the work is not yet decided.
 - `dbx-skill-architect` precedes new skill creation.
+- `dbx-skill-portfolio-auditor` handles installed-skill portfolio optimization; hand off single-skill design, critique, or improvement to `dbx-skill-architect`.
 - `dbx-subagent-context-control` supports Codex planning only for explicit subagent context questions.
 - `dbx-conversation-align` and `dbx-decision-framing` compete in some communication/choice scenarios; choose by primary intent.
 

@@ -1,0 +1,6 @@
+interface:
+  display_name: "DBX Skill Portfolio Auditor"
+  short_description: "Audit installed skills, context cost, scope, explicit-only policy, and cleanup plans."
+  default_prompt: "Audit my installed skills and recommend which should be global, project-scoped, explicit-only, disabled, or uninstalled."
+policy:
+  allow_implicit_invocation: false
