@@ -1,0 +1,76 @@
+{
+  "skill_name": "dbx-agent-handoff",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-next-ai-session",
+      "kind": "positive",
+      "prompt": "帮我写一个 handoff，让下个 Codex session 继续当前任务。",
+      "expected_trigger": true,
+      "rationale": "Explicit future AI session continuation."
+    },
+    {
+      "id": "positive-context-compaction",
+      "kind": "positive",
+      "prompt": "当前上下文太长了，compact 一下，给新的 agent 接手。",
+      "expected_trigger": true,
+      "rationale": "Explicit context compaction and agent transfer."
+    },
+    {
+      "id": "positive-restart-packet",
+      "kind": "positive",
+      "prompt": "Prepare a restart packet for another AI agent. It should continue from this thread without rediscovering the repo.",
+      "expected_trigger": true,
+      "rationale": "Explicit AI agent restart packet."
+    },
+    {
+      "id": "positive-resume-notes",
+      "kind": "positive",
+      "prompt": "把现在的进度写成 resume notes，下一轮 AI session 只看这个就能继续。",
+      "expected_trigger": true,
+      "rationale": "Explicit AI-session resume notes."
+    },
+    {
+      "id": "negative-human-work-handoff",
+      "kind": "negative",
+      "prompt": "帮我写一份离职交接文档，给接手这个项目的同事看。",
+      "expected_trigger": false,
+      "rationale": "Human workplace handoff, not AI-session continuation."
+    },
+    {
+      "id": "negative-project-transition-doc",
+      "kind": "negative",
+      "prompt": "给团队写一份项目交接文档，说明模块负责人、上线计划和风险。",
+      "expected_trigger": false,
+      "rationale": "Team project transition document."
+    },
+    {
+      "id": "negative-client-status-update",
+      "kind": "negative",
+      "prompt": "整理一个客户状态更新，方便销售同事 handoff 给客户成功团队。",
+      "expected_trigger": false,
+      "rationale": "Client/team status handoff, not AI session state."
+    },
+    {
+      "id": "negative-meeting-summary",
+      "kind": "negative",
+      "prompt": "把这次会议总结一下，给没参会的人看。",
+      "expected_trigger": false,
+      "rationale": "General meeting summary."
+    },
+    {
+      "id": "near-miss-ambiguous-handoff",
+      "kind": "failure_mode",
+      "prompt": "写个交接文档。",
+      "expected_trigger": true,
+      "rationale": "Ambiguous handoff should trigger only the clarification gate, not the handoff-writing workflow."
+    },
+    {
+      "id": "near-miss-plain-summary",
+      "kind": "near_miss",
+      "prompt": "总结一下我们刚才聊了什么。",
+      "expected_trigger": false,
+      "rationale": "General summary is not an AI-session restart packet."
+    }
+  ]
+}

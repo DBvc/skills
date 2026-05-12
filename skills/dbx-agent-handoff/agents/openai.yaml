@@ -1,0 +1,7 @@
+interface:
+  display_name: "dbx-agent-handoff"
+  short_description: "Create restart handoffs for future AI sessions"
+  default_prompt: "Use $dbx-agent-handoff to write a compact restart packet so another AI agent or future session can continue the current work."
+
+policy:
+  allow_implicit_invocation: true
