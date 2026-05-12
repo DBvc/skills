@@ -79,6 +79,7 @@ handoff_context:
   decisions: []
   blockers: []
   next_steps: []
+  start_prompt: ""
   suggested_skills: []
   excluded_sensitive_material: []
 ```
@@ -122,11 +123,20 @@ What the next AI session should accomplish. If the user supplied a focus, reflec
 2. Next action.
 3. Validation or stopping condition.
 
+## Start Prompt For Next Session
+
+```text
+Read this handoff file first: <absolute handoff path>
+Continue the task described in Focus. Follow Recommended Next Steps, respect Decisions Made, and do not redo completed work. If the file references artifacts, inspect only the ones needed for the next action.
+```
+
 ## Suggested Skills
 
 - Skill:
   Why:
 ```
+
+Replace `<absolute handoff path>` with the actual temporary file path.
 
 Omit `Suggested Skills` if no skill is relevant. Keep empty sections only when they communicate that nothing is known; otherwise remove empty bullets.
 
@@ -141,6 +151,7 @@ A good handoff lets the next AI agent answer these in under one minute:
 - Which files, commands, and artifacts matter?
 - What risks or blockers are known?
 - What is the next concrete action?
+- What prompt should the user paste into the next AI session?
 
 Revise before completion if the handoff cannot answer those questions.
 
@@ -150,6 +161,9 @@ Final response should be brief:
 
 ```text
 Handoff written: <absolute path>
+
+Start next session with:
+<copy-pasteable prompt that tells the next AI session to read the handoff path and continue>
 ```
 
 Add one short note only if there is a blocker, missing context, or important caveat for the user.

@@ -71,6 +71,13 @@
       "prompt": "总结一下我们刚才聊了什么。",
       "expected_trigger": false,
       "rationale": "General summary is not an AI-session restart packet."
+    },
+    {
+      "id": "near-miss-non-ai-session",
+      "kind": "near_miss",
+      "prompt": "帮我准备下周 coaching session 的交接 notes，给下一位教练看。",
+      "expected_trigger": false,
+      "rationale": "Session refers to a human coaching session, not an AI session or context compaction."
     }
   ]
 }

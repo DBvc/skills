@@ -6,7 +6,7 @@
       "id": "positive-ai-session-handoff",
       "kind": "positive",
       "prompt": "用 $dbx-agent-handoff 写一个 handoff，让下个 Codex session 继续当前仓库里的任务。",
-      "expected_behavior": "Create a temporary Markdown handoff for future AI-session continuation, include focus/current state/key context/decisions/blockers/next steps, avoid duplicating artifacts, avoid secrets, verify the file, and report the path.",
+      "expected_behavior": "Create a temporary Markdown handoff for future AI-session continuation, include focus/current state/key context/decisions/blockers/next steps/a start prompt for the next session, avoid duplicating artifacts, avoid secrets, verify the file, and report the path.",
       "checks": {
         "trigger": [
           {
@@ -69,7 +69,19 @@
           },
           {
             "type": "must_contain",
+            "value": "Start Prompt For Next Session",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "must_contain",
             "value": "Handoff written:",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "must_contain",
+            "value": "Start next session with:",
             "required": true,
             "quality": "artifact"
           },
@@ -78,6 +90,30 @@
             "value": "(?m)Handoff written: /.*handoff-.*\\.md",
             "required": true,
             "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)Start next session with:.*(read|阅读).*handoff-.*\\.md",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)Start next session with:.*Focus.*Recommended Next Steps.*Decisions Made",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)Start next session with:.*(do not redo|avoid redoing|不要重做|不要重复)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)Start next session with:.*(artifacts?|文件|资料).*?(needed|必要|需要)",
+            "required": true,
+            "quality": "behavior"
           }
         ],
         "safety": [
@@ -142,6 +178,24 @@
           {
             "type": "must_not_contain",
             "value": "mktemp",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Handoff written:",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Start Prompt For Next Session",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Start next session with:",
             "required": true,
             "quality": "behavior"
           }
@@ -211,6 +265,128 @@
           {
             "type": "must_not_contain",
             "value": "Suggested Skills",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Start Prompt For Next Session",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Start next session with:",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "negative-project-transition-no-ai-start-prompt",
+      "kind": "negative",
+      "prompt": "给团队写一份项目交接文档，说明模块负责人、上线计划和风险。",
+      "expected_behavior": "Handle this as a human-facing project transition document and do not emit AI-session handoff sections or next-session start prompts.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "AI session",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "AI agent",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "mktemp",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "Handoff written:",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Start Prompt For Next Session",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Start next session with:",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Suggested Skills",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "negative-meeting-summary-no-ai-start-prompt",
+      "kind": "negative",
+      "prompt": "把这次会议总结一下，给没参会的人看。",
+      "expected_behavior": "Handle this as a meeting summary and do not emit AI-session handoff sections or next-session start prompts.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "AI session",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "mktemp",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "Handoff written:",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Start Prompt For Next Session",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Start next session with:",
             "required": true,
             "quality": "behavior"
           }
@@ -303,6 +479,24 @@
           {
             "type": "must_not_contain",
             "value": "Suggested Skills",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Start Prompt For Next Session",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Start next session with:",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Handoff written:",
             "required": true,
             "quality": "behavior"
           }
