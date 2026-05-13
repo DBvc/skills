@@ -1,6 +1,6 @@
 ---
 name: dbx-skill-portfolio-auditor
-description: Audit installed or repository agent skills, especially Codex/DBX skill collections, to reduce context bloat and decide global vs repo/project vs explicit-only vs disable/uninstall. Use when the user asks which skills are useful, over-installed, narrow, stale, risky, redundant, or should move scopes. Do not use for creating a new task skill; use dbx-skill-architect for skill design.
+description: Manual-only skill. Use only when the user explicitly names `$dbx-skill-portfolio-auditor`, asks to manually trigger this skill, or launches it from the skill UI. Audits installed or repository agent skills to decide global vs repo/project vs explicit-only vs disable/uninstall. Do not implicitly invoke for generic skill audit, context-bloat, stale-skill, or cleanup requests; ask whether to run this skill instead. Do not use for creating a new task skill; use dbx-skill-architect for skill design.
 compatibility: Designed for Codex/OpenAI Agent Skills and DBX repositories. Scripts use Python 3 standard library only and do not access the network.
 ---
 
@@ -11,6 +11,8 @@ Audit a user's installed skill portfolio and recommend a safer, cheaper, more us
 This skill treats a skill collection as a portfolio of selectively loaded controllers. The job is not to praise or delete skills. The job is to decide which controller belongs globally, which belongs in a project, which should be explicit-only, which should be disabled for review, and which should be removed or merged.
 
 ## Use when
+
+This skill is explicit/manual-only. The following use cases apply only after the user explicitly names `$dbx-skill-portfolio-auditor`, asks to manually trigger this skill, or launches it from the skill UI.
 
 - The user has many installed skills and worries about context bloat, trigger collisions, stale skills, low-value installs, or unsafe third-party skills.
 - The user asks which skills should be global, repo/project scoped, explicit/manual-only, disabled, uninstalled, merged, or refactored.

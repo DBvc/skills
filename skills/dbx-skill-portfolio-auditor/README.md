@@ -1,6 +1,6 @@
 # dbx-skill-portfolio-auditor
 
-Audit installed or repository skills and recommend installation scope changes: global, repo/project, explicit-only, disabled pending review, uninstall/archive, or merge/refactor.
+Manual-only skill for auditing installed or repository skills and recommending installation scope changes: global, repo/project, explicit-only, disabled pending review, uninstall/archive, or merge/refactor.
 It also flags likely trigger overlap between skills by comparing descriptions and `evals/triggers.json` positive, negative, and near-miss prompts.
 
 This skill is intentionally configured as explicit-only for Codex through `agents/openai.yaml` because portfolio audits are infrequent, privacy-sensitive, and should not accidentally trigger during normal work.
