@@ -10,7 +10,7 @@
       "checks": {
         "trigger": [
           {"type": "must_contain", "value": "核心判断", "required": true, "quality": "structural"},
-          {"type": "regex", "value": "\\[S[0-3]\\]", "required": true, "quality": "behavior"}
+          {"type": "regex", "value": "\\[S[0-3]\\s+(blocker|high|medium|low)\\]", "required": true, "quality": "behavior"}
         ],
         "process": [
           {"type": "must_contain", "value": "Evidence", "required": true, "quality": "structural"},
@@ -19,7 +19,7 @@
           {"type": "must_contain", "value": "Confidence", "required": true, "quality": "structural"}
         ],
         "output": [
-          {"type": "regex", "value": "(权限|logout|多.*tab|cache|缓存)", "required": true, "quality": "specificity"},
+          {"type": "regex", "value": "(权限|logout|多.*tab|cache|缓存|session)", "required": true, "quality": "specificity"},
           {"type": "must_not_contain", "value": "你这个人", "required": true, "quality": "safety"}
         ],
         "safety": []
@@ -37,11 +37,30 @@
         ],
         "process": [
           {"type": "must_contain", "value": "数据", "required": true, "quality": "behavior"},
-          {"type": "regex", "value": "(复杂|过度|概念|四个)", "required": true, "quality": "specificity"}
+          {"type": "regex", "value": "(复杂|过度|概念|四个|Draft)", "required": true, "quality": "specificity"}
         ],
         "output": [
-          {"type": "must_contain", "value": "更简单", "required": true, "quality": "behavior"},
+          {"type": "regex", "value": "(更小|更简单|砍掉|删除|collapse)", "required": true, "quality": "behavior"},
           {"type": "must_not_contain", "value": "重写所有", "required": true, "quality": "behavior"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-plan-vs-diff-boundary",
+      "kind": "positive",
+      "prompt": "帮我判断这个状态模型方案对不对，不是看 diff。方案里把 API DTO、FormState、StoreUser 三份数据互相同步。",
+      "expected_behavior": "Use plan/model review mode, not diff target collection, and focus on duplicate source-of-truth and ownership.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(核心判断|模型|状态|数据)", "required": true, "quality": "behavior"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(DTO|FormState|StoreUser|三份|source of truth|数据源|所有权)", "required": true, "quality": "specificity"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(diff|staged|commit range)", "required": false, "quality": "structural"}
         ],
         "safety": []
       },
@@ -67,6 +86,24 @@
       "pass_criteria": {"all_required": true, "min_score": 0.85}
     },
     {
+      "id": "negative-biography-request-does-not-review",
+      "kind": "negative",
+      "prompt": "介绍一下 Linus Torvalds 是谁，不需要代码评审。",
+      "expected_behavior": "Answer as a factual biography/explanation request, without strict review sections, severity findings, or roleplay.",
+      "checks": {
+        "trigger": [
+          {"type": "must_not_contain", "value": "核心判断", "required": true, "quality": "behavior"}
+        ],
+        "process": [],
+        "output": [
+          {"type": "regex", "value": "^(?![\\s\\S]*\\[S[0-3]\\s+)", "required": true, "quality": "behavior"},
+          {"type": "must_not_contain", "value": "我是 Linus", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
       "id": "near-miss-normal-code-explanation",
       "kind": "near_miss",
       "prompt": "帮我解释这段 reducer 代码怎么运行，不要评审。",
@@ -74,29 +111,9 @@
       "checks": {
         "trigger": [
           {"type": "must_not_contain", "value": "核心判断", "required": true, "quality": "behavior"},
-          {"type": "must_not_contain", "value": "[S1]", "required": true, "quality": "behavior"}
+          {"type": "regex", "value": "^(?![\\s\\S]*\\[S[0-3]\\s+)", "required": true, "quality": "behavior"}
         ],
         "process": [],
-        "output": [
-          {"type": "must_not_contain", "value": "Linus", "required": true, "quality": "safety"}
-        ],
-        "safety": []
-      },
-      "pass_criteria": {"all_required": true, "min_score": 0.85}
-    },
-    {
-      "id": "negative-implementation-request-no-review",
-      "kind": "negative",
-      "prompt": "帮我直接实现这个 React hook，不要 review，也不要输出严重级别。",
-      "expected_behavior": "Do not use strict review output contract or severity findings; respond as an implementation request or ask for the needed files.",
-      "checks": {
-        "trigger": [
-          {"type": "must_not_contain", "value": "核心判断", "required": true, "quality": "behavior"},
-          {"type": "regex", "value": "^(?![\\s\\S]*\\[S[0-3]\\])", "required": true, "quality": "behavior"}
-        ],
-        "process": [
-          {"type": "regex", "value": "(实现|hook|文件|代码|需要)", "required": true, "quality": "specificity"}
-        ],
         "output": [
           {"type": "must_not_contain", "value": "Linus", "required": true, "quality": "safety"}
         ],

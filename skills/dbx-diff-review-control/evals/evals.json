@@ -1,0 +1,142 @@
+{
+  "skill_name": "dbx-diff-review-control",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "staged-subset-keeps-unstaged-out-of-scope",
+      "kind": "positive",
+      "prompt": "只 review staged diff。当前 staged 有 src/auth/cache.ts 和 src/auth/logout.ts；unstaged 有 src/debug.ts 和 src/dev.ts，是调试代码，不用管。staged diff 新增全局权限 cache，但 logout 没有清。",
+      "expected_behavior": "Select staged/index as the review target, explicitly mark unstaged files out of scope, and report the permission cache/logout risk with evidence, impact, fix, confidence, and verification status.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(Review 目标|review target|staged|已暂存)", "required": true, "quality": "collection"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(unstaged|未纳入|out.?of.?scope|调试)", "required": true, "quality": "collection"},
+          {"type": "regex", "value": "(权限|permission|logout|cache|缓存)", "required": true, "quality": "specificity"}
+        ],
+        "output": [
+          {"type": "regex", "value": "\\[S[0-3]\\s+(blocker|high|medium|low)\\]", "required": true, "quality": "behavior"},
+          {"type": "must_contain", "value": "Evidence", "required": true, "quality": "structural"},
+          {"type": "must_contain", "value": "Impact", "required": true, "quality": "structural"},
+          {"type": "must_contain", "value": "Fix", "required": true, "quality": "structural"},
+          {"type": "must_contain", "value": "Confidence", "required": true, "quality": "structural"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "selected-files-does-not-review-whole-repo",
+      "kind": "positive",
+      "prompt": "只看 src/store/user.ts 和 src/api/user.ts。其他改动不要 review。这两个文件把 API user DTO 直接塞进 store，并且组件里又复制了一份 editableUser。",
+      "expected_behavior": "Use selected files as target, distinguish context from reviewed target, and focus on duplicate source-of-truth/model risk rather than unrelated files.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(selected files|只看|Review 目标|src/store/user\\.ts|src/api/user\\.ts)", "required": true, "quality": "collection"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(source of truth|数据源|状态|store|DTO|模型)", "required": true, "quality": "domain"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "顺便 review 了整个 repo", "required": true, "quality": "collection"},
+          {"type": "must_contain", "value": "Evidence", "required": true, "quality": "structural"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "commit-range-out-of-scope-dirty-state",
+      "kind": "positive",
+      "prompt": "review HEAD~2..HEAD，不要看我工作区没提交的实验代码。这个 range 里修改了 exported type，把 id 从 string 改成 number。",
+      "expected_behavior": "Select commit range target, mark working tree dirty state out of scope, and evaluate exported type compatibility risk.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(HEAD~2\\.\\.HEAD|commit range|commit-range|Review 目标)", "required": true, "quality": "collection"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(exported type|导出类型|id|number|string|兼容|compat)", "required": true, "quality": "domain"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(out.?of.?scope|未纳入|工作区)", "required": true, "quality": "collection"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "no-major-findings-compact",
+      "kind": "positive",
+      "prompt": "review 这个小 diff：只改了一个 tooltip 文案，没有行为变化。",
+      "expected_behavior": "Keep output compact, say no blocking issue if appropriate, and avoid fake severe findings.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(未发现|没有.*阻止|no.*blocking|无.*问题)", "required": true, "quality": "behavior"}
+        ],
+        "process": [],
+        "output": [
+          {"type": "regex", "value": "^(?![\\s\\S]*\\[S[01])", "required": true, "quality": "behavior"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "near-miss-explicit-strict-plan-routes-to-linus",
+      "kind": "near_miss",
+      "prompt": "用 Linus 风格严厉评审这个架构方案是不是过度设计，不是看 diff。",
+      "expected_behavior": "Do not use the diff target-control report shape. Route to strict pragmatic plan critique instead.",
+      "checks": {
+        "trigger": [
+          {"type": "must_not_contain", "value": "Review 目标", "required": true, "quality": "behavior"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(方案|架构|过度设计|strict|dbx-linus-review|严厉)", "required": true, "quality": "specificity"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "staged/index diff", "required": true, "quality": "collection"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "negative-implementation-only-does-not-review",
+      "kind": "negative",
+      "prompt": "帮我直接实现这个 React hook，不要 review，也不要输出 review 结论。",
+      "expected_behavior": "Do not produce diff-review sections, severity findings, or review-target disclosure.",
+      "checks": {
+        "trigger": [
+          {"type": "must_not_contain", "value": "Review 目标", "required": true, "quality": "behavior"}
+        ],
+        "process": [],
+        "output": [
+          {"type": "regex", "value": "^(?![\\s\\S]*\\[S[0-3]\\s+)", "required": true, "quality": "behavior"},
+          {"type": "must_not_contain", "value": "主要发现", "required": true, "quality": "behavior"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "missing-artifact-asks-target",
+      "kind": "failure_mode",
+      "prompt": "帮我 review 一下代码，但我没有贴 diff，也没有说 branch、commit 或文件。",
+      "expected_behavior": "Ask for the smallest missing target instead of inventing findings.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(diff|PR|branch|commit|文件|staged|工作区|范围)", "required": true, "quality": "behavior"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(不能|无法|需要|请提供|要看)", "required": true, "quality": "safety"}
+        ],
+        "output": [
+          {"type": "regex", "value": "^(?![\\s\\S]*\\[S[0-3])", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    }
+  ]
+}

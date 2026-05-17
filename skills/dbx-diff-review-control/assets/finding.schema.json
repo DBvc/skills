@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DBX Diff Review Finding",
+  "type": "object",
+  "required": ["severity", "title", "evidence", "impact", "fix", "confidence", "verification"],
+  "properties": {
+    "severity": {
+      "type": "string",
+      "enum": ["S0 blocker", "S1 high", "S2 medium", "S3 low"]
+    },
+    "title": {"type": "string", "minLength": 1},
+    "location": {"type": "string"},
+    "evidence": {"type": "string", "minLength": 1},
+    "impact": {"type": "string", "minLength": 1},
+    "fix": {"type": "string", "minLength": 1},
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"]
+    },
+    "verification": {"type": "string", "minLength": 1},
+    "target_scope": {
+      "type": "string",
+      "enum": ["selected-target", "context", "out-of-scope-follow-up"]
+    }
+  },
+  "additionalProperties": true
+}

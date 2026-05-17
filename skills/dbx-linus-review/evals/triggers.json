@@ -1,6 +1,6 @@
 {
   "skill_name": "dbx-linus-review",
-  "version": "1.0",
+  "version": "1.1",
   "cases": [
     {
       "id": "positive-explicit-linus-review",
@@ -17,11 +17,39 @@
       "rationale": "Strict pragmatic review of a technical plan."
     },
     {
+      "id": "positive-overengineering-plan",
+      "kind": "positive",
+      "prompt": "这个 DraftManager/DraftBus/DraftStore/DraftReconciler 的方案是不是过度设计？请严厉一点。",
+      "expected_trigger": true,
+      "rationale": "Explicit over-engineering judgment for a plan."
+    },
+    {
+      "id": "positive-data-model-judgment",
+      "kind": "positive",
+      "prompt": "这个权限缓存模型对不对？我想要一个非常严格的判断。",
+      "expected_trigger": true,
+      "rationale": "Strict judgment of data model and ownership."
+    },
+    {
       "id": "positive-code-change-good-enough",
       "kind": "positive",
       "prompt": "检查这个提交够不够合并，重点看有没有过度设计、兼容性和真实风险。",
       "expected_trigger": true,
       "rationale": "Merge readiness review with pragmatic criteria."
+    },
+    {
+      "id": "near-miss-ordinary-diff-review",
+      "kind": "near_miss",
+      "prompt": "帮我普通 review 一下这个 PR，主要看看有没有明显 bug，语气正常就行。",
+      "expected_trigger": false,
+      "rationale": "Ordinary review should route to dbx-diff-review-control."
+    },
+    {
+      "id": "near-miss-selected-files-normal-review",
+      "kind": "near_miss",
+      "prompt": "只 review src/a.ts 和 src/b.ts 的 staged diff，正常语气就行。",
+      "expected_trigger": false,
+      "rationale": "File/staged target selection belongs to normal diff review unless strict critique is explicit."
     },
     {
       "id": "negative-explain-linus-history",
@@ -36,20 +64,6 @@
       "prompt": "帮我实现这个 React hook，不需要 review。",
       "expected_trigger": false,
       "rationale": "Implementation request, not review."
-    },
-    {
-      "id": "near-miss-normal-explanation",
-      "kind": "near_miss",
-      "prompt": "解释一下这段代码是怎么工作的，语气正常一点。",
-      "expected_trigger": false,
-      "rationale": "Normal explanation should not trigger strict review."
-    },
-    {
-      "id": "near-miss-ordinary-code-review",
-      "kind": "near_miss",
-      "prompt": "帮我普通 review 一下这个 PR，主要看看有没有明显 bug，语气正常就行。",
-      "expected_trigger": false,
-      "rationale": "Ordinary review without strict, Linus-style, pragmatic, good-enough, or merge-risk framing should use the normal review path."
     },
     {
       "id": "failure-mode-no-artifact",

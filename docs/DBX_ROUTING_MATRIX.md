@@ -18,7 +18,8 @@ Read it when:
 | --- | --- | --- |
 | Write open-source commit/PR artifact | `dbx-open-source-commit-pr` | `dbx-linus-review`, unless review is requested. |
 | Write work/internal commit/PR artifact | `dbx-work-commit-pr` | `dbx-open-source-commit-pr`. |
-| Find code/design/maintainability risk | `dbx-linus-review` | commit/PR skills. |
+| Review concrete PR/diff/staged/commit/file changes | `dbx-diff-review-control` | `dbx-linus-review`, unless strict pragmatic critique is explicit. |
+| Judge architecture plans, data models, over-engineering, or explicit strict technical risk | `dbx-linus-review` | `dbx-diff-review-control`, unless a concrete diff target must be selected first. |
 | Make a high-impact real decision | `dbx-decision-framing` | `dbx-linus-review`, unless code/design evidence dominates. |
 | Rewrite risky conversation or boundary message | `dbx-conversation-align` | `dbx-decision-framing`, unless real action trade-off dominates. |
 | Create/review/improve/evaluate a skill | `dbx-skill-architect` | other runtime skills. |
@@ -41,7 +42,9 @@ Current graph:
 
 | Relationship | Rule |
 | --- | --- |
-| `dbx-linus-review` precedes commit/PR skills | Review risk before writing the final PR artifact when both are requested. |
+| `dbx-diff-review-control` precedes commit/PR skills | Review concrete code-change risk before writing the final PR artifact when both are requested. |
+| `dbx-diff-review-control` precedes `dbx-linus-review` for ambiguous concrete diffs | Establish staged/unstaged/branch/commit/file scope before applying strict pragmatic judgment. |
+| `dbx-linus-review` handles explicit strict critique | Use it when the user asks for Linus-style, harsh, over-engineering, model, or merge/readiness judgment. |
 | `dbx-decision-framing` precedes `dbx-goal-writer` | Decide whether/what to do before writing a Codex execution contract. |
 | `dbx-skill-architect` precedes new skill creation | Triage repeatability, stable task distribution, evaluability, safety, and placement. |
 | `dbx-subagent-context-control` supports Codex planning | Use only when Codex subagents or `fork_context` are explicit. |
@@ -52,7 +55,7 @@ Current graph:
 
 ### Review before PR writing
 
-If the user asks to review code and write PR text, run technical review first, then write commit/PR artifacts from the final diff and accepted findings.
+If the user asks to review concrete code changes and write PR text, run `dbx-diff-review-control` first, then write commit/PR artifacts from the final diff and accepted findings. If the user explicitly asks for strict pragmatic judgment, establish the diff target first and then apply `dbx-linus-review`.
 
 ### Decision before execution contract
 
@@ -75,6 +78,8 @@ If the task depends on Codex `/goal`, subagents, or `fork_context`, consult `doc
 | Prompt | Route |
 | --- | --- |
 | “帮我解释一下这个 PR 改了什么。” | Direct answer, not commit/PR skill unless artifact requested. |
+| “帮我普通 review 一下 staged diff。” | `dbx-diff-review-control`. |
+| “用 Linus 风格严厉判断这个 staged diff 能不能合。” | `dbx-diff-review-control` to establish target, then `dbx-linus-review`. |
 | “帮我审一下这个架构方案有没有明显问题。” | `dbx-linus-review` if evidence/code/design risk dominates; `dbx-decision-framing` if trade-off dominates. |
 | “我该不该做这个项目？” | `dbx-decision-framing`. |
 | “帮我把这个 prompt 写好一点，只用一次。” | Direct answer, not `dbx-skill-architect` full skill. |

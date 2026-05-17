@@ -170,8 +170,8 @@ Example collection eval:
 
 ```text
 Prompt: "Review this diff and write a PR description."
-Expected: dbx-linus-review first, then appropriate commit/PR skill.
-Known bad behavior: commit/PR skill writes polished text before review surfaces blockers.
+Expected: dbx-diff-review-control first, then appropriate commit/PR skill.
+Known bad behavior: commit/PR skill writes polished text before review surfaces blockers or before the diff target is selected.
 ```
 
 ## 10. Evaluation Before Expansion

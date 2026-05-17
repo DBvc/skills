@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DBX Strict Pragmatic Review Contract",
+  "type": "object",
+  "required": ["target_type", "review_mode", "artifact_present", "scope_clear", "evidence_required"],
+  "properties": {
+    "target_type": {
+      "type": "string",
+      "enum": ["diff", "code", "architecture_plan", "implementation_proposal", "data_model", "merge_risk"]
+    },
+    "review_mode": {"type": "string", "const": "strict_pragmatic"},
+    "artifact_present": {"type": "boolean"},
+    "scope_clear": {"type": "boolean"},
+    "evidence_required": {"type": "boolean"},
+    "persona_roleplay_allowed": {"type": "boolean", "const": false}
+  },
+  "additionalProperties": true
+}
