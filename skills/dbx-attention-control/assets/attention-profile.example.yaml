@@ -1,0 +1,71 @@
+attention_profile:
+  version: "2026-05-19"
+  owner: "user"
+  language: "zh-CN"
+
+  active_horizons:
+    now:
+      - "example: current commitment or live decision"
+    cycle:
+      - "example: current month or quarter theme"
+    long_term:
+      - "example: durable capability, system, or life direction"
+
+  non_goals:
+    - "example: topics to avoid unless explicitly requested"
+
+  route_thresholds:
+    act_now:
+      requires_now_horizon: true
+      requires_bounded_action: true
+    build:
+      max_parallel_items: 3
+      requires_compound_value: high
+    test:
+      requires_stop_condition: true
+    track:
+      revisit_only_on_trigger: true
+    store:
+      requires_retrieval_intent: true
+    incubate:
+      requires_trigger: true
+    drop:
+      allow_when_low_value_or_duplicate: true
+    guard:
+      default_for_high_risk: true
+    clarify:
+      ask_only_if_context_changes_route: true
+
+  source_map:
+    trusted: []
+    weak: []
+    blocked: []
+
+  domain_weights: {}
+
+  risk_policy:
+    financial: "guard_by_default"
+    health: "guard_by_default"
+    legal: "guard_by_default"
+    privacy: "guard_by_default"
+    destructive_external_write: "approval_required"
+
+  tag_vocabulary:
+    canonical_routes:
+      - "attention/act-now"
+      - "attention/build"
+      - "attention/test"
+      - "attention/track"
+      - "attention/store"
+      - "attention/incubate"
+      - "attention/drop"
+      - "attention/guard"
+      - "attention/clarify"
+    user_domains: []
+
+  adapter_preferences: {}
+
+  review_cadence:
+    inbox: "weekly"
+    profile: "monthly_or_quarterly"
+    adapter_mapping: "when tags or queues become noisy"

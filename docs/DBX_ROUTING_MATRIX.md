@@ -21,6 +21,7 @@ Read it when:
 | Review concrete PR/diff/staged/commit/file changes | `dbx-diff-review-control` | `dbx-linus-review`, unless strict pragmatic critique is explicit. |
 | Judge architecture plans, data models, over-engineering, or explicit strict technical risk | `dbx-linus-review` | `dbx-diff-review-control`, unless a concrete diff target must be selected first. |
 | Make a high-impact real decision | `dbx-decision-framing` | `dbx-linus-review`, unless code/design evidence dominates. |
+| Route noisy mixed inbox, saved content, tasks, ideas, signals, courses, tools, notes, or external-system metadata | `dbx-attention-control` | Product-specific tagging/write workflows, unless adapter dry-run is requested. |
 | Rewrite risky conversation or boundary message | `dbx-conversation-align` | `dbx-decision-framing`, unless real action trade-off dominates. |
 | Create/review/improve/evaluate a skill | `dbx-skill-architect` | other runtime skills. |
 | Create/start/audit Codex `/goal` contract | `dbx-goal-writer` | `dbx-skill-architect`, unless designing a reusable skill. |
@@ -47,6 +48,7 @@ Current graph:
 | `dbx-linus-review` handles explicit strict critique | Use it when the user asks for Linus-style, harsh, over-engineering, model, or merge/readiness judgment. |
 | `dbx-decision-framing` precedes `dbx-goal-writer` | Decide whether/what to do before writing a Codex execution contract. |
 | `dbx-skill-architect` precedes new skill creation | Triage repeatability, stable task distribution, evaluability, safety, and placement. |
+| `dbx-attention-control` precedes product-specific tagging/write workflows | Route mixed inputs through the stable kernel before mapping to tags, task fields, note metadata, queues, or other external systems. |
 | `dbx-subagent-context-control` supports Codex planning | Use only when Codex subagents or `fork_context` are explicit. |
 | `dbx-conversation-align` competes with `dbx-decision-framing` | Communication wording vs real-world trade-off. |
 | `dbx-open-source-commit-pr` competes with `dbx-work-commit-pr` | Public OSS artifact vs internal work artifact. |
@@ -82,6 +84,7 @@ If the task depends on Codex `/goal`, subagents, or `fork_context`, consult `doc
 | “用 Linus 风格严厉判断这个 staged diff 能不能合。” | `dbx-diff-review-control` to establish target, then `dbx-linus-review`. |
 | “帮我审一下这个架构方案有没有明显问题。” | `dbx-linus-review` if evidence/code/design risk dominates; `dbx-decision-framing` if trade-off dominates. |
 | “我该不该做这个项目？” | `dbx-decision-framing`. |
+| “帮我把这一堆收藏、课程、想法和任务分一下：哪些做、哪些存、哪些丢。” | `dbx-attention-control`. |
 | “帮我把这个 prompt 写好一点，只用一次。” | Direct answer, not `dbx-skill-architect` full skill. |
 | “帮我写一句不那么冲的回复。” | `dbx-conversation-align` compact rewrite, not full diagnosis. |
 | “我要开一个持续极简回答模式。” | Interaction-mode/stateful pattern; no current DBX runtime skill. Need activation/deactivation/lifetime. |
@@ -99,3 +102,11 @@ Before adding a skill, update this matrix if the new skill:
 - deprecates or replaces another skill.
 
 If you cannot state how the new skill interacts with the existing collection, you are not done designing it.
+
+## dbx-attention-control routing note
+
+Use `dbx-attention-control` when the user asks to route a noisy collection of mixed inputs or build a reusable attention profile. It should run before any product-specific metadata/tagging/task/note write workflow.
+
+Do not route ordinary summaries, explanations, recommendations, coding tasks, or single-topic research through this skill unless the user explicitly asks for attention allocation.
+
+Product names and productivity methods are examples unless the user explicitly requests an adapter. Keep them in adapter manifests or profile config, not in the kernel.

@@ -1,0 +1,138 @@
+{
+  "kernel_version": "0.2.0",
+  "mode": "adapter_dry_run",
+  "scope": {
+    "item_count": 4,
+    "evidence_available": ["title", "source_hint", "user_comment"],
+    "profile_used": false,
+    "external_write_status": "dry_run_only"
+  },
+  "items": [
+    {
+      "id_or_locator": "item-001",
+      "title": "当前项目需要的架构迁移方案文章",
+      "route": "act_now",
+      "confidence": "medium",
+      "scores": {
+        "horizon_fit": "high",
+        "evidence_strength": "medium",
+        "transformability": "high",
+        "compound_value": "medium",
+        "attention_cost": "medium",
+        "risk_reversibility": "low"
+      },
+      "evidence_used": ["title says current project", "user comment says needed for architecture migration"],
+      "reason": "It supports a current project and can likely become an implementation or decision step.",
+      "next_step_or_no_action": "Read the relevant section and extract one migration decision or checklist item.",
+      "risk_notes": []
+    },
+    {
+      "id_or_locator": "item-002",
+      "title": "一门看起来不错但暂时用不到的课程",
+      "route": "incubate",
+      "confidence": "medium",
+      "scores": {
+        "horizon_fit": "low",
+        "evidence_strength": "low",
+        "transformability": "medium",
+        "compound_value": "unknown",
+        "attention_cost": "high",
+        "risk_reversibility": "low"
+      },
+      "evidence_used": ["title says course", "user comment says not currently needed"],
+      "reason": "Course-scale attention cost is high and there is no current trigger.",
+      "next_step_or_no_action": "Incubate until a related project starts or review next monthly planning cycle.",
+      "risk_notes": ["time-sink risk"]
+    },
+    {
+      "id_or_locator": "item-003",
+      "title": "某股票明天必涨",
+      "route": "guard",
+      "confidence": "high",
+      "scores": {
+        "horizon_fit": "unknown",
+        "evidence_strength": "low",
+        "transformability": "low",
+        "compound_value": "low",
+        "attention_cost": "medium",
+        "risk_reversibility": "high"
+      },
+      "evidence_used": ["title contains guaranteed short-term market claim"],
+      "reason": "It is a high-risk market claim with weak evidence and should not become a trade instruction.",
+      "next_step_or_no_action": "Do not act on it directly. At most convert it into a bounded research question about source credibility and long-term thesis fit.",
+      "risk_notes": ["financial risk", "low credibility", "unsafe certainty"]
+    },
+    {
+      "id_or_locator": "item-004",
+      "title": "重复出现的新工具趋势",
+      "route": "track",
+      "confidence": "medium",
+      "scores": {
+        "horizon_fit": "medium",
+        "evidence_strength": "medium",
+        "transformability": "medium",
+        "compound_value": "medium",
+        "attention_cost": "medium",
+        "risk_reversibility": "low"
+      },
+      "evidence_used": ["title says repeated trend"],
+      "reason": "It may become relevant if the signal repeats or ties to a current project, but does not yet deserve focused attention.",
+      "next_step_or_no_action": "Track for recurrence; upgrade to test only after two independent high-quality sources or a project need appears.",
+      "risk_notes": ["FOMO risk"]
+    }
+  ],
+  "adapter_mutation_plan": [
+    {
+      "target_system": "example-external-system",
+      "item_id_or_locator": "item-001",
+      "operation": "add_metadata",
+      "field": "tag",
+      "old_value_if_known": "",
+      "new_value": "attention/act-now",
+      "reason": "Mapped from act_now route.",
+      "rollback_note": "Remove attention/act-now tag.",
+      "confidence": "medium"
+    },
+    {
+      "target_system": "example-external-system",
+      "item_id_or_locator": "item-002",
+      "operation": "add_metadata",
+      "field": "tag",
+      "old_value_if_known": "",
+      "new_value": "attention/incubate",
+      "reason": "Mapped from incubate route.",
+      "rollback_note": "Remove attention/incubate tag.",
+      "confidence": "medium"
+    },
+    {
+      "target_system": "example-external-system",
+      "item_id_or_locator": "item-003",
+      "operation": "add_metadata",
+      "field": "tag",
+      "old_value_if_known": "",
+      "new_value": "attention/guard",
+      "reason": "Mapped from guard route.",
+      "rollback_note": "Remove attention/guard tag.",
+      "confidence": "high"
+    },
+    {
+      "target_system": "example-external-system",
+      "item_id_or_locator": "item-004",
+      "operation": "add_metadata",
+      "field": "tag",
+      "old_value_if_known": "",
+      "new_value": "attention/track",
+      "reason": "Mapped from track route.",
+      "rollback_note": "Remove attention/track tag.",
+      "confidence": "medium"
+    }
+  ],
+  "profile_update_candidates": [],
+  "completion_proof": {
+    "processed_items": 4,
+    "profile_used": false,
+    "external_write_happened": false,
+    "uncertainties": ["No full article bodies were available.", "No user-specific profile was used."],
+    "validation": "Validated with validate_attention_output.py --require-dry-run."
+  }
+}

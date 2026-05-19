@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["adapter_manifest"],
+  "properties": {
+    "adapter_manifest": {
+      "type": "object",
+      "required": ["system_name", "system_type", "read_fields", "stable_locator_fields", "supported_mutations", "forbidden_mutations", "route_mapping", "dry_run_default", "approval_required"],
+      "properties": {
+        "system_name": {"type": "string"},
+        "system_type": {
+          "type": "string",
+          "enum": ["bookmark", "note", "task", "calendar", "document", "issue_tracker", "feed", "custom"]
+        },
+        "read_fields": {"type": "array", "items": {"type": "string"}},
+        "stable_locator_fields": {"type": "array", "items": {"type": "string"}},
+        "supported_mutations": {"type": "array", "items": {"type": "string"}},
+        "forbidden_mutations": {"type": "array", "items": {"type": "string"}},
+        "route_mapping": {"type": "object"},
+        "idempotency_policy": {"type": "string"},
+        "rollback_policy": {"type": "string"},
+        "dry_run_default": {"type": "boolean"},
+        "approval_required": {"type": "boolean"}
+      }
+    }
+  }
+}

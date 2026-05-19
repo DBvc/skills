@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["kernel_version", "mode", "scope", "items", "completion_proof"],
+  "properties": {
+    "kernel_version": {"type": "string"},
+    "mode": {
+      "type": "string",
+      "enum": ["profile_bootstrap", "item_routing", "adapter_dry_run", "review_and_calibrate"]
+    },
+    "scope": {
+      "type": "object",
+      "required": ["item_count", "evidence_available", "profile_used", "external_write_status"],
+      "properties": {
+        "item_count": {"type": "integer", "minimum": 0},
+        "evidence_available": {"type": "array", "items": {"type": "string"}},
+        "profile_used": {"type": "boolean"},
+        "external_write_status": {
+          "type": "string",
+          "enum": ["none", "dry_run_only", "approved_write_requested", "completed_with_tool_evidence"]
+        }
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id_or_locator", "title", "route", "confidence", "evidence_used", "reason", "next_step_or_no_action", "risk_notes"],
+        "properties": {
+          "id_or_locator": {"type": "string"},
+          "title": {"type": "string"},
+          "route": {
+            "type": "string",
+            "enum": ["act_now", "build", "test", "track", "store", "incubate", "drop", "guard", "clarify"]
+          },
+          "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+          "scores": {
+            "type": "object",
+            "properties": {
+              "horizon_fit": {"type": "string"},
+              "evidence_strength": {"type": "string"},
+              "transformability": {"type": "string"},
+              "compound_value": {"type": "string"},
+              "attention_cost": {"type": "string"},
+              "risk_reversibility": {"type": "string"}
+            }
+          },
+          "evidence_used": {"type": "array", "items": {"type": "string"}},
+          "reason": {"type": "string"},
+          "next_step_or_no_action": {"type": "string"},
+          "risk_notes": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "adapter_mutation_plan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["target_system", "item_id_or_locator", "operation", "field", "new_value", "reason", "rollback_note", "confidence"],
+        "properties": {
+          "target_system": {"type": "string"},
+          "item_id_or_locator": {"type": "string"},
+          "operation": {"type": "string"},
+          "field": {"type": "string"},
+          "old_value_if_known": {"type": "string"},
+          "new_value": {"type": "string"},
+          "reason": {"type": "string"},
+          "rollback_note": {"type": "string"},
+          "confidence": {"type": "string", "enum": ["high", "medium", "low"]}
+        }
+      }
+    },
+    "profile_update_candidates": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "completion_proof": {
+      "type": "object",
+      "required": ["processed_items", "profile_used", "external_write_happened", "uncertainties", "validation"],
+      "properties": {
+        "processed_items": {"type": "integer", "minimum": 0},
+        "profile_used": {"type": "boolean"},
+        "external_write_happened": {"type": "boolean"},
+        "uncertainties": {"type": "array", "items": {"type": "string"}},
+        "validation": {"type": "string"}
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"mode": {"const": "adapter_dry_run"}},
+        "required": ["mode"]
+      },
+      "then": {
+        "properties": {
+          "scope": {
+            "properties": {
+              "external_write_status": {"const": "dry_run_only"}
+            }
+          },
+          "completion_proof": {
+            "properties": {
+              "external_write_happened": {"const": false}
+            }
+          }
+        }
+      }
+    }
+  ]
+}
