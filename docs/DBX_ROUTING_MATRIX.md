@@ -26,6 +26,7 @@ Read it when:
 | Create/review/improve/evaluate a skill | `dbx-skill-architect` | other runtime skills. |
 | Create/start/audit Codex `/goal` contract | `dbx-goal-writer` | `dbx-skill-architect`, unless designing a reusable skill. |
 | Control Codex subagent context inheritance | `dbx-subagent-context-control` | generic coordination advice. |
+| Manually execute a Software Plan-First phase | The explicitly named `dbx-software-plan-first-*` phase skill | Any phase skill when the request is only ordinary planning, repo reading, or implementation. |
 | Establish project memory, ADR, glossary, or agent brief | No current runtime skill; direct answer or design one with `dbx-skill-architect`. | `dbx-goal-writer`, unless writing a Codex goal. |
 | Explicit multi-skill macro workflow | No current command layer; use this matrix and direct orchestration. | A single overloaded skill. |
 
@@ -52,6 +53,10 @@ Current graph:
 | `dbx-subagent-context-control` supports Codex planning | Use only when Codex subagents or `fork_context` are explicit. |
 | `dbx-conversation-align` competes with `dbx-decision-framing` | Communication wording vs real-world trade-off. |
 | `dbx-open-source-commit-pr` competes with `dbx-work-commit-pr` | Public OSS artifact vs internal work artifact. |
+| `dbx-software-plan-first-plan-issue` handoff to `dbx-software-plan-first-ground-plan` | Use only after explicit invocation and only when repository facts are needed before finalizing a plan. |
+| `dbx-software-plan-first-ground-plan` handoff to `dbx-software-plan-first-finalize-plan` | Grounding output supplies verified facts, source-of-truth boundaries, and validation candidates for plan finalization. |
+| `dbx-software-plan-first-finalize-plan` precedes `dbx-software-plan-first-implement-feature` | A sealed `plan.md` / `tasks.md` workflow is required before review-gated implementation. |
+| `dbx-software-plan-first-showhand` is the gated automation variant | It may continue across tasks only when decision completeness, grounding, validation, source-of-truth, and worktree-safety gates pass. |
 
 ## 3. Chaining Rules
 
@@ -75,6 +80,10 @@ If there are threats, coercion, privacy invasion, legal/HR escalation, or severe
 
 If the task depends on Codex `/goal`, subagents, or `fork_context`, consult `docs/DBX_CODEX_COMPATIBILITY.md` and avoid inventing syntax.
 
+### Software Plan-First phases
+
+The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do not infer them from phrases like "先计划", "plan-first", "读一下仓库", "按 tasks.md 做", or "一路做完" unless the user explicitly names the DBX-prefixed skill. When invoked, preserve the phase order: plan issue -> ground plan -> finalize plan -> implement feature, with showhand only as a stricter automation path.
+
 ## 4. Near-Miss Examples
 
 | Prompt | Route |
@@ -87,6 +96,9 @@ If the task depends on Codex `/goal`, subagents, or `fork_context`, consult `doc
 | “帮我把这一堆收藏、课程、想法和任务分一下：哪些做、哪些存、哪些丢。” | `dbx-attention-control`. |
 | “帮我把这个 prompt 写好一点，只用一次。” | Direct answer, not `dbx-skill-architect` full skill. |
 | “帮我写一句不那么冲的回复。” | `dbx-conversation-align` compact rewrite, not full diagnosis. |
+| “这个需求先 plan-first 一下，别急着写代码。” | Direct planning or Plan mode behavior, not `dbx-software-plan-first-*` unless explicitly named. |
+| “使用 $dbx-software-plan-first-ground-plan，只读确认仓库事实。” | `dbx-software-plan-first-ground-plan`. |
+| “按 tasks.md 做下一个任务。” | Direct implementation unless `$dbx-software-plan-first-implement-feature` is explicitly named. |
 | “我要开一个持续极简回答模式。” | Interaction-mode/stateful pattern; no current DBX runtime skill. Need activation/deactivation/lifetime. |
 | “帮我做一个项目术语表，以后 agent 都按这个理解。” | Stateful project-memory pattern; direct artifact or future skill, not normal decision framing. |
 

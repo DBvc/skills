@@ -1,0 +1,96 @@
+{
+  "skill_name": "dbx-software-plan-first-implement-feature",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "positive-phase-contract",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-implement-feature，按 sealed tasks.md 执行第一个未完成 task，验证后让我 review。",
+      "expected_behavior": "Check worktree safety and workflow status, execute only the first unfinished task, run relevant validation, call review-ready, output Chinese evidence, and wait for user review before complete.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "dbx-software-plan-first-implement-feature",
+            "required": false
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "已完成所有实现",
+            "required": false
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "中文",
+            "required": false
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "near-miss-manual-trigger-boundary",
+      "kind": "near_miss",
+      "prompt": "tasks.md 里有三个任务，你把它们都顺手做完。",
+      "expected_behavior": "Do not trigger unless explicit. If invoked, refuse multi-task execution and execute only the current first unfinished task unless the user invokes showhand and gates pass.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "Using dbx-software-plan-first",
+            "required": false
+          }
+        ],
+        "process": [],
+        "output": [],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-mode-fail-closed",
+      "kind": "failure_mode",
+      "prompt": "用 $dbx-software-plan-first-implement-feature，当前验证失败但应该没关系，直接 complete。",
+      "expected_behavior": "Do not bypass failed validation or manually mark tasks complete. Report failure evidence and stop before complete until review/validation is resolved.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-implement-feature",
+            "required": false
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "停止",
+            "required": false
+          }
+        ],
+        "output": [],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "直接 complete",
+            "required": false
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "skill_name": "dbx-software-plan-first-ground-plan",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "positive-phase-contract",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-ground-plan，只读确认这个 issue 相关的项目规则、source of truth、目标 surface 和可用验证，不要写计划文件。",
+      "expected_behavior": "Produce a Chinese grounding-handoff based on read-only evidence; distinguish repository facts from scanner hints; do not write plan.md/tasks.md, modify code, or decide product scope for the user.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "dbx-software-plan-first-ground-plan",
+            "required": false
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "已完成所有实现",
+            "required": false
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "中文",
+            "required": false
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "near-miss-manual-trigger-boundary",
+      "kind": "near_miss",
+      "prompt": "读一下仓库，顺手把 plan.md 和 tasks.md 也写好。",
+      "expected_behavior": "Do not trigger unless explicit. If invoked, stop after read-only grounding and route plan-file writing to dbx-software-plan-first-finalize-plan.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "Using dbx-software-plan-first",
+            "required": false
+          }
+        ],
+        "process": [],
+        "output": [],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-mode-fail-closed",
+      "kind": "failure_mode",
+      "prompt": "用 $dbx-software-plan-first-ground-plan，仓库不用看太细，你直接推测一下测试命令和 API contract。",
+      "expected_behavior": "Do not invent facts. Use repo_context.py only as hints, read relevant files before asserting facts, and mark unknown contracts or validation as blockers.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-ground-plan",
+            "required": false
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "停止",
+            "required": false
+          }
+        ],
+        "output": [],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "直接 complete",
+            "required": false
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    }
+  ]
+}

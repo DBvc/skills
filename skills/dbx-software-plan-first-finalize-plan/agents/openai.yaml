@@ -1,0 +1,6 @@
+interface:
+  display_name: "dbx-software-plan-first-finalize-plan"
+  short_description: "Write Chinese plan.md/tasks.md, validate task structure, and seal the workflow."
+  default_prompt: "$dbx-software-plan-first-finalize-plan: 把已收敛并 grounding 过的计划写入 plan.md/tasks.md，然后 seal workflow。"
+policy:
+  allow_implicit_invocation: false

@@ -23,6 +23,11 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-subagent-context-control`](skills/dbx-subagent-context-control/) | Codex subagent 上下文继承控制。Control Codex subagent context inheritance. |
 | [`dbx-goal-writer`](skills/dbx-goal-writer/) | Codex goal 合同生成、启动与审计。Create, start, and audit Codex goal contracts. |
 | [`dbx-agent-handoff`](skills/dbx-agent-handoff/) | AI agent/session 续跑交接包生成。Create restart handoffs for future AI sessions. |
+| [`dbx-software-plan-first-plan-issue`](skills/dbx-software-plan-first-plan-issue/) | 手动触发的软件 Plan-First 对话收敛阶段：不读仓库、不写计划文件、不实现代码。Manual-only plan convergence phase. |
+| [`dbx-software-plan-first-ground-plan`](skills/dbx-software-plan-first-ground-plan/) | 手动触发的软件 Plan-First 只读 grounding 阶段：确认仓库事实、规则、source of truth 和验证模型。Manual-only read-only grounding phase. |
+| [`dbx-software-plan-first-finalize-plan`](skills/dbx-software-plan-first-finalize-plan/) | 手动触发的软件 Plan-First 定稿阶段：写入中文 `plan.md` / `tasks.md` 并建立 workflow seal。Manual-only plan finalization phase. |
+| [`dbx-software-plan-first-implement-feature`](skills/dbx-software-plan-first-implement-feature/) | 手动触发的软件 Plan-First 单任务实现阶段：只做第一个未完成 task，验证后等待 review。Manual-only review-gated implementation phase. |
+| [`dbx-software-plan-first-showhand`](skills/dbx-software-plan-first-showhand/) | 手动触发的软件 Plan-First 安全自动执行阶段：仅在所有门禁满足时连续执行完整计划。Manual-only safe automation phase. |
 
 ## Repository Governance
 

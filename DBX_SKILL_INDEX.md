@@ -41,6 +41,11 @@ Maturity values below reflect current repository artifacts. All current stable s
 | `dbx-decision-framing` | Frame high-impact real decisions. | decision | L5 | YAML/user-visible ceremony and over-analysis for low-stakes tasks. | Use before `dbx-goal-writer` when the task itself is not yet decided. | Hide boundary YAML by default for lightweight decisions; preserve internal self-check. |
 | `dbx-subagent-context-control` | Control Codex subagent context inheritance. | coordination + host-specific | L5 | Codex feature drift and host portability. | Supports `dbx-goal-writer` only when Codex subagents or `fork_context` are explicit. | Keep `docs/DBX_CODEX_COMPATIBILITY.md` current. |
 | `dbx-goal-writer` | Create, start, and audit Codex goal contracts. | procedure + host-specific | L5 | Codex `/goal` may be feature-gated or surface-dependent. | Use after decision is made; do not use for generic planning. | Add fixture tests for invented slash syntax and unsupported package mode. |
+| `dbx-software-plan-first-plan-issue` | Manual-only Software Plan-First chat convergence before repository grounding. | procedure + coordination + stateful workflow | L5 | Wrong trigger could turn ordinary planning into ceremonial workflow. | Use only when explicitly named; precedes `dbx-software-plan-first-ground-plan` or `dbx-software-plan-first-finalize-plan`. | Add baseline comparison after first real issue workflow. |
+| `dbx-software-plan-first-ground-plan` | Manual-only read-only grounding of project facts, rules, source-of-truth, surfaces, and validation. | procedure + knowledge + tool | L5 | Scanner hints may be mistaken for verified facts. | Follows `dbx-software-plan-first-plan-issue`; hands off to `dbx-software-plan-first-finalize-plan`. | Add fixture repo for grounding output regression. |
+| `dbx-software-plan-first-finalize-plan` | Manual-only writing of Chinese `plan.md` and `tasks.md`, plus workflow seal. | procedure + stateful workflow + tool | L5 | Incomplete decisions may be sealed as if final. | Follows plan convergence and grounding; precedes implementation. | Add structural checker for generated `plan.md` / `tasks.md` examples. |
+| `dbx-software-plan-first-implement-feature` | Manual-only review-gated execution of exactly one current unfinished task. | procedure + tool + stateful workflow | L5 | Scope creep across tasks or bypassed validation/review. | Follows sealed plan; use instead of showhand when user review is needed after each task. | Add fixture workflow with failed validation and dirty worktree cases. |
+| `dbx-software-plan-first-showhand` | Manual-only safe automatic execution of the full plan-first workflow when all gates pass. | procedure + coordination + stateful workflow | L5 | Automation may continue through subjective, destructive, or under-specified work. | Use only when explicitly named and all decision/source-of-truth/validation/worktree gates pass. | Add safety evals for destructive writes and product/design uncertainty. |
 
 ## Collection-Level Relationships
 
@@ -57,6 +62,8 @@ Important relationships:
 - `dbx-attention-control` handles mixed inbox/information/idea/task attention routing before product-specific tagging or external metadata writes.
 - `dbx-subagent-context-control` supports Codex planning only for explicit subagent context questions.
 - `dbx-conversation-align` and `dbx-decision-framing` compete in some communication/choice scenarios; choose by primary intent.
+- `dbx-software-plan-first-*` skills form a manual-only phase chain: plan issue -> ground plan -> finalize plan -> implement one task, with showhand as the gated automation variant.
+- Do not route ordinary planning, repository reading, or implementation into `dbx-software-plan-first-*` unless the user explicitly names the DBX-prefixed phase skill.
 
 ## Future Skill Candidates
 

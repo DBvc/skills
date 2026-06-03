@@ -1,0 +1,41 @@
+{
+  "skill_name": "dbx-software-plan-first-ground-plan",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-explicit-manual-trigger",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-ground-plan，只读确认这个 issue 相关的项目规则、source of truth、目标 surface 和可用验证，不要写计划文件。",
+      "expected_trigger": true,
+      "rationale": "Explicitly invokes the DBX-prefixed skill name for this phase."
+    },
+    {
+      "id": "negative-unprefixed-source-skill-name",
+      "kind": "negative",
+      "prompt": "使用 $software-plan-first-ground-plan，只读确认这个 issue 相关的项目规则、source of truth、目标 surface 和可用验证，不要写计划文件。",
+      "expected_trigger": false,
+      "rationale": "This repository package uses DBX-prefixed skill names; unprefixed source names belong to the external package if installed."
+    },
+    {
+      "id": "negative-ordinary-request-without-manual-trigger",
+      "kind": "negative",
+      "prompt": "读一下仓库，顺手把 plan.md 和 tasks.md 也写好。",
+      "expected_trigger": false,
+      "rationale": "All DBX Software Plan-First skills are manual-trigger only."
+    },
+    {
+      "id": "near-miss-general-plan-first-language",
+      "kind": "near_miss",
+      "prompt": "这个需求先 plan-first 一下，别急着写代码。",
+      "expected_trigger": false,
+      "rationale": "Generic plan-first wording is intentionally not enough to trigger a manual-only phase skill."
+    },
+    {
+      "id": "failure-mode-explicit-but-unsafe-or-incomplete",
+      "kind": "failure_mode",
+      "prompt": "用 $dbx-software-plan-first-ground-plan，仓库不用看太细，你直接推测一下测试命令和 API contract。",
+      "expected_trigger": true,
+      "rationale": "Explicit invocation should trigger the skill so it can fail closed instead of proceeding unsafely."
+    }
+  ]
+}

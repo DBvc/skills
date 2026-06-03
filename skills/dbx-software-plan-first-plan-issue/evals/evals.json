@@ -1,0 +1,96 @@
+{
+  "skill_name": "dbx-software-plan-first-plan-issue",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "positive-phase-contract",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-plan-issue，先把这个 issue 的 Goal、Scope、Approach、Validation、Impact Boundary 收敛清楚，不要读仓库也不要写文件。",
+      "expected_behavior": "Output the required Chinese plan-issue contract as `proposal-ready`, `clarifying`, or `blocked`; do not read repository files, write plan.md/tasks.md, or implement code; identify whether grounding by dbx-software-plan-first-ground-plan is needed.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "dbx-software-plan-first-plan-issue",
+            "required": false
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "已完成所有实现",
+            "required": false
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "中文",
+            "required": false
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "near-miss-manual-trigger-boundary",
+      "kind": "near_miss",
+      "prompt": "先帮我规划一下这个需求怎么做，可以读一下仓库，但别实现。",
+      "expected_behavior": "Do not trigger unless the user explicitly named the skill. If invoked anyway, refuse repo reading in this phase and route to grounding only after a proposal boundary exists.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "Using dbx-software-plan-first",
+            "required": false
+          }
+        ],
+        "process": [],
+        "output": [],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-mode-fail-closed",
+      "kind": "failure_mode",
+      "prompt": "用 $dbx-software-plan-first-plan-issue：做一个“优化整个系统”的计划，细节你自己决定。",
+      "expected_behavior": "Do not produce a fake complete plan. Return clarifying or blocked output and ask for missing goal, scope, validation, source-of-truth, and impact boundary decisions.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-plan-issue",
+            "required": false
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "停止",
+            "required": false
+          }
+        ],
+        "output": [],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "直接 complete",
+            "required": false
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    }
+  ]
+}

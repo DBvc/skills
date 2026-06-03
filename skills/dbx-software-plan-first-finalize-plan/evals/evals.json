@@ -1,0 +1,96 @@
+{
+  "skill_name": "dbx-software-plan-first-finalize-plan",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "positive-phase-contract",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-finalize-plan，计划和 grounding 已确认，请写中文 plan.md、tasks.md，并建立 workflow seal。",
+      "expected_behavior": "Initialize the issue workflow, write Chinese plan.md and tasks.md from complete decisions/evidence, ensure each task has acceptance and validation fields, run seal, and report file paths/config/next command without implementing code.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "dbx-software-plan-first-finalize-plan",
+            "required": false
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "已完成所有实现",
+            "required": false
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "中文",
+            "required": false
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "near-miss-manual-trigger-boundary",
+      "kind": "near_miss",
+      "prompt": "帮我写个简单 plan.md，边写边顺便先改第一个任务。",
+      "expected_behavior": "Do not trigger unless explicit. If invoked, do not implement; finalize only when Goal, Scope, Approach, Validation, Plan Strategy, Impact Profile, and Impact Boundary are complete.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "Using dbx-software-plan-first",
+            "required": false
+          }
+        ],
+        "process": [],
+        "output": [],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-mode-fail-closed",
+      "kind": "failure_mode",
+      "prompt": "用 $dbx-software-plan-first-finalize-plan，虽然还没确认验证方式，你先 seal 吧。",
+      "expected_behavior": "Do not seal an incomplete plan. Stop and report missing validation/source-of-truth/impact-boundary decisions or route back to plan/grounding.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-finalize-plan",
+            "required": false
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "停止",
+            "required": false
+          }
+        ],
+        "output": [],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "直接 complete",
+            "required": false
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    }
+  ]
+}

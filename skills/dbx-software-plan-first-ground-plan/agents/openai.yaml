@@ -1,0 +1,6 @@
+interface:
+  display_name: "dbx-software-plan-first-ground-plan"
+  short_description: "Read-only grounding for project facts, contracts, rules, paths, and validation."
+  default_prompt: "$dbx-software-plan-first-ground-plan: 只读确认这个计划需要的仓库事实、source of truth、项目规则和验证命令。"
+policy:
+  allow_implicit_invocation: false

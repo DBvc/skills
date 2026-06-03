@@ -1,0 +1,6 @@
+interface:
+  display_name: "dbx-software-plan-first-plan-issue"
+  short_description: "Converge a Chinese implementation plan in chat without repo reads or coding."
+  default_prompt: "$dbx-software-plan-first-plan-issue: 收敛这个软件需求的目标、范围、方案、验证和影响边界，不读仓库也不写代码。"
+policy:
+  allow_implicit_invocation: false

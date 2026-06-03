@@ -1,0 +1,41 @@
+{
+  "skill_name": "dbx-software-plan-first-plan-issue",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-explicit-manual-trigger",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-plan-issue，先把这个 issue 的 Goal、Scope、Approach、Validation、Impact Boundary 收敛清楚，不要读仓库也不要写文件。",
+      "expected_trigger": true,
+      "rationale": "Explicitly invokes the DBX-prefixed skill name for this phase."
+    },
+    {
+      "id": "negative-unprefixed-source-skill-name",
+      "kind": "negative",
+      "prompt": "使用 $software-plan-first-plan-issue，先把这个 issue 的 Goal、Scope、Approach、Validation、Impact Boundary 收敛清楚，不要读仓库也不要写文件。",
+      "expected_trigger": false,
+      "rationale": "This repository package uses DBX-prefixed skill names; unprefixed source names belong to the external package if installed."
+    },
+    {
+      "id": "negative-ordinary-request-without-manual-trigger",
+      "kind": "negative",
+      "prompt": "先帮我规划一下这个需求怎么做，可以读一下仓库，但别实现。",
+      "expected_trigger": false,
+      "rationale": "All DBX Software Plan-First skills are manual-trigger only."
+    },
+    {
+      "id": "near-miss-general-plan-first-language",
+      "kind": "near_miss",
+      "prompt": "这个需求先 plan-first 一下，别急着写代码。",
+      "expected_trigger": false,
+      "rationale": "Generic plan-first wording is intentionally not enough to trigger a manual-only phase skill."
+    },
+    {
+      "id": "failure-mode-explicit-but-unsafe-or-incomplete",
+      "kind": "failure_mode",
+      "prompt": "用 $dbx-software-plan-first-plan-issue：做一个“优化整个系统”的计划，细节你自己决定。",
+      "expected_trigger": true,
+      "rationale": "Explicit invocation should trigger the skill so it can fail closed instead of proceeding unsafely."
+    }
+  ]
+}

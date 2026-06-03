@@ -1,0 +1,6 @@
+interface:
+  display_name: "dbx-software-plan-first-showhand"
+  short_description: "Run the full plan-first workflow only when all automation safety gates pass."
+  default_prompt: "$dbx-software-plan-first-showhand: 在决策、grounding、验证、source of truth 和工作区安全门禁都满足时自动执行完整计划。"
+policy:
+  allow_implicit_invocation: false

@@ -59,6 +59,7 @@ Current DBX graph:
 | `dbx-subagent-context-control` supports `dbx-goal-writer` | Goal contracts may include subagent context strategy when Codex subagents are involved. |
 | `dbx-conversation-align` competes with `dbx-decision-framing` | Use conversation-align for wording/boundaries; decision-framing for real action trade-offs. |
 | `dbx-open-source-commit-pr` competes with `dbx-work-commit-pr` | Choose based on public/open-source vs work/internal context. |
+| `dbx-software-plan-first-*` forms a manual-only phase chain | Plan issue -> ground plan -> finalize plan -> implement feature; showhand is the gated automation variant. |
 
 ## 4. Conflict Resolution
 
@@ -80,6 +81,8 @@ Examples:
 | “Make this message less harsh.” | `dbx-conversation-align` compact rewrite, not full decision analysis. |
 | “Turn this reusable workflow into a skill.” | `dbx-skill-architect` triage, then create/improve if gates pass. |
 | “Write a Codex goal for this already-approved task.” | `dbx-goal-writer`. |
+| “Use $dbx-software-plan-first-finalize-plan to seal the agreed plan.” | `dbx-software-plan-first-finalize-plan`. |
+| “先 plan-first 一下，不要写代码。” | Direct planning, not DBX Software Plan-First phase skills unless explicitly named. |
 
 ## 5. Installation Scope
 

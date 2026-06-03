@@ -1,0 +1,41 @@
+{
+  "skill_name": "dbx-software-plan-first-implement-feature",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-explicit-manual-trigger",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-implement-feature，按 sealed tasks.md 执行第一个未完成 task，验证后让我 review。",
+      "expected_trigger": true,
+      "rationale": "Explicitly invokes the DBX-prefixed skill name for this phase."
+    },
+    {
+      "id": "negative-unprefixed-source-skill-name",
+      "kind": "negative",
+      "prompt": "使用 $software-plan-first-implement-feature，按 sealed tasks.md 执行第一个未完成 task，验证后让我 review。",
+      "expected_trigger": false,
+      "rationale": "This repository package uses DBX-prefixed skill names; unprefixed source names belong to the external package if installed."
+    },
+    {
+      "id": "negative-ordinary-request-without-manual-trigger",
+      "kind": "negative",
+      "prompt": "tasks.md 里有三个任务，你把它们都顺手做完。",
+      "expected_trigger": false,
+      "rationale": "All DBX Software Plan-First skills are manual-trigger only."
+    },
+    {
+      "id": "near-miss-general-plan-first-language",
+      "kind": "near_miss",
+      "prompt": "这个需求先 plan-first 一下，别急着写代码。",
+      "expected_trigger": false,
+      "rationale": "Generic plan-first wording is intentionally not enough to trigger a manual-only phase skill."
+    },
+    {
+      "id": "failure-mode-explicit-but-unsafe-or-incomplete",
+      "kind": "failure_mode",
+      "prompt": "用 $dbx-software-plan-first-implement-feature，当前验证失败但应该没关系，直接 complete。",
+      "expected_trigger": true,
+      "rationale": "Explicit invocation should trigger the skill so it can fail closed instead of proceeding unsafely."
+    }
+  ]
+}

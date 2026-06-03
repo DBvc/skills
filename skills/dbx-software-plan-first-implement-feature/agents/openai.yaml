@@ -1,0 +1,6 @@
+interface:
+  display_name: "dbx-software-plan-first-implement-feature"
+  short_description: "Execute exactly one current task, validate it, and stop for review."
+  default_prompt: "$dbx-software-plan-first-implement-feature: 按 sealed tasks.md 执行第一个未完成 task，验证后进入 review-ready。"
+policy:
+  allow_implicit_invocation: false
