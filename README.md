@@ -16,6 +16,7 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-linus-review`](skills/dbx-linus-review/) | 严格、实用主义、证据驱动的技术方案、模型和合并风险判断。Strict pragmatic technical judgment. |
 | [`dbx-skill-architect`](skills/dbx-skill-architect/) | 场景优先的 skill 创建、评审、改进与评测。Scenario-first skill architecture, critique, improvement, and eval design. |
 | [`dbx-skill-portfolio-auditor`](skills/dbx-skill-portfolio-auditor/) | 已安装技能组合审计与全局/项目/显式触发/禁用/卸载范围决策。Audit installed skill portfolios and recommend global, project, explicit-only, disable, or uninstall placement. |
+| [`dbx-product-judgment-control`](skills/dbx-product-judgment-control/) | 证据边界内判断产品、功能、PRD、交互、信息架构、实现对齐、路线图或竞品定位是否产品正确。Evidence-bounded product judgment across artifacts and decisions. |
 | [`dbx-attention-control`](skills/dbx-attention-control/) | 混合输入的注意力分流内核：把收藏、想法、任务、课程、工具、消息等路由为行动、构建、实验、追踪、存档、孵化、丢弃、风险保护或澄清，并支持个人配置和外部系统 dry-run 映射。Product-agnostic attention-allocation controller for mixed inputs with profile and adapter layers. |
 | [`dbx-conversation-align`](skills/dbx-conversation-align/) | 对话卡点诊断、措辞改写与边界沟通。Diagnose stuck conversations, rewrite risky messages, and plan boundaries. |
 | [`dbx-decision-framing`](skills/dbx-decision-framing/) | 高影响真实决策的分支门禁、取舍分析与验证动作。Frame high-impact decisions with gates, trade-offs, and validation steps. |
