@@ -95,7 +95,7 @@
     {
       "id": "multi-repo-manual-snapshot",
       "kind": "positive",
-      "prompt": "使用 $dbx-software-plan-first-implement-feature，在虚拟 workspace 下执行一个会改 solo 和 solo-web 的 sealed task；task 已写 提交类型: feat，workspace.commit=manual。",
+      "prompt": "使用 $dbx-software-plan-first-implement-feature，在虚拟 workspace 下执行一个会改 api-service 和 web-app 的 sealed task；task 已写 提交类型: feat，workspace.commit=manual。",
       "expected_behavior": "Run the current task from workspace root, keep artifacts under .plan-first/issues/<issue-id>/, record review-ready snapshots per discovered repo, do not stage or commit in manual mode, and use the task's 提交类型 metadata for the suggested deterministic commit subject instead of guessing from the diff.",
       "checks": {
         "trigger": [
@@ -120,12 +120,12 @@
           },
           {
             "type": "must_contain",
-            "value": "solo:",
+            "value": "api-service:",
             "required": true
           },
           {
             "type": "must_contain",
-            "value": "solo-web:",
+            "value": "web-app:",
             "required": true
           }
         ],

@@ -22,6 +22,7 @@ description: Manual trigger only. Use only when the user explicitly names `dbx-s
 
 - 只能在 Goal、Scope、Approach、Validation、Plan Strategy、Impact Profile、Impact Boundary 已完整时使用。
 - 如果需要仓库事实但尚未 grounding，先交给 `dbx-software-plan-first-ground-plan`。
+- 如果计划会新增、移动或固定 source/config/test/doc 产物，产物归属必须已经由项目事实或用户确认支持；归属未定时不要 seal，先返回 grounding 或澄清。
 - 写入中文 `plan.md` 和 `tasks.md`。
 - 运行 `scripts/issue-workflow.sh seal <issue-id>` 建立 seal。
 - 计划过程产物固定写入 `.plan-first/issues/<issue-id>/`，不作为提交产物。
@@ -45,7 +46,7 @@ scripts/issue-workflow.sh init <issue-id>
 ```
 
 2. 用中文填写 `plan.md` 和 `tasks.md`。
-3. 确认 `tasks.md` 每个任务包含：`验收:`、`验证:`，以及必要的 `使用检查:`、`依赖:`、`约束:`。
+3. 确认 `tasks.md` 每个任务包含：`验收:`、`验证:`，以及必要的 `使用检查:`、`依赖:`、`约束:`。会新增或迁移产物的任务，必须在 `约束:` 中写明产物归属、依据和禁止误放的边界。
 4. 运行：
 
 ```sh

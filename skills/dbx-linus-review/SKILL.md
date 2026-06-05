@@ -124,9 +124,12 @@ Use only the lenses that matter for the current artifact.
 - What are the core entities?
 - What identifies them?
 - Who owns the state?
+- Who owns the code/artifact location? A new file path is part of the ownership model, not a neutral detail.
 - What is persisted, derived, cached, or copied?
 - Which invariant must never break?
 - Are branches, flags, transforms, or caches hiding a bad model?
+- For new files, ask whether the artifact is feature-local, shared domain logic, protocol adaptation, infrastructure, test fixture, or documentation. Wrong placement matters when it creates a false source of truth, unnecessary public/shared surface, or future coupling.
+- Treat proposed or handoff file paths as claims to review, not approvals of ownership.
 
 ### 3. Special cases
 

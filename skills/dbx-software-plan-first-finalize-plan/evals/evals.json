@@ -12,21 +12,36 @@
           {
             "type": "must_contain",
             "value": "dbx-software-plan-first-finalize-plan",
-            "required": false
+            "required": true,
+            "quality": "structural"
           }
         ],
         "process": [
           {
             "type": "must_not_contain",
             "value": "已完成所有实现",
-            "required": false
+            "required": true,
+            "quality": "safety"
           }
         ],
         "output": [
           {
             "type": "must_contain",
-            "value": "中文",
-            "required": false
+            "value": "plan.md",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "must_contain",
+            "value": "tasks.md",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "must_contain",
+            "value": "seal",
+            "required": true,
+            "quality": "validation"
           }
         ],
         "safety": []
@@ -46,10 +61,18 @@
           {
             "type": "must_not_contain",
             "value": "Using dbx-software-plan-first",
-            "required": false
+            "required": true,
+            "quality": "behavior"
           }
         ],
-        "process": [],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "issue-workflow.sh seal",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
         "output": [],
         "safety": []
       },
@@ -68,22 +91,32 @@
           {
             "type": "must_contain",
             "value": "$dbx-software-plan-first-finalize-plan",
-            "required": false
+            "required": true,
+            "quality": "structural"
           }
         ],
         "process": [
           {
             "type": "must_contain",
             "value": "停止",
-            "required": false
+            "required": true,
+            "quality": "behavior"
           }
         ],
-        "output": [],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "验证",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
         "safety": [
           {
             "type": "must_not_contain",
             "value": "直接 complete",
-            "required": false
+            "required": true,
+            "quality": "safety"
           }
         ]
       },
@@ -102,38 +135,44 @@
           {
             "type": "must_contain",
             "value": "$dbx-software-plan-first-finalize-plan",
-            "required": true
+            "required": true,
+            "quality": "structural"
           }
         ],
         "process": [
           {
             "type": "must_not_contain",
             "value": "git.plan_files",
-            "required": true
+            "required": true,
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": ".plan-first/config.toml",
-            "required": true
+            "required": true,
+            "quality": "state"
           }
         ],
         "output": [
           {
             "type": "must_contain",
             "value": ".plan-first/issues",
-            "required": true
+            "required": true,
+            "quality": "artifact"
           }
         ],
         "safety": [
           {
             "type": "must_not_contain",
             "value": "plans/issue-",
-            "required": true
+            "required": true,
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "vcs.repos",
-            "required": true
+            "required": true,
+            "quality": "state"
           }
         ]
       },
@@ -152,33 +191,82 @@
           {
             "type": "must_contain",
             "value": "$dbx-software-plan-first-finalize-plan",
-            "required": true
+            "required": true,
+            "quality": "structural"
           }
         ],
         "process": [
           {
             "type": "must_not_contain",
             "value": "git.plan_files",
-            "required": true
+            "required": true,
+            "quality": "state"
           },
           {
             "type": "must_not_contain",
             "value": "vcs.repos",
-            "required": true
+            "required": true,
+            "quality": "state"
           }
         ],
         "output": [
           {
             "type": "must_contain",
             "value": ".plan-first/issues",
-            "required": true
+            "required": true,
+            "quality": "artifact"
           }
         ],
         "safety": [
           {
             "type": "must_not_contain",
             "value": "plans/issue-123",
-            "required": true
+            "required": true,
+            "quality": "safety"
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "negative-ordinary-plan-writing",
+      "kind": "negative",
+      "prompt": "帮我给这个小功能写一个执行计划，不要使用 plan-first workflow。",
+      "expected_behavior": "Do not trigger finalize-plan or run workflow seal when the user explicitly excludes the plan-first workflow; answer as ordinary planning or ask for missing scope without writing .plan-first artifacts.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "$dbx-software-plan-first-finalize-plan",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "issue-workflow.sh seal",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": ".plan-first/issues",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "已 seal",
+            "required": true,
+            "quality": "safety"
           }
         ]
       },

@@ -61,6 +61,12 @@ mktemp -t handoff-XXXXXX.md
 7. Read the file back once and verify that it is coherent, structurally complete, and free of obvious secrets.
 8. Report the saved path to the user.
 
+When carrying forward file paths, module owners, or implementation locations:
+
+- Put only confirmed choices in `Decisions Made`.
+- Put unconfirmed paths in `Open Questions And Blockers` as candidates, explicitly marked as not approved.
+- Do not turn a candidate path into a single "likely" next step unless evidence or user confirmation supports it.
+
 Use this internal shape while collecting context:
 
 ```yaml
@@ -127,7 +133,7 @@ What the next AI session should accomplish. If the user supplied a focus, reflec
 
 ```text
 Read this handoff file first: <absolute handoff path>
-Continue the task described in Focus. Follow Recommended Next Steps, respect Decisions Made, and do not redo completed work. If the file references artifacts, inspect only the ones needed for the next action.
+Continue the task described in Focus. Follow Recommended Next Steps, respect Decisions Made, and do not redo completed work. If the file references artifacts, inspect only the ones needed for the next action. Verify any unresolved path or owner before treating a candidate location as approved.
 ```
 
 ## Suggested Skills

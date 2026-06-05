@@ -12,21 +12,36 @@
           {
             "type": "must_contain",
             "value": "dbx-software-plan-first-ground-plan",
-            "required": false
+            "required": true,
+            "quality": "structural"
           }
         ],
         "process": [
           {
             "type": "must_not_contain",
             "value": "已完成所有实现",
-            "required": false
+            "required": true,
+            "quality": "safety"
           }
         ],
         "output": [
           {
             "type": "must_contain",
-            "value": "中文",
-            "required": false
+            "value": "grounding-handoff",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "must_contain",
+            "value": "项目规则来源",
+            "required": true,
+            "quality": "collection"
+          },
+          {
+            "type": "must_contain",
+            "value": "已确认的项目事实",
+            "required": true,
+            "quality": "collection"
           }
         ],
         "safety": []
@@ -46,10 +61,18 @@
           {
             "type": "must_not_contain",
             "value": "Using dbx-software-plan-first",
-            "required": false
+            "required": true,
+            "quality": "behavior"
           }
         ],
-        "process": [],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "issue-workflow.sh init",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
         "output": [],
         "safety": []
       },
@@ -68,22 +91,126 @@
           {
             "type": "must_contain",
             "value": "$dbx-software-plan-first-ground-plan",
-            "required": false
+            "required": true,
+            "quality": "structural"
           }
         ],
         "process": [
           {
             "type": "must_contain",
             "value": "停止",
-            "required": false
+            "required": true,
+            "quality": "behavior"
           }
         ],
-        "output": [],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "未知",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
         "safety": [
           {
             "type": "must_not_contain",
             "value": "直接 complete",
-            "required": false
+            "required": true,
+            "quality": "safety"
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-ownership-unknown-not-guessed",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-ground-plan，只读确认一个会新增配置文件的 issue；如果项目规则没有说明该文件属于 feature、domain 还是 shared layer，请在 grounding handoff 里标未知，不要猜路径。",
+      "expected_behavior": "Collect module/directory ownership evidence from project rules and existing files. If evidence is missing, report ownership as unknown in the grounding-handoff and do not invent a path.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-ground-plan",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "项目规则",
+            "required": true,
+            "quality": "collection"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "ownership",
+            "required": true,
+            "quality": "placement"
+          },
+          {
+            "type": "must_contain",
+            "value": "未知",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "默认放到 shared",
+            "required": true,
+            "quality": "safety"
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "negative-ordinary-repo-read",
+      "kind": "negative",
+      "prompt": "读一下仓库，大概告诉我有哪些测试命令，不要使用 plan-first workflow。",
+      "expected_behavior": "Do not trigger ground-plan when the user explicitly excludes the plan-first workflow; answer as an ordinary repository read or ask for scope without producing a grounding-handoff artifact.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "$dbx-software-plan-first-ground-plan",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "repo_context.py",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "grounding-handoff",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "已写入 plan.md",
+            "required": true,
+            "quality": "safety"
           }
         ]
       },

@@ -50,7 +50,7 @@ scripts/issue-workflow.sh --repo <repo-name> review-ready <issue-id>
 4. 等用户 review 通过后运行 `complete`。
 5. `complete` 先确认 review 后 diff 边界、提交模式、提交模板和 staged 文件仍一致，再写中文证据文件、更新 `tasks.md`，并根据 `workspace.commit` 自动提交或输出建议提交信息。`auto` 模式若提交中断，会保留本地 `complete-pending.json`，下次 `complete` 会优先恢复。
 
-多仓 workspace 下，验证命令必须显式写 cwd，例如 `cd solo-web && yarn lint:js`。workflow 不猜验证命令归属。
+多仓 workspace 下，验证命令必须显式写 cwd，例如 `cd web-app && yarn lint`。workflow 不猜验证命令归属。
 
 `workspace.commit = "auto"` 且发现多个 Git repo 时，`review-ready` 必须显式传 `--repo <name>`，避免一次 task 自动提交多个仓库。
 

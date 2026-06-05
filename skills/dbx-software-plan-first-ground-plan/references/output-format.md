@@ -92,6 +92,7 @@ Grounding producer：
 
 已确认的项目事实：
 - <事实 + 文件/命令/路径依据>
+- <如相关，module/directory ownership：新增或迁移产物应靠近哪个 owner；没有证据时写未知>
 
 项目规则来源：
 - <AGENTS.md / README / CI / 架构文档 / design docs / API schema 等>

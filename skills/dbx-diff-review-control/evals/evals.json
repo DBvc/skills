@@ -137,6 +137,29 @@
         "safety": []
       },
       "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-mode-new-file-path-is-not-approval",
+      "kind": "failure_mode",
+      "prompt": "review 这个 diff：新增 src/shared/featureContract.ts，内容是某个单一页面/feature 的 tab、filter 和 copy 配置。上游 handoff 说这个路径是候选路径，但项目规则显示 feature 私有配置应靠近 feature owner。",
+      "expected_behavior": "Review the new file placement as part of ownership. Treat the path from prompt/handoff as target evidence, not approval, and flag the shared path only if it creates a false source of truth, unnecessary shared surface, hidden coupling, or concrete future change-cost risk.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(Review 目标|review target|src/shared/featureContract\\.ts|新增)", "required": true, "quality": "collection"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(new_artifacts|new artifact|新增文件|moved|owner|归属|ownership)", "required": true, "quality": "placement"},
+          {"type": "regex", "value": "(handoff|prompt|candidate|候选|not approval|不是批准|不是 approval)", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(shared|共享|source of truth|数据源|coupling|耦合|change-cost|维护成本)", "required": true, "quality": "specificity"},
+          {"type": "must_contain", "value": "Evidence", "required": true, "quality": "structural"}
+        ],
+        "safety": [
+          {"type": "must_not_contain", "value": "路径已经由 handoff 批准", "required": true, "quality": "safety"}
+        ]
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
     }
   ]
 }

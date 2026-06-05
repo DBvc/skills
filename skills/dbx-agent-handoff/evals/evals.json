@@ -569,6 +569,68 @@
         "all_required": true,
         "min_score": 0.85
       }
+    },
+    {
+      "id": "failure-mode-candidate-path-not-approved",
+      "kind": "failure_mode",
+      "prompt": "用 $dbx-agent-handoff 写给下个 AI session 的交接。当前任务要新增一个配置 contract，但文件位置还没定；候选路径有 feature 本地目录和 shared/system 目录。不要让下个 session 误以为某个候选路径已经批准。",
+      "expected_behavior": "Preserve uncertainty about implementation location: confirmed decisions go only under Decisions Made, candidate paths go under Open Questions/Blockers as not approved, and the start prompt tells the next session to verify unresolved owner/path before treating a location as approved.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "AI session",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(candidate|候选|not approved|未批准|未确认)",
+            "required": true,
+            "quality": "placement"
+          },
+          {
+            "type": "regex",
+            "value": "(verify|验证|确认).*(path|owner|位置|归属)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "Open Questions And Blockers",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "regex",
+            "value": "(not approved|未批准|未确认)",
+            "required": true,
+            "quality": "placement"
+          },
+          {
+            "type": "regex",
+            "value": "(Start next session with:|Start Prompt For Next Session)",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "likely under shared/system",
+            "required": true,
+            "quality": "safety"
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
     }
   ]
 }

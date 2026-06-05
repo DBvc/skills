@@ -47,6 +47,7 @@ python3 scripts/repo_context.py
 
 - 查找项目规则：`.plan-first/rules.md`、`AGENTS.md`、README、CONTRIBUTING、架构文档、CI、测试文档。
 - 确认目标 surface：app/site/package/service/module/route/page/component/API/job/script/artifact。
+- 确认 module/directory ownership：新增或迁移产物应靠近哪个 feature、domain、service、shared layer、test area 或 doc area；如果项目规则没有证据，明确标为未知，不猜路径。
 - 确认 source of truth：API schema、GraphQL/protobuf/OpenAPI、数据库 schema、设计文档、现有 handler/client、测试 fixture、产品文案或用户当前确认。
 - 确认可用验证：项目原生命令、测试层级、browser/manual/visual/review-only 证据。
 - 识别 generated/protected/deprecated 文件和不要触碰的区域。

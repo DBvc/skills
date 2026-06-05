@@ -104,8 +104,8 @@ workflow 不配置 repo 列表。
 验证命令总是在 workspace root 下执行。多仓任务必须在 `tasks.md` 中显式写 cwd，例如：
 
 ```text
-验证: cd solo-web && yarn lint:js
-验证: cd solo && npm run ci:lint
+验证: cd web-app && yarn lint
+验证: cd api-service && npm run test:ci
 ```
 
 不要让 workflow 猜某条验证命令属于哪个 repo。

@@ -143,6 +143,9 @@ change_model:
   changed_user_paths: []
   core_entities: []
   state_owners: []
+  new_artifacts: []
+  module_owners: []
+  path_fit_evidence: []
   important_invariants: []
   public_contracts_changed: []
   persisted_data_or_schema_changed: []
@@ -173,19 +176,24 @@ Run these passes in order. The files in `agents/` are optional specialist pass p
    - Ask whether new branches are real domain rules or patches over a bad representation.
    - Wrong data structure, wrong identity boundary, or wrong state owner should outrank style issues.
 
-4. **Contract and compatibility pass**
+4. **New artifact ownership pass**
+   - For new or moved source/config/test/doc files, check the intended owner, nearest existing module, and project-rule evidence for the chosen path.
+   - Treat paths supplied by the prompt, plan, or handoff as target evidence, not as approval.
+   - Flag placement only when it creates a wrong source of truth, unnecessary shared/public surface, hidden coupling, or real future change-cost risk.
+
+5. **Contract and compatibility pass**
    - Check public APIs, exported types, props, configs, CLI behavior, persisted data, database migrations, route contracts, analytics events, feature flags, and backwards compatibility.
    - Never dismiss user breakage because the new design is cleaner.
 
-5. **Maintainability pass**
+6. **Maintainability pass**
    - Look for unnecessary concepts, leaky abstractions, hidden coupling, mixed responsibilities, duplicated sources of truth, and changes that make future fixes harder.
    - Flag only maintainability issues with a concrete future bug path or change-cost impact.
 
-6. **Validation pass**
+7. **Validation pass**
    - Check tests, type safety, lint/build coverage, regression tests, and manual verification gaps.
    - A missing test is a finding only when it leaves an important changed invariant unprotected.
 
-7. **Verifier pass**
+8. **Verifier pass**
    - Try to disprove each candidate finding before reporting it.
    - Keep a finding only if it is introduced or materially worsened by the selected change set, has concrete evidence, has user or maintainability impact, and has a specific fix direction.
 

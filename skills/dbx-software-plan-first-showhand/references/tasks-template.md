@@ -12,6 +12,8 @@
 - 可选且可重复的 `约束:` 行。
 - 可选且最多一行 `提交类型:` 行，用于确定 commit subject 中的 `{commit_type}`。
 
+如果 task 会新增、移动或固定 source/config/test/doc 产物，必须至少有一行 `约束:` 写明产物归属、依据和禁止误放的边界。上游 prompt、计划草稿或 handoff 中出现的候选路径不是批准。
+
 新 task 的 task type 编码在 `验收:` 中，推荐写成 `任务类型=step; ...`。没有该 marker 的已有 task 默认为 `step`。支持类型：`step`、`loop-batch`、`gate`、`promote`。
 
 最终文件中不要保留这段说明。
@@ -27,6 +29,7 @@
 使用检查: fast
 依赖: none
 约束: 不发明未被 source of truth 支持的字段、错误码或权限语义
+约束: 产物归属=目标 feature/module 的近源目录；依据=该 contract 只服务当前 feature，不是跨模块共享 contract；禁止放入 shared/system/global 目录
 
 - [ ] [implement-visible-behavior] 实现已确认的用户可见行为
 验收: 任务类型=step; 目标 surface、关键状态和回归证据已覆盖
@@ -46,5 +49,5 @@
 
 `依赖:` 行必须使用裸 task id，例如 `依赖: settle-contract`。
 `提交类型:` 是确定性元数据，不允许在 complete 阶段临场猜。需要 `{commit_type}` 时，优先使用 task 的 `提交类型:`，否则使用 `.plan-first/config.toml` 的 `commit.default_type`；两者都没有就报错。
-`约束:` 用于执行护栏，例如 non-goals、touched-surface limits、contract/data boundaries、design/content boundaries、review gates、batch limits、selection rules、retry/skip rules、no-full-rerun guards、worktree safety、prototype cleanup 和 write boundaries。不要在这里重复 task summary 或 `验收:` 行。
+`约束:` 用于执行护栏，例如 non-goals、touched-surface limits、artifact ownership、contract/data boundaries、design/content boundaries、review gates、batch limits、selection rules、retry/skip rules、no-full-rerun guards、worktree safety、prototype cleanup 和 write boundaries。不要在这里重复 task summary 或 `验收:` 行。
 不要把普通实现任务拆成“实现代码”和“添加测试”两个 checklist item，除非测试工作本身就是独立交付物。

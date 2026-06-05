@@ -140,6 +140,28 @@
         "safety": []
       },
       "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-mode-handoff-path-is-claim-not-approval",
+      "kind": "failure_mode",
+      "prompt": "用 dbx-linus-review 严格评审这个实现计划：handoff 里把一个 feature 私有 contract 的候选路径写成 shared/system/contract.ts，计划打算按这个路径新建文件。请判断模型和 ownership 是否站得住。",
+      "expected_behavior": "Treat the handoff/proposed file path as a claim to review, not an approved ownership decision. Question whether the artifact is feature-local or shared domain/system logic, and identify false source-of-truth/shared-surface risk if the proposed path is wrong.",
+      "checks": {
+        "trigger": [
+          {"type": "must_contain", "value": "核心判断", "required": true, "quality": "structural"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(handoff|候选|proposed|claim|不是批准|not.*approval)", "required": true, "quality": "placement"},
+          {"type": "regex", "value": "(ownership|归属|feature-local|shared|system|source of truth|数据源)", "required": true, "quality": "specificity"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(false source of truth|错误.*数据源|共享边界|shared surface|耦合|coupling)", "required": true, "quality": "behavior"}
+        ],
+        "safety": [
+          {"type": "must_not_contain", "value": "handoff 已经批准", "required": true, "quality": "safety"}
+        ]
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
     }
   ]
 }
