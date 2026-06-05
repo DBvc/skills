@@ -64,7 +64,7 @@ scripts/issue-workflow.sh complete <issue-id>
 ## 不要 showhand 的情况
 
 - 用户需要逐步 review。
-- `git.mode = "manual-commit"` 且连续任务之间无法可靠隔离。
+- `workspace.commit = "manual"` 且连续任务之间无法可靠隔离。
 - contract、设计、文案、权限、数据、环境、验证或 source of truth 仍不完整。
 - 任务涉及高风险写入、迁移、外部系统副作用、生产数据、formal/destructive write。
 

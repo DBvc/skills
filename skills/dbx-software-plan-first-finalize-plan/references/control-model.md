@@ -20,7 +20,7 @@
    不能只说“完成了”。必须记录验证命令、review-only 原因、变更文件和证据路径。
 
 6. **Git 是适配器，不是工作流本体**  
-   提交风格、是否自动提交、计划文件是否进入仓库由 `.plan-first/config.toml` 控制。工作流完整性由 seal 和 review snapshot 保证。
+   提交风格和是否自动提交由 `.plan-first/config.toml` 控制；计划过程产物固定属于本地 `.plan-first/issues/<issue-id>/` 状态，不进入 task commit。工作流完整性由 seal、root marker 和完整 review snapshot 保证。
 
 ## 主要失败模式
 

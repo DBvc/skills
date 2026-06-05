@@ -9,7 +9,6 @@ import hashlib
 import json
 import os
 import re
-import shlex
 import subprocess
 import sys
 import textwrap
@@ -27,18 +26,26 @@ REF_DIR = SCRIPT_DIR.parent / "references"
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "version": 1,
-    "paths": {"plan_root": "plans", "state_dir": ".plan-first"},
-    "git": {"mode": "auto-commit", "plan_files": "tracked"},
+    "workspace": {"commit": "manual"},
     "commit": {
-        "plan_subject": "plan: issue-{issue_id} 新增执行计划",
         "task_subject": "work: issue-{issue_id} 完成 {task_id}",
-        "include_default_body": True,
+        "default_type": "chore",
+        "include_body": True,
+        "body_template": "\n".join([
+            "中文 plan-first 任务完成。",
+            "",
+            "Issue: {issue_id}",
+            "Task: {task_id}",
+            "Evidence: {evidence_file}",
+        ]),
     },
-    "project": {"rules": [".plan-first/rules.md", "AGENTS.md", "README.md"]},
 }
 
 CN_NO_VALIDATION = "# 无程序化验证:"
 EN_NO_VALIDATION = "# no-programmatic-validation:"
+CONFIG_REL = Path(".plan-first") / "config.toml"
+ISSUES_REL = Path(".plan-first") / "issues"
+ISSUE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
 def die(message: str, code: int = 1) -> None:
@@ -51,36 +58,90 @@ def info(message: str) -> None:
 
 
 def run(cmd: List[str], cwd: Optional[Path] = None, check: bool = True, capture: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=str(cwd) if cwd else None, text=True, check=check,
-                          stdout=subprocess.PIPE if capture else None,
-                          stderr=subprocess.PIPE if capture else None)
+    return subprocess.run(
+        cmd,
+        cwd=str(cwd) if cwd else None,
+        text=True,
+        check=check,
+        stdout=subprocess.PIPE if capture else None,
+        stderr=subprocess.PIPE if capture else None,
+    )
 
 
-def repo_root() -> Path:
-    try:
-        cp = run(["git", "rev-parse", "--show-toplevel"])
-    except subprocess.CalledProcessError:
-        die("必须在 Git 仓库中执行。")
-    return Path(cp.stdout.strip())
+def git_root_for(path: Path) -> Optional[Path]:
+    if not path.exists():
+        return None
+    cp = run(["git", "rev-parse", "--show-toplevel"], cwd=path, check=False)
+    if cp.returncode != 0:
+        return None
+    value = cp.stdout.strip()
+    if not value:
+        return None
+    return Path(value).resolve()
 
 
+def find_config_root(start: Path) -> Optional[Path]:
+    current = start.resolve()
+    candidates = [current] + list(current.parents)
+    for candidate in candidates:
+        if (candidate / CONFIG_REL).exists():
+            return candidate
+    return None
 
-def ensure_local_exclude(root: Path, cfg: Dict[str, Any]) -> None:
-    """把 workflow 本地状态目录加入 .git/info/exclude，避免 seal/review cache 污染工作区。"""
-    state_dir = str(cfg.get("paths", {}).get("state_dir", ".plan-first")).strip().strip("/")
-    if not state_dir:
-        return
-    pattern = f"/{state_dir}/issues/"
-    exclude_path = root / ".git" / "info" / "exclude"
-    try:
-        exclude_path.parent.mkdir(parents=True, exist_ok=True)
-        existing = exclude_path.read_text(encoding="utf-8") if exclude_path.exists() else ""
-        if pattern not in existing.splitlines():
-            suffix = "" if existing.endswith("\n") or not existing else "\n"
-            exclude_path.write_text(existing + suffix + pattern + "\n", encoding="utf-8")
-    except Exception:
-        # 这是本地工作区清洁度优化，失败时不应阻断主流程。
-        return
+
+def multi_repo_parent(git_root: Path) -> Optional[Path]:
+    current = git_root.resolve()
+    candidates = [current.parent, current.parent.parent]
+    for candidate in candidates:
+        repos = discover_repos(candidate)
+        repo_roots = {repo.root for repo in repos}
+        if current in repo_roots and len(repo_roots) > 1:
+            return candidate
+    return None
+
+
+def default_config_text() -> str:
+    return textwrap.dedent("""\
+    version = 1
+
+    [workspace]
+    commit = "manual"
+    """)
+
+
+def ensure_root_marker_config(root: Path) -> Optional[Path]:
+    cfg_path = root / CONFIG_REL
+    if cfg_path.exists():
+        return None
+    cfg_path.parent.mkdir(parents=True, exist_ok=True)
+    cfg_path.write_text(default_config_text(), encoding="utf-8")
+    return cfg_path
+
+
+def resolve_workspace_root(cli_root: Optional[str], allow_cwd_bootstrap: bool = False) -> Path:
+    if cli_root:
+        return Path(cli_root).expanduser().resolve()
+    env_root = os.environ.get("PLAN_FIRST_ROOT")
+    if env_root:
+        return Path(env_root).expanduser().resolve()
+    config_root = find_config_root(Path.cwd())
+    if config_root:
+        return config_root
+    git_root = git_root_for(Path.cwd())
+    if git_root:
+        parent = multi_repo_parent(git_root) if allow_cwd_bootstrap else None
+        if parent is not None:
+            die(f"当前目录位于未初始化的多 repo workspace 子仓库。首次 init 请在 workspace root 执行，或传 --root {parent}。")
+        return git_root
+    if allow_cwd_bootstrap:
+        return Path.cwd().resolve()
+    die("找不到 workspace root。请在 workspace 根创建 .plan-first/config.toml，或传 --root。")
+
+
+def reject_unknown(data: Dict[str, Any], allowed: set[str], label: str) -> None:
+    unknown = sorted(set(data.keys()) - allowed)
+    if unknown:
+        die(f"{label} 包含不支持的配置字段：{', '.join(unknown)}。")
 
 
 def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
@@ -93,67 +154,285 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
     return out
 
 
+def parse_scalar(raw: str, cfg_path: Path, line_no: int) -> Any:
+    value = raw.strip()
+    if value in {"true", "false"}:
+        return value == "true"
+    if value.isdigit():
+        return int(value)
+    if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
+        return value[1:-1]
+    die(f"无法解析 {cfg_path}:{line_no} 的值：{raw}")
+
+
+def strip_inline_comment(value: str) -> str:
+    in_quote = False
+    escaped = False
+    for idx, ch in enumerate(value):
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\":
+            escaped = True
+            continue
+        if ch == '"':
+            in_quote = not in_quote
+            continue
+        if ch == "#" and not in_quote:
+            return value[:idx].rstrip()
+    return value
+
+
+def parse_minimal_toml(text: str, cfg_path: Path) -> Dict[str, Any]:
+    """Python 3.11 以下的极简 TOML fallback，只支持本 workflow 的配置形状。"""
+    data: Dict[str, Any] = {}
+    current: Dict[str, Any] = data
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        raw = lines[i]
+        line_no = i + 1
+        stripped = raw.strip()
+        i += 1
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith("[") and stripped.endswith("]"):
+            section = stripped[1:-1].strip()
+            if not section or "." in section:
+                die(f"不支持的 TOML section：{stripped}")
+            current = data.setdefault(section, {})
+            if not isinstance(current, dict):
+                die(f"TOML section 与字段冲突：{section}")
+            continue
+        if "=" not in stripped:
+            die(f"无法解析 {cfg_path}:{line_no}：{raw}")
+        key, value = stripped.split("=", 1)
+        key = key.strip()
+        value = strip_inline_comment(value.strip())
+        if not key:
+            die(f"无法解析 {cfg_path}:{line_no}：缺少 key")
+        if value.startswith('"""'):
+            content = value[3:]
+            collected: List[str] = []
+            if content.endswith('"""') and len(content) >= 3:
+                current[key] = content[:-3]
+                continue
+            if content:
+                collected.append(content)
+            while i < len(lines):
+                next_line = lines[i]
+                i += 1
+                end = next_line.find('"""')
+                if end >= 0:
+                    collected.append(next_line[:end])
+                    current[key] = "\n".join(collected)
+                    break
+                collected.append(next_line)
+            else:
+                die(f"未闭合的 triple-quoted string：{cfg_path}:{line_no}")
+            continue
+        current[key] = parse_scalar(value, cfg_path, line_no)
+    return data
+
+
+def parse_config_text(text: str, cfg_path: Path) -> Dict[str, Any]:
+    if tomllib is not None:
+        return tomllib.loads(text)
+    return parse_minimal_toml(text, cfg_path)
+
+
 def load_config(root: Path) -> Dict[str, Any]:
-    cfg_path = root / ".plan-first" / "config.toml"
+    cfg_path = root / CONFIG_REL
     cfg = DEFAULT_CONFIG
     if cfg_path.exists():
-        if tomllib is None:
-            die("检测到 .plan-first/config.toml，但当前 Python 不支持 tomllib。请使用 Python 3.11+。")
         try:
-            data = tomllib.loads(cfg_path.read_text(encoding="utf-8"))
+            data = parse_config_text(cfg_path.read_text(encoding="utf-8"), cfg_path)
         except Exception as exc:
             die(f"无法解析 {cfg_path}: {exc}")
+        if not isinstance(data, dict):
+            die(f"{cfg_path} 必须是 TOML table。")
+        reject_unknown(data, {"version", "workspace", "commit"}, "config.toml")
+        if "workspace" in data:
+            reject_unknown(data["workspace"], {"commit"}, "workspace")
+        if "commit" in data:
+            reject_unknown(data["commit"], {"task_subject", "default_type", "include_body", "body_template"}, "commit")
         cfg = deep_merge(DEFAULT_CONFIG, data)
-    git_mode = cfg.get("git", {}).get("mode")
-    if git_mode not in {"auto-commit", "manual-commit"}:
-        die('配置 git.mode 只能是 "auto-commit" 或 "manual-commit"。')
-    plan_files = cfg.get("git", {}).get("plan_files")
-    if plan_files not in {"tracked", "local"}:
-        die('配置 git.plan_files 只能是 "tracked" 或 "local"。')
+    if cfg.get("version") != 1:
+        die("配置 version 只能是 1。")
+    commit_mode = cfg.get("workspace", {}).get("commit")
+    if commit_mode not in {"none", "manual", "auto"}:
+        die('配置 workspace.commit 只能是 "none"、"manual" 或 "auto"。')
+    commit_cfg = cfg.get("commit", {})
+    if not isinstance(commit_cfg.get("task_subject"), str) or not commit_cfg.get("task_subject", "").strip():
+        die("配置 commit.task_subject 必须是非空字符串。")
+    if "default_type" in commit_cfg and commit_cfg["default_type"] is not None and not isinstance(commit_cfg["default_type"], str):
+        die("配置 commit.default_type 必须是字符串。")
+    if not isinstance(commit_cfg.get("include_body"), bool):
+        die("配置 commit.include_body 必须是 boolean。")
+    if not isinstance(commit_cfg.get("body_template"), str):
+        die("配置 commit.body_template 必须是字符串。")
     return cfg
 
 
 def rel(root: Path, path: Path) -> str:
-    return str(path.resolve().relative_to(root.resolve())).replace(os.sep, "/")
+    root_resolved = root.resolve()
+    path_resolved = path.resolve()
+    try:
+        return str(path_resolved.relative_to(root_resolved)).replace(os.sep, "/")
+    except ValueError:
+        return str(path_resolved)
+
+
+@dataclasses.dataclass(frozen=True)
+class Repo:
+    name: str
+    root: Path
+    rel_path: str
+
+
+@dataclasses.dataclass
+class Context:
+    root: Path
+    cfg: Dict[str, Any]
+    repos: List[Repo]
+
+
+def repo_name_for(root: Path, repo_root: Path) -> str:
+    rp = rel(root, repo_root)
+    return "." if rp == "." else rp
+
+
+def add_repo(root: Path, repo_root: Path, repos: List[Repo], seen: set[Path]) -> None:
+    repo_root = repo_root.resolve()
+    if repo_root in seen:
+        return
+    seen.add(repo_root)
+    rp = rel(root, repo_root)
+    repos.append(Repo(name=repo_name_for(root, repo_root), root=repo_root, rel_path=rp))
+
+
+def child_dirs(path: Path) -> List[Path]:
+    skip = {".git", ".plan-first", "node_modules", "dist", "build", "coverage", ".venv", "vendor", "target"}
+    if not path.exists() or not path.is_dir():
+        return []
+    out: List[Path] = []
+    for child in sorted(path.iterdir(), key=lambda p: p.name):
+        if not child.is_dir():
+            continue
+        if child.name in skip:
+            continue
+        if child.name.startswith(".") or child.name.startswith(".__"):
+            continue
+        out.append(child)
+    return out
+
+
+def discover_repos(root: Path) -> List[Repo]:
+    root = root.resolve()
+    repos: List[Repo] = []
+    seen: set[Path] = set()
+    root_git = git_root_for(root)
+    if root_git and root_git == root:
+        add_repo(root, root, repos, seen)
+        return repos
+
+    direct_non_git: List[Path] = []
+    for child in child_dirs(root):
+        child_git = git_root_for(child)
+        if child_git and child_git == child.resolve():
+            add_repo(root, child_git, repos, seen)
+        else:
+            direct_non_git.append(child)
+
+    for parent in direct_non_git:
+        for child in child_dirs(parent):
+            child_git = git_root_for(child)
+            if child_git and child_git == child.resolve():
+                add_repo(root, child_git, repos, seen)
+
+    return repos
+
+
+def git_exclude_path(repo_root: Path) -> Optional[Path]:
+    cp = run(["git", "rev-parse", "--git-path", "info/exclude"], cwd=repo_root, check=False)
+    if cp.returncode != 0:
+        return None
+    raw = cp.stdout.strip()
+    if not raw:
+        return None
+    path = Path(raw)
+    if not path.is_absolute():
+        path = repo_root / path
+    return path
+
+
+def ensure_local_exclude(ctx: Context) -> None:
+    """如果 workspace root 本身是 Git repo，把本地 issue 状态加入本地 exclude。"""
+    root_repo = next((repo for repo in ctx.repos if repo.root == ctx.root.resolve()), None)
+    if root_repo is None:
+        return
+    exclude_path = git_exclude_path(root_repo.root)
+    if exclude_path is None:
+        return
+    pattern = "/.plan-first/"
+    try:
+        exclude_path.parent.mkdir(parents=True, exist_ok=True)
+        existing = exclude_path.read_text(encoding="utf-8") if exclude_path.exists() else ""
+        if pattern not in existing.splitlines():
+            suffix = "" if existing.endswith("\n") or not existing else "\n"
+            exclude_path.write_text(existing + suffix + pattern + "\n", encoding="utf-8")
+    except Exception:
+        # 这是本地工作区清洁度优化，失败时不应阻断主流程。
+        return
+
+
+def build_context(cli_root: Optional[str], allow_cwd_bootstrap: bool = False) -> Context:
+    root = resolve_workspace_root(cli_root, allow_cwd_bootstrap=allow_cwd_bootstrap)
+    if not root.exists():
+        die(f"workspace root 不存在：{root}")
+    if not root.is_dir():
+        die(f"workspace root 必须是目录：{root}")
+    cfg = load_config(root)
+    ctx = Context(root=root.resolve(), cfg=cfg, repos=discover_repos(root))
+    ensure_local_exclude(ctx)
+    return ctx
 
 
 @dataclasses.dataclass
 class Paths:
     issue_id: str
-    root: Path
-    cfg: Dict[str, Any]
     plan_dir: Path
     plan_file: Path
     task_file: Path
     runs_dir: Path
     state_dir: Path
-    issue_state_dir: Path
     seal_file: Path
     review_state_file: Path
+    pending_complete_file: Path
     validation_log: Path
 
 
-def issue_paths(issue_id: str, root: Path, cfg: Dict[str, Any]) -> Paths:
-    state_dir = root / cfg["paths"]["state_dir"]
-    plan_files = cfg["git"]["plan_files"]
-    if plan_files == "local":
-        plan_dir = state_dir / "issues" / f"issue-{issue_id}"
-    else:
-        plan_dir = root / cfg["paths"]["plan_root"] / f"issue-{issue_id}"
-    issue_state_dir = state_dir / "issues" / f"issue-{issue_id}" / "state"
+def issue_paths(issue_id: str, ctx: Context) -> Paths:
+    if issue_id in {".", ".."} or not ISSUE_ID_RE.match(issue_id):
+        die("issue-id 只能是单个安全路径段：字母/数字开头，可包含字母、数字、点、下划线或连字符。")
+    issues_root = (ctx.root / ISSUES_REL).resolve()
+    issue_dir = (issues_root / issue_id).resolve()
+    try:
+        issue_dir.relative_to(issues_root)
+    except ValueError:
+        die("issue-id 不能逃逸 .plan-first/issues 目录。")
+    state_dir = issue_dir / "state"
     return Paths(
         issue_id=issue_id,
-        root=root,
-        cfg=cfg,
-        plan_dir=plan_dir,
-        plan_file=plan_dir / "plan.md",
-        task_file=plan_dir / "tasks.md",
-        runs_dir=plan_dir / "runs",
+        plan_dir=issue_dir,
+        plan_file=issue_dir / "plan.md",
+        task_file=issue_dir / "tasks.md",
+        runs_dir=issue_dir / "runs",
         state_dir=state_dir,
-        issue_state_dir=issue_state_dir,
-        seal_file=issue_state_dir / "seal.json",
-        review_state_file=issue_state_dir / "review-state.json",
-        validation_log=issue_state_dir / "validation.log",
+        seal_file=state_dir / "seal.json",
+        review_state_file=state_dir / "review-ready.json",
+        pending_complete_file=state_dir / "complete-pending.json",
+        validation_log=state_dir / "validation.log",
     )
 
 
@@ -191,6 +470,7 @@ class Task:
     use_checks: List[str]
     depends: List[str]
     constraints: List[str]
+    commit_type: Optional[str]
 
 
 def strip_label(line: str, labels: Tuple[str, ...]) -> Optional[str]:
@@ -222,6 +502,7 @@ def parse_tasks(task_file: Path, require_valid: bool = True) -> List[Task]:
                 use_checks=[],
                 depends=[],
                 constraints=[],
+                commit_type=None,
             )
             tasks.append(current)
             continue
@@ -249,10 +530,17 @@ def parse_tasks(task_file: Path, require_valid: bool = True) -> List[Task]:
         if value is not None:
             current.constraints.append(value)
             continue
+        value = strip_label(line, ("提交类型:", "Commit-Type:", "Commit type:", "Commit-Type:"))
+        if value is not None:
+            if current.commit_type is not None and require_valid:
+                die(f"任务 [{current.task_id}] 只能有一行 提交类型:。")
+            current.commit_type = value
+            continue
     if require_valid:
         if not tasks:
             die("tasks.md 中没有结构化任务。请用 `- [ ] [task-id] 摘要` 格式填写任务。")
         seen = set()
+        type_re = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*$")
         for task in tasks:
             if task.task_id in seen:
                 die(f"任务 id 重复：{task.task_id}")
@@ -261,6 +549,8 @@ def parse_tasks(task_file: Path, require_valid: bool = True) -> List[Task]:
                 die(f"任务 [{task.task_id}] 缺少 `验收:`。")
             if not task.validates:
                 die(f"任务 [{task.task_id}] 至少需要一行 `验证:`。")
+            if task.commit_type and not type_re.match(task.commit_type):
+                die(f"任务 [{task.task_id}] 的 `提交类型:` 只能包含字母、数字、下划线或连字符，并以字母开头。")
     return tasks
 
 
@@ -275,19 +565,39 @@ def completed_count(tasks: List[Task]) -> int:
     return sum(1 for t in tasks if t.status == "done")
 
 
-def write_seal(paths: Paths, reason: str) -> None:
-    paths.issue_state_dir.mkdir(parents=True, exist_ok=True)
+def repo_payload(ctx: Context) -> List[Dict[str, str]]:
+    return [{"name": repo.name, "path": repo.rel_path} for repo in ctx.repos]
+
+
+def repo_manifest_map(payload: Any) -> Optional[Dict[str, str]]:
+    if not isinstance(payload, list):
+        return None
+    out: Dict[str, str] = {}
+    for item in payload:
+        if not isinstance(item, dict):
+            return None
+        name = item.get("name")
+        path = item.get("path")
+        if not isinstance(name, str) or not isinstance(path, str):
+            return None
+        out[name] = path
+    return out
+
+
+def write_seal(ctx: Context, paths: Paths, reason: str) -> None:
+    paths.state_dir.mkdir(parents=True, exist_ok=True)
     seal = {
         "version": 1,
         "issue_id": paths.issue_id,
         "created_or_updated_at": utc_now(),
         "reason": reason,
-        "plan_file": rel(paths.root, paths.plan_file),
-        "task_file": rel(paths.root, paths.task_file),
+        "workspace_root": str(ctx.root),
+        "plan_file": rel(ctx.root, paths.plan_file),
+        "task_file": rel(ctx.root, paths.task_file),
         "plan_hash": sha256_file(paths.plan_file),
         "task_hash": sha256_file(paths.task_file),
-        "git_mode": paths.cfg["git"]["mode"],
-        "plan_files": paths.cfg["git"]["plan_files"],
+        "commit_mode": ctx.cfg["workspace"]["commit"],
+        "repos": repo_payload(ctx),
     }
     paths.seal_file.write_text(json.dumps(seal, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
@@ -298,8 +608,10 @@ def load_seal(paths: Paths) -> Dict[str, Any]:
     return json.loads(paths.seal_file.read_text(encoding="utf-8"))
 
 
-def verify_seal(paths: Paths) -> Dict[str, Any]:
+def verify_seal(ctx: Context, paths: Paths) -> Dict[str, Any]:
     seal = load_seal(paths)
+    if seal.get("version") != 1:
+        die("seal version 不支持；请重新 init/seal 当前 issue。")
     if not paths.plan_file.exists() or not paths.task_file.exists():
         die("plan.md 或 tasks.md 不存在，无法校验 seal。")
     plan_hash = sha256_file(paths.plan_file)
@@ -308,53 +620,129 @@ def verify_seal(paths: Paths) -> Dict[str, Any]:
         die("plan.md 与 seal 不一致。请不要在实现阶段静默改计划；需要重新 finalize/seal。")
     if task_hash != seal.get("task_hash"):
         die("tasks.md 与 seal 不一致。`tasks.md` 只能由 workflow complete 更新；需要重新 seal 或恢复文件。")
+    if seal.get("workspace_root") != str(ctx.root):
+        die("当前 workspace root 与 seal 不一致。请在正确 root 下执行，或重新 seal。")
     return seal
 
 
-def render_template(template: str, issue_id: str, task: Optional[Task] = None) -> str:
+TEMPLATE_RE = re.compile(r"{([A-Za-z_][A-Za-z0-9_]*)}")
+
+
+def task_commit_type(ctx: Context, task: Optional[Task]) -> str:
+    if task is None:
+        return ""
+    value = task.commit_type or ctx.cfg["commit"].get("default_type") or ""
+    return value.strip()
+
+
+def render_template(
+    ctx: Context,
+    template: str,
+    issue_id: str,
+    task: Optional[Task] = None,
+    evidence_file: str = "",
+    validation_log: str = "",
+    changed_files: str = "",
+) -> str:
     values = {
         "issue_id": issue_id,
         "task_id": task.task_id if task else "",
         "task_summary": task.summary if task else "",
+        "commit_type": task_commit_type(ctx, task),
+        "evidence_file": evidence_file,
+        "validation_log": validation_log,
+        "changed_files": changed_files,
     }
-    out = template
-    for k, v in values.items():
-        out = out.replace("{" + k + "}", v)
-    return out
+
+    def replace(match: re.Match[str]) -> str:
+        key = match.group(1)
+        if key not in values:
+            die(f"提交模板包含未知变量：{key}")
+        if key == "commit_type" and not values[key]:
+            die("提交模板使用了 {commit_type}，但当前 task 未写 `提交类型:`，且 commit.default_type 为空。")
+        return values[key]
+
+    return TEMPLATE_RE.sub(replace, template)
 
 
-def git_status_names(root: Path, staged_only: bool = False) -> List[str]:
+def render_task_subject(ctx: Context, issue_id: str, task: Task) -> str:
+    return render_template(ctx, ctx.cfg["commit"]["task_subject"], issue_id, task).strip()
+
+
+def render_task_body(
+    ctx: Context,
+    issue_id: str,
+    task: Task,
+    evidence_file: str,
+    validation_log: str,
+    changed_files: str,
+) -> Optional[str]:
+    if not ctx.cfg["commit"].get("include_body", True):
+        return None
+    body = render_template(
+        ctx,
+        ctx.cfg["commit"].get("body_template", ""),
+        issue_id,
+        task,
+        evidence_file=evidence_file,
+        validation_log=validation_log,
+        changed_files=changed_files,
+    ).strip()
+    return body or None
+
+
+def git_status_names(repo: Repo, staged_only: bool = False) -> List[str]:
     if staged_only:
-        cp = run(["git", "diff", "--cached", "--name-only"], cwd=root)
+        cp = run(["git", "diff", "--cached", "--name-only"], cwd=repo.root)
         return [x for x in cp.stdout.splitlines() if x.strip()]
     names: List[str] = []
-    for cmd in (["git", "diff", "--name-only"], ["git", "diff", "--cached", "--name-only"], ["git", "ls-files", "--others", "--exclude-standard"]):
-        cp = run(cmd, cwd=root)
+    for cmd in (
+        ["git", "diff", "--name-only"],
+        ["git", "diff", "--cached", "--name-only"],
+        ["git", "ls-files", "--others", "--exclude-standard"],
+    ):
+        cp = run(cmd, cwd=repo.root)
         names.extend([x for x in cp.stdout.splitlines() if x.strip()])
     return sorted(set(names))
 
 
-def should_exclude(paths: Paths, name: str) -> bool:
+def should_exclude(ctx: Context, repo: Repo, name: str) -> bool:
+    if repo.root != ctx.root:
+        return False
     norm = name.replace(os.sep, "/")
-    state_rel = rel(paths.root, paths.state_dir) if paths.state_dir.exists() else paths.cfg["paths"]["state_dir"]
-    state_rel = state_rel.rstrip("/")
-    if norm == state_rel or norm.startswith(state_rel + "/"):
-        return True
-    # 当前 issue 的计划产物不属于 task 代码快照。
-    plan_dir_rel = rel(paths.root, paths.plan_dir) if paths.plan_dir.exists() else str(paths.plan_dir.relative_to(paths.root)).replace(os.sep, "/")
-    if norm == plan_dir_rel or norm.startswith(plan_dir_rel.rstrip("/") + "/"):
-        return True
-    return False
+    return norm == ".plan-first" or norm.startswith(".plan-first/")
 
 
-def changed_files(paths: Paths) -> List[str]:
-    return [n for n in git_status_names(paths.root) if not should_exclude(paths, n)]
+def selected_repos(ctx: Context, selected_repo: Optional[str]) -> List[Repo]:
+    if selected_repo is None:
+        return ctx.repos
+    matches = [
+        repo for repo in ctx.repos
+        if selected_repo in {repo.name, repo.rel_path} or (repo.name == "." and selected_repo == ctx.root.name)
+    ]
+    if not matches:
+        available = ", ".join(repo.name for repo in ctx.repos) or "无"
+        die(f"找不到 repo：{selected_repo}。可用 repo：{available}")
+    return matches
 
 
-def hash_changed_files(root: Path, names: List[str]) -> Dict[str, str]:
+def changed_files(ctx: Context, repos: List[Repo]) -> Dict[str, List[str]]:
+    out: Dict[str, List[str]] = {}
+    for repo in repos:
+        names = [n for n in git_status_names(repo) if not should_exclude(ctx, repo, n)]
+        if names:
+            out[repo.name] = names
+    return out
+
+
+def status_files(ctx: Context, repo: Repo) -> List[str]:
+    return [n for n in git_status_names(repo) if not should_exclude(ctx, repo, n)]
+
+
+def hash_changed_files(repo: Repo, names: List[str]) -> Dict[str, str]:
     out: Dict[str, str] = {}
     for name in names:
-        path = root / name
+        path = repo.root / name
         if not path.exists():
             out[name] = "__deleted__"
         elif path.is_file():
@@ -364,26 +752,71 @@ def hash_changed_files(root: Path, names: List[str]) -> Dict[str, str]:
     return out
 
 
-def git_add(root: Path, files: List[str]) -> None:
+def snapshot_repos(ctx: Context, repos: List[Repo]) -> Dict[str, Dict[str, Any]]:
+    snapshot: Dict[str, Dict[str, Any]] = {}
+    for repo in repos:
+        names = status_files(ctx, repo)
+        snapshot[repo.name] = {
+            "path": repo.rel_path,
+            "files": hash_changed_files(repo, names),
+        }
+    return snapshot
+
+
+def non_empty_snapshot(snapshot: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    return {repo_name: payload for repo_name, payload in snapshot.items() if payload.get("files")}
+
+
+def changed_files_text(changed_repos: Dict[str, Dict[str, Any]]) -> str:
+    lines: List[str] = []
+    for repo_name in sorted(changed_repos):
+        files = changed_repos[repo_name].get("files", {})
+        for name in sorted(files):
+            lines.append(f"{repo_name}:{name}")
+    return "\n".join(lines)
+
+
+def git_add(repo: Repo, files: List[str]) -> None:
     if not files:
         return
-    run(["git", "add", "--"] + files, cwd=root, capture=True)
+    run(["git", "add", "--"] + files, cwd=repo.root, capture=True)
 
 
-def git_commit(root: Path, subject: str, body: Optional[str]) -> bool:
-    cp = run(["git", "diff", "--cached", "--quiet"], cwd=root, check=False)
+def git_commit(repo: Repo, subject: str, body: Optional[str]) -> bool:
+    cp = run(["git", "diff", "--cached", "--quiet"], cwd=repo.root, check=False)
     if cp.returncode == 0:
         return False
     cmd = ["git", "commit", "-m", subject]
     if body:
         cmd += ["-m", body]
-    run(cmd, cwd=root, capture=False)
+    run(cmd, cwd=repo.root, capture=False)
     return True
 
 
-def staged_non_allowed(root: Path, allowed: List[str]) -> List[str]:
+def staged_non_allowed(repo: Repo, allowed: List[str]) -> List[str]:
     allowed_set = set(allowed)
-    return [n for n in git_status_names(root, staged_only=True) if n not in allowed_set]
+    return [n for n in git_status_names(repo, staged_only=True) if n not in allowed_set]
+
+
+def commit_auto_changes(ctx: Context, changed_repos: Dict[str, Dict[str, Any]], subject: str, body: Optional[str]) -> List[str]:
+    repos_by_name = {repo.name: repo for repo in ctx.repos}
+    messages: List[str] = []
+    for repo_name, payload in changed_repos.items():
+        repo = repos_by_name[repo_name]
+        files = sorted(payload.get("files", {}).keys())
+        unexpected = staged_non_allowed(repo, files)
+        if unexpected:
+            die("检测到不属于当前任务的 staged 文件，不能自动提交：\n" + "\n".join(f"- {repo.name}:{x}" for x in unexpected))
+        current_names = set(git_status_names(repo))
+        git_add(repo, [name for name in files if name in current_names])
+        committed = git_commit(repo, subject, body)
+        if committed:
+            messages.append(f"已自动提交任务到 {repo.name}：{subject}")
+        else:
+            messages.append(f"{repo.name} 没有新的代码变更需要提交。")
+    if not changed_repos:
+        messages.append("没有代码变更需要自动提交。")
+    return messages
 
 
 def parse_shared_checks(plan_file: Path) -> Dict[str, str]:
@@ -437,23 +870,29 @@ def is_no_validation_marker(command: str) -> bool:
     return stripped.startswith(CN_NO_VALIDATION) or stripped.startswith(EN_NO_VALIDATION)
 
 
-def run_shell_command(root: Path, command: str, log_lines: List[str]) -> bool:
+def run_shell_command(ctx: Context, command: str, log_lines: List[str]) -> bool:
     log_lines.append(f"$ {command}")
-    cp = subprocess.run(["bash", "-lc", command], cwd=str(root), text=True,
-                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    cp = subprocess.run(
+        ["bash", "-lc", command],
+        cwd=str(ctx.root),
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
     if cp.stdout:
         log_lines.append(cp.stdout.rstrip())
     log_lines.append(f"退出码：{cp.returncode}")
     return cp.returncode == 0
 
 
-def run_validations(paths: Paths, task: Task, is_last_task: bool) -> Tuple[bool, List[str], List[str]]:
+def run_validations(ctx: Context, paths: Paths, task: Task, is_last_task: bool) -> Tuple[bool, List[str], List[str]]:
     log_lines: List[str] = []
     summary: List[str] = []
     ok = True
 
-    log_lines.append(f"# 验证日志：issue-{paths.issue_id} / task {task.task_id}")
+    log_lines.append(f"# 验证日志：issue {paths.issue_id} / task {task.task_id}")
     log_lines.append(f"时间：{utc_now()}")
+    log_lines.append(f"Workspace root：{ctx.root}")
     log_lines.append("")
 
     for command in task.validates:
@@ -461,7 +900,7 @@ def run_validations(paths: Paths, task: Task, is_last_task: bool) -> Tuple[bool,
             summary.append(f"跳过程序化验证：{command}")
             log_lines.append(f"[review-only] {command}")
             continue
-        passed = run_shell_command(paths.root, command, log_lines)
+        passed = run_shell_command(ctx, command, log_lines)
         summary.append(f"task 验证：{'通过' if passed else '失败'}：{command}")
         ok = ok and passed
         log_lines.append("")
@@ -478,7 +917,7 @@ def run_validations(paths: Paths, task: Task, is_last_task: bool) -> Tuple[bool,
             summary.append(f"shared check review-only：{check_id}")
             log_lines.append(f"[review-only shared {check_id}] {command}")
             continue
-        passed = run_shell_command(paths.root, command, log_lines)
+        passed = run_shell_command(ctx, command, log_lines)
         summary.append(f"shared check {check_id}：{'通过' if passed else '失败'}")
         ok = ok and passed
         log_lines.append("")
@@ -495,12 +934,12 @@ def run_validations(paths: Paths, task: Task, is_last_task: bool) -> Tuple[bool,
                     summary.append(f"最终验证 review-only：{command}")
                     log_lines.append(f"[review-only final] {command}")
                     continue
-                passed = run_shell_command(paths.root, command, log_lines)
+                passed = run_shell_command(ctx, command, log_lines)
                 summary.append(f"最终验证：{'通过' if passed else '失败'}：{command}")
                 ok = ok and passed
                 log_lines.append("")
 
-    paths.issue_state_dir.mkdir(parents=True, exist_ok=True)
+    paths.state_dir.mkdir(parents=True, exist_ok=True)
     paths.validation_log.write_text("\n".join(log_lines) + "\n", encoding="utf-8")
     return ok, summary, log_lines
 
@@ -514,75 +953,65 @@ def mark_task_complete(paths: Paths, task: Task) -> None:
     paths.task_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def command_init(paths: Paths) -> None:
+def command_init(ctx: Context, paths: Paths) -> None:
     plan_template, tasks_template = ensure_templates()
+    marker = ensure_root_marker_config(ctx.root)
     paths.plan_dir.mkdir(parents=True, exist_ok=True)
     paths.runs_dir.mkdir(parents=True, exist_ok=True)
-    paths.issue_state_dir.mkdir(parents=True, exist_ok=True)
+    paths.state_dir.mkdir(parents=True, exist_ok=True)
     created = []
+    if marker is not None:
+        created.append(rel(ctx.root, marker))
     if not paths.plan_file.exists():
         paths.plan_file.write_text(plan_template.read_text(encoding="utf-8"), encoding="utf-8")
-        created.append(rel(paths.root, paths.plan_file))
+        created.append(rel(ctx.root, paths.plan_file))
     if not paths.task_file.exists():
         paths.task_file.write_text(tasks_template.read_text(encoding="utf-8"), encoding="utf-8")
-        created.append(rel(paths.root, paths.task_file))
+        created.append(rel(ctx.root, paths.task_file))
     if created:
         info("已创建中文计划过程产物：")
         for item in created:
             info(f"- {item}")
     else:
         info("计划过程产物已存在，未覆盖：")
-        info(f"- {rel(paths.root, paths.plan_file)}")
-        info(f"- {rel(paths.root, paths.task_file)}")
-    info(f"配置：git.mode={paths.cfg['git']['mode']}，git.plan_files={paths.cfg['git']['plan_files']}")
+        info(f"- {rel(ctx.root, paths.plan_file)}")
+        info(f"- {rel(ctx.root, paths.task_file)}")
+    info(f"Workspace root：{ctx.root}")
+    info(f"提交模式：workspace.commit={ctx.cfg['workspace']['commit']}")
     info("下一步：填写 plan.md/tasks.md 后运行 `scripts/issue-workflow.sh seal <issue-id>`。")
 
 
-def command_seal(paths: Paths) -> None:
+def command_seal(ctx: Context, paths: Paths) -> None:
     if not paths.plan_file.exists() or not paths.task_file.exists():
         die("缺少 plan.md 或 tasks.md。请先运行 init 并填写计划。")
     tasks = parse_tasks(paths.task_file, require_valid=True)
-    write_seal(paths, "finalize-plan seal")
+    write_seal(ctx, paths, "finalize-plan seal")
     info("已写入 workflow seal：")
-    info(f"- {rel(paths.root, paths.seal_file)}")
+    info(f"- {rel(ctx.root, paths.seal_file)}")
     info(f"任务数量：{len(tasks)}")
-    mode = paths.cfg["git"]["mode"]
-    plan_files = paths.cfg["git"]["plan_files"]
-    if mode == "auto-commit" and plan_files == "tracked":
-        plan_rel = rel(paths.root, paths.plan_file)
-        task_rel = rel(paths.root, paths.task_file)
-        allowed = [plan_rel, task_rel]
-        unexpected = staged_non_allowed(paths.root, allowed)
-        if unexpected:
-            die("检测到非计划文件已 staged，不能自动提交计划：\n" + "\n".join(f"- {x}" for x in unexpected))
-        git_add(paths.root, allowed)
-        subject = render_template(paths.cfg["commit"]["plan_subject"], paths.issue_id)
-        body = None
-        if paths.cfg["commit"].get("include_default_body", True):
-            body = f"中文 plan-first 过程产物已 seal。\n\nIssue: {paths.issue_id}\n任务数量: {len(tasks)}\n计划文件: {plan_rel}\n任务文件: {task_rel}"
-        committed = git_commit(paths.root, subject, body)
-        if committed:
-            info(f"已自动提交计划：{subject}")
-        else:
-            info("没有新的计划文件变更需要提交。")
-    else:
-        subject = render_template(paths.cfg["commit"]["plan_subject"], paths.issue_id)
-        info("当前配置不会自动提交计划。建议提交信息：")
-        info(subject)
+    info("计划过程产物是本地 workflow 状态，不自动提交。")
 
 
-def command_status(paths: Paths) -> None:
+def command_status(ctx: Context, paths: Paths) -> None:
     if not paths.plan_file.exists() or not paths.task_file.exists():
         info("当前 issue 尚未初始化。")
+        info(f"Workspace root：{ctx.root}")
         info(f"建议运行：scripts/issue-workflow.sh init {paths.issue_id}")
         return
     sealed = paths.seal_file.exists()
     tasks = parse_tasks(paths.task_file, require_valid=False)
     next_task = first_unchecked(tasks)
     info(f"Issue: {paths.issue_id}")
-    info(f"计划文件：{rel(paths.root, paths.plan_file)}")
-    info(f"任务文件：{rel(paths.root, paths.task_file)}")
-    info(f"配置：git.mode={paths.cfg['git']['mode']}，git.plan_files={paths.cfg['git']['plan_files']}")
+    info(f"Workspace root：{ctx.root}")
+    info(f"计划文件：{rel(ctx.root, paths.plan_file)}")
+    info(f"任务文件：{rel(ctx.root, paths.task_file)}")
+    info(f"提交模式：workspace.commit={ctx.cfg['workspace']['commit']}")
+    if ctx.repos:
+        info("Git repos：")
+        for repo in ctx.repos:
+            info(f"- {repo.name}: {repo.rel_path}")
+    else:
+        info("Git repos：未发现")
     info(f"Seal：{'已建立' if sealed else '未建立'}")
     info(f"任务进度：{completed_count(tasks)}/{len(tasks)}")
     if next_task:
@@ -593,8 +1022,8 @@ def command_status(paths: Paths) -> None:
         info("尚未填写结构化任务。")
 
 
-def command_next(paths: Paths) -> None:
-    verify_seal(paths)
+def command_next(ctx: Context, paths: Paths) -> None:
+    verify_seal(ctx, paths)
     tasks = parse_tasks(paths.task_file, require_valid=True)
     task = first_unchecked(tasks)
     if not task:
@@ -602,6 +1031,8 @@ def command_next(paths: Paths) -> None:
         return
     info(f"当前任务 #{task.number}: [{task.task_id}] {task.summary}")
     info(f"验收：{task.accept}")
+    if task.commit_type:
+        info(f"提交类型：{task.commit_type}")
     for command in task.validates:
         info(f"验证：{command}")
     for check_id in task.use_checks:
@@ -612,8 +1043,8 @@ def command_next(paths: Paths) -> None:
         info(f"约束：{c}")
 
 
-def command_notes_template(paths: Paths) -> None:
-    verify_seal(paths)
+def command_notes_template(ctx: Context, paths: Paths) -> None:
+    verify_seal(ctx, paths)
     tasks = parse_tasks(paths.task_file, require_valid=True)
     task = first_unchecked(tasks)
     if not task:
@@ -627,7 +1058,7 @@ def command_notes_template(paths: Paths) -> None:
 
     ## 开始前确认
 
-    - 工作区状态：<git status 摘要>
+    - 工作区状态：<每个相关 repo 的 git status 摘要>
     - 影响边界：<本 task 触达范围>
     - source of truth：<本 task 使用的项目事实>
 
@@ -646,93 +1077,138 @@ def command_notes_template(paths: Paths) -> None:
     """).strip())
 
 
-def command_review_ready(paths: Paths) -> None:
-    verify_seal(paths)
+def prepare_review_repos(ctx: Context, selected_repo: Optional[str]) -> List[Repo]:
+    mode = ctx.cfg["workspace"]["commit"]
+    if mode in {"manual", "none"} and selected_repo is not None:
+        die(f"workspace.commit={mode} 必须 review 整个 workspace；--repo 只允许 auto 模式使用。")
+    repos = selected_repos(ctx, selected_repo)
+    if mode == "auto":
+        if not repos:
+            die("workspace.commit=auto 需要至少一个 Git repo。")
+        if len(repos) != 1:
+            die("多 repo workspace 下 workspace.commit=auto 必须为 review-ready 显式传 --repo <name>。")
+    return repos
+
+
+def command_review_ready(ctx: Context, paths: Paths, selected_repo: Optional[str]) -> None:
+    verify_seal(ctx, paths)
     tasks = parse_tasks(paths.task_file, require_valid=True)
     task = first_unchecked(tasks)
     if not task:
         info("所有任务已完成，无需 review-ready。")
         return
+    repos = prepare_review_repos(ctx, selected_repo)
     is_last = completed_count(tasks) == len(tasks) - 1
-    ok, summary, _ = run_validations(paths, task, is_last)
+    ok, summary, _ = run_validations(ctx, paths, task, is_last)
     if not ok:
         info("验证失败，未生成 review-ready。验证日志：")
-        info(f"- {rel(paths.root, paths.validation_log)}")
+        info(f"- {rel(ctx.root, paths.validation_log)}")
         raise SystemExit(1)
 
-    names = changed_files(paths)
-    snapshot = hash_changed_files(paths.root, names)
+    snapshot = snapshot_repos(ctx, repos)
+    changed_snapshot = non_empty_snapshot(snapshot)
+    if ctx.cfg["workspace"]["commit"] == "auto":
+        repo = repos[0]
+        names = sorted(snapshot.get(repo.name, {}).get("files", {}).keys())
+        unexpected = staged_non_allowed(repo, names)
+        if unexpected:
+            die("检测到不属于当前 review snapshot 的 staged 文件，不能继续：\n" + "\n".join(f"- {repo.name}:{x}" for x in unexpected))
     review = {
-        "version": 1,
+        "version": 3,
         "issue_id": paths.issue_id,
         "task_number": task.number,
         "task_id": task.task_id,
         "task_summary": task.summary,
+        "commit_type": task_commit_type(ctx, task),
         "created_at": utc_now(),
         "plan_hash": sha256_file(paths.plan_file),
         "task_hash": sha256_file(paths.task_file),
-        "changed_files": snapshot,
+        "workspace_repos": repo_payload(ctx),
+        "reviewed_repos": [repo.name for repo in repos],
+        "repo_snapshots": snapshot,
+        "changed_repos": changed_snapshot,
         "validation_summary": summary,
-        "validation_log": rel(paths.root, paths.validation_log),
-        "git_mode": paths.cfg["git"]["mode"],
-        "plan_files": paths.cfg["git"]["plan_files"],
+        "validation_log": rel(ctx.root, paths.validation_log),
+        "commit_mode": ctx.cfg["workspace"]["commit"],
     }
-    paths.issue_state_dir.mkdir(parents=True, exist_ok=True)
+    paths.state_dir.mkdir(parents=True, exist_ok=True)
     paths.review_state_file.write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-    if paths.cfg["git"]["mode"] == "auto-commit":
-        unexpected = staged_non_allowed(paths.root, names)
-        if unexpected:
-            die("检测到不属于当前 review snapshot 的 staged 文件，不能继续：\n" + "\n".join(f"- {x}" for x in unexpected))
-        git_add(paths.root, names)
-        info("已 stage 当前 review snapshot 的变更文件。")
+    if ctx.cfg["workspace"]["commit"] == "auto":
+        repo = repos[0]
+        names = sorted(snapshot.get(repo.name, {}).get("files", {}).keys())
+        git_add(repo, names)
+        info(f"已 stage 当前 review snapshot 的变更文件：{repo.name}")
     else:
-        info("manual-commit 模式：未 stage 文件，只记录 review snapshot hash。")
+        info(f"{ctx.cfg['workspace']['commit']} 模式：未 stage 文件，只记录 review snapshot hash。")
 
     info("状态：review-ready")
     info(f"当前任务：[{task.task_id}] {task.summary}")
+    if task.commit_type:
+        info(f"提交类型：{task.commit_type}")
     info("验证结果：")
     for item in summary:
         info(f"- {item}")
-    if names:
+    changed_text = changed_files_text(changed_snapshot)
+    if changed_text:
         info("变更文件快照：")
-        for name in names:
-            info(f"- {name}")
+        for line in changed_text.splitlines():
+            info(f"- {line}")
     else:
         info("变更文件快照：无代码文件变更。")
-    info(f"验证日志：{rel(paths.root, paths.validation_log)}")
+    info(f"验证日志：{rel(ctx.root, paths.validation_log)}")
     info("用户 review 通过后运行：")
     info(f"scripts/issue-workflow.sh complete {paths.issue_id}")
 
 
-def command_complete(paths: Paths) -> None:
-    verify_seal(paths)
-    if not paths.review_state_file.exists():
-        die("缺少 review-ready 快照。请先运行 review-ready。")
-    review = json.loads(paths.review_state_file.read_text(encoding="utf-8"))
-    tasks = parse_tasks(paths.task_file, require_valid=True)
-    task = first_unchecked(tasks)
-    if not task:
-        info("所有任务已完成。")
-        return
-    if review.get("task_id") != task.task_id or review.get("task_number") != task.number:
-        die("review-ready 的任务与当前第一个未完成任务不一致。请重新 review-ready。")
-    if review.get("plan_hash") != sha256_file(paths.plan_file) or review.get("task_hash") != sha256_file(paths.task_file):
-        die("review-ready 后 plan.md 或 tasks.md 发生变化。请重新 review-ready。")
-    names = list(review.get("changed_files", {}).keys())
-    current_snapshot = hash_changed_files(paths.root, names)
-    if current_snapshot != review.get("changed_files"):
-        die("review-ready 后变更文件内容发生变化。请重新 review-ready。")
+def verify_review_snapshot(ctx: Context, review: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    if review.get("version") != 3:
+        die("review-ready 快照版本已过期。请重新运行 review-ready。")
+    repos_by_name = {repo.name: repo for repo in ctx.repos}
+    if review.get("commit_mode") in {"manual", "none"}:
+        expected_manifest = repo_manifest_map(review.get("workspace_repos"))
+        current_manifest = repo_manifest_map(repo_payload(ctx))
+        if expected_manifest is None:
+            die("review-ready 快照格式错误：缺少 workspace_repos。")
+        if current_manifest != expected_manifest:
+            die("review-ready 后 workspace repo 边界发生变化。请重新 review-ready。")
+    reviewed_repos = review.get("reviewed_repos")
+    repo_snapshots = review.get("repo_snapshots")
+    if not isinstance(reviewed_repos, list) or not all(isinstance(x, str) for x in reviewed_repos):
+        die("review-ready 快照格式错误：缺少 reviewed_repos。")
+    if not isinstance(repo_snapshots, dict):
+        die("review-ready 快照格式错误：缺少 repo_snapshots。")
 
-    mark_task_complete(paths, task)
-    paths.runs_dir.mkdir(parents=True, exist_ok=True)
-    evidence_file = paths.runs_dir / f"task-{task.number:03d}-{task.task_id}.md"
+    repos: List[Repo] = []
+    for repo_name in reviewed_repos:
+        if repo_name not in repos_by_name:
+            die(f"review-ready 中的 repo 不存在于当前 workspace：{repo_name}")
+        if repo_name not in repo_snapshots:
+            die(f"review-ready 中缺少 repo {repo_name} 的快照。")
+        repos.append(repos_by_name[repo_name])
+
+    expected = {name: repo_snapshots[name] for name in reviewed_repos}
+    for repo_name, payload in expected.items():
+        files = payload.get("files", {})
+        if not isinstance(files, dict):
+            die(f"review-ready 中 repo {repo_name} 的 files 格式错误。")
+        if payload.get("path") != repos_by_name[repo_name].rel_path:
+            die(f"review-ready 中 repo {repo_name} 的路径与当前 workspace 不一致。请重新 review-ready。")
+
+    current = snapshot_repos(ctx, repos)
+    if current != expected:
+        die("review-ready 后被 review 的 repo diff 边界发生变化。请重新 review-ready。")
+    return repo_snapshots
+
+
+def build_evidence_lines(ctx: Context, paths: Paths, task: Task, review: Dict[str, Any], changed_text: str) -> List[str]:
     evidence = [
         f"# 任务完成证据：{task.task_id}",
         "",
         f"- Issue: {paths.issue_id}",
         f"- 任务序号: {task.number}",
         f"- 任务摘要: {task.summary}",
+        f"- 提交类型: {task_commit_type(ctx, task) or '未设置'}",
         f"- 完成时间: {utc_now()}",
         f"- 验证日志: {review.get('validation_log')}",
         "",
@@ -746,48 +1222,161 @@ def command_complete(paths: Paths) -> None:
     for item in review.get("validation_summary", []):
         evidence.append(f"- {item}")
     evidence += ["", "## 变更文件", ""]
-    if names:
-        for name in names:
-            evidence.append(f"- {name}")
+    if changed_text:
+        for line in changed_text.splitlines():
+            evidence.append(f"- {line}")
     else:
         evidence.append("- 无代码文件变更")
     evidence += ["", "## 备注", "", "- complete 复用了 review-ready 时的快照和验证缓存。"]
+    return evidence
+
+
+def write_complete_pending(
+    paths: Paths,
+    task: Task,
+    changed_repos: Dict[str, Dict[str, Any]],
+    subject: str,
+    body: Optional[str],
+    evidence_rel: str,
+    evidence: List[str],
+) -> None:
+    pending = {
+        "version": 1,
+        "issue_id": paths.issue_id,
+        "task_number": task.number,
+        "task_id": task.task_id,
+        "subject": subject,
+        "body": body,
+        "changed_repos": changed_repos,
+        "evidence_file": evidence_rel,
+        "evidence": evidence,
+        "created_at": utc_now(),
+    }
+    paths.state_dir.mkdir(parents=True, exist_ok=True)
+    paths.pending_complete_file.write_text(json.dumps(pending, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def resume_auto_pending_if_ready(ctx: Context, paths: Paths) -> bool:
+    if not paths.pending_complete_file.exists():
+        return False
+    pending = json.loads(paths.pending_complete_file.read_text(encoding="utf-8"))
+    if pending.get("version") != 1 or pending.get("issue_id") != paths.issue_id:
+        die("complete-pending 状态格式错误。")
+    tasks = parse_tasks(paths.task_file, require_valid=True)
+    task = next((item for item in tasks if item.task_id == pending.get("task_id")), None)
+    if task is None:
+        die("complete-pending 指向的 task 不存在。")
+    if task.status != "done":
+        paths.pending_complete_file.unlink()
+        return False
+    if ctx.cfg["workspace"]["commit"] != "auto":
+        die("存在 auto complete-pending，但当前 workspace.commit 不是 auto。")
+
+    evidence_rel = str(pending.get("evidence_file", ""))
+    evidence_file = ctx.root / evidence_rel if evidence_rel else paths.runs_dir / f"task-{task.number:03d}-{task.task_id}.md"
+    evidence = pending.get("evidence", [])
+    if isinstance(evidence, list) and all(isinstance(line, str) for line in evidence):
+        evidence_file.parent.mkdir(parents=True, exist_ok=True)
+        evidence_file.write_text("\n".join(evidence) + "\n", encoding="utf-8")
+    write_seal(ctx, paths, f"complete task {task.task_id}")
+
+    changed_repos = pending.get("changed_repos", {})
+    if not isinstance(changed_repos, dict):
+        die("complete-pending 中 changed_repos 格式错误。")
+    body = pending.get("body")
+    if body is not None and not isinstance(body, str):
+        die("complete-pending 中 body 格式错误。")
+    messages = commit_auto_changes(ctx, changed_repos, str(pending.get("subject", "")), body)
+    for message in messages:
+        info(message)
+    try:
+        paths.review_state_file.unlink()
+    except FileNotFoundError:
+        pass
+    paths.pending_complete_file.unlink()
+    info("状态：complete")
+    info(f"已恢复完成任务：[{task.task_id}] {task.summary}")
+    info(f"证据文件：{rel(ctx.root, evidence_file)}")
+    return True
+
+
+def command_complete(ctx: Context, paths: Paths) -> None:
+    if resume_auto_pending_if_ready(ctx, paths):
+        return
+    verify_seal(ctx, paths)
+    tasks = parse_tasks(paths.task_file, require_valid=True)
+    task = first_unchecked(tasks)
+    if not task:
+        info("所有任务已完成。")
+        return
+    if not paths.review_state_file.exists():
+        die("缺少 review-ready 快照。请先运行 review-ready。")
+    review = json.loads(paths.review_state_file.read_text(encoding="utf-8"))
+    if review.get("task_id") != task.task_id or review.get("task_number") != task.number:
+        die("review-ready 的任务与当前第一个未完成任务不一致。请重新 review-ready。")
+    if review.get("plan_hash") != sha256_file(paths.plan_file) or review.get("task_hash") != sha256_file(paths.task_file):
+        die("review-ready 后 plan.md 或 tasks.md 发生变化。请重新 review-ready。")
+    mode = ctx.cfg["workspace"]["commit"]
+    if review.get("commit_mode") != mode:
+        die("当前 workspace.commit 与 review-ready 时不一致。请重新 review-ready。")
+    repo_snapshots = verify_review_snapshot(ctx, review)
+    changed_repos = non_empty_snapshot(repo_snapshots)
+    changed_text = changed_files_text(changed_repos)
+    evidence_file = paths.runs_dir / f"task-{task.number:03d}-{task.task_id}.md"
+    evidence_rel = rel(ctx.root, evidence_file)
+
+    subject: Optional[str] = None
+    body: Optional[str] = None
+    if mode in {"manual", "auto"}:
+        subject = render_task_subject(ctx, paths.issue_id, task)
+        body = render_task_body(
+            ctx,
+            paths.issue_id,
+            task,
+            evidence_file=evidence_rel,
+            validation_log=str(review.get("validation_log", "")),
+            changed_files=changed_text,
+        )
+
+    repos_by_name = {repo.name: repo for repo in ctx.repos}
+    if mode == "auto":
+        if len(changed_repos) > 1:
+            die("workspace.commit=auto 不允许一次 complete 多个 repo；请重新 review-ready --repo <name>。")
+        for repo_name, payload in changed_repos.items():
+            repo = repos_by_name[repo_name]
+            files = sorted(payload.get("files", {}).keys())
+            unexpected = staged_non_allowed(repo, files)
+            if unexpected:
+                die("检测到不属于当前任务的 staged 文件，不能自动提交：\n" + "\n".join(f"- {repo.name}:{x}" for x in unexpected))
+
+    evidence = build_evidence_lines(ctx, paths, task, review, changed_text)
+    if mode == "auto":
+        write_complete_pending(paths, task, changed_repos, subject or "", body, evidence_rel, evidence)
+
+    mark_task_complete(paths, task)
+    paths.runs_dir.mkdir(parents=True, exist_ok=True)
     evidence_file.write_text("\n".join(evidence) + "\n", encoding="utf-8")
 
-    write_seal(paths, f"complete task {task.task_id}")
+    write_seal(ctx, paths, f"complete task {task.task_id}")
 
-    mode = paths.cfg["git"]["mode"]
-    plan_files = paths.cfg["git"]["plan_files"]
-    if mode == "auto-commit":
-        files_to_stage = names[:]
-        if plan_files == "tracked":
-            files_to_stage += [rel(paths.root, paths.task_file), rel(paths.root, evidence_file)]
-        # 只允许 review snapshot 文件和当前 workflow 产物进入提交。
-        unexpected = staged_non_allowed(paths.root, files_to_stage)
-        if unexpected:
-            die("检测到不属于当前任务的 staged 文件，不能自动提交：\n" + "\n".join(f"- {x}" for x in unexpected))
-        git_add(paths.root, files_to_stage)
-        subject = render_template(paths.cfg["commit"]["task_subject"], paths.issue_id, task)
-        body = None
-        if paths.cfg["commit"].get("include_default_body", True):
-            body = "\n".join([
-                "中文 plan-first 任务完成。",
-                "",
-                f"Issue: {paths.issue_id}",
-                f"Task: {task.task_id}",
-                f"Evidence: {rel(paths.root, evidence_file)}",
-            ])
-        committed = git_commit(paths.root, subject, body)
-        if committed:
-            info(f"已自动提交任务：{subject}")
-        else:
-            info("没有新的代码变更需要提交。")
+    if mode == "auto":
+        auto_messages = commit_auto_changes(ctx, changed_repos, subject or "", body)
+        for message in auto_messages:
+            info(message)
+        try:
+            paths.pending_complete_file.unlink()
+        except FileNotFoundError:
+            pass
+    elif mode == "manual":
+        info("manual 模式：未自动提交。建议提交信息：")
+        info(subject or "")
+        if changed_repos:
+            info("涉及 repo：")
+            for repo_name in sorted(changed_repos):
+                info(f"- {repo_name}")
     else:
-        subject = render_template(paths.cfg["commit"]["task_subject"], paths.issue_id, task)
-        info("manual-commit 模式：未自动提交。建议提交信息：")
-        info(subject)
+        info("none 模式：未 stage、未提交，也不生成提交建议。")
 
-    # complete 后清理 review state，避免重复完成。
     try:
         paths.review_state_file.unlink()
     except FileNotFoundError:
@@ -797,7 +1386,7 @@ def command_complete(paths: Paths) -> None:
     next_task = first_unchecked(tasks_after)
     info("状态：complete")
     info(f"已完成任务：[{task.task_id}] {task.summary}")
-    info(f"证据文件：{rel(paths.root, evidence_file)}")
+    info(f"证据文件：{evidence_rel}")
     if next_task:
         info(f"下一个任务：[{next_task.task_id}] {next_task.summary}")
     else:
@@ -806,12 +1395,14 @@ def command_complete(paths: Paths) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Software Plan-First 中文工作流")
+    parser.add_argument("--root", help="workspace root；默认向上查找 .plan-first/config.toml，找不到则使用当前 Git root；init 可在非 Git cwd bootstrap")
+    parser.add_argument("--repo", help="仅 auto 模式可用；限制 review-ready 的 Git repo，多 repo auto commit 时必填")
     parser.add_argument("command", nargs="?", help="init|seal|status|next|notes-template|review-ready|complete，或直接传 issue-id 查看 status")
     parser.add_argument("issue_id", nargs="?")
     args = parser.parse_args()
 
     if not args.command:
-        print("用法：scripts/issue-workflow.sh <command> <issue-id>")
+        print("用法：scripts/issue-workflow.sh [--root ROOT] [--repo NAME] <command> <issue-id>")
         raise SystemExit(2)
 
     commands = {"init", "seal", "status", "next", "notes-template", "review-ready", "complete"}
@@ -824,25 +1415,23 @@ def main() -> None:
     if not issue_id:
         die("缺少 issue-id。")
 
-    root = repo_root()
-    cfg = load_config(root)
-    ensure_local_exclude(root, cfg)
-    paths = issue_paths(issue_id, root, cfg)
+    ctx = build_context(args.root, allow_cwd_bootstrap=command == "init")
+    paths = issue_paths(issue_id, ctx)
 
     if command == "init":
-        command_init(paths)
+        command_init(ctx, paths)
     elif command == "seal":
-        command_seal(paths)
+        command_seal(ctx, paths)
     elif command == "status":
-        command_status(paths)
+        command_status(ctx, paths)
     elif command == "next":
-        command_next(paths)
+        command_next(ctx, paths)
     elif command == "notes-template":
-        command_notes_template(paths)
+        command_notes_template(ctx, paths)
     elif command == "review-ready":
-        command_review_ready(paths)
+        command_review_ready(ctx, paths, args.repo)
     elif command == "complete":
-        command_complete(paths)
+        command_complete(ctx, paths)
     else:
         die(f"未知命令：{command}")
 

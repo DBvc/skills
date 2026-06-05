@@ -24,7 +24,8 @@ description: Manual trigger only. Use only when the user explicitly names `dbx-s
 - 如果需要仓库事实但尚未 grounding，先交给 `dbx-software-plan-first-ground-plan`。
 - 写入中文 `plan.md` 和 `tasks.md`。
 - 运行 `scripts/issue-workflow.sh seal <issue-id>` 建立 seal。
-- 是否自动提交、提交格式、计划文件位置由 `.plan-first/config.toml` 控制。
+- 计划过程产物固定写入 `.plan-first/issues/<issue-id>/`，不作为提交产物。
+- 是否自动提交以及提交格式由 `.plan-first/config.toml` 控制。
 
 ## 必须读取
 
@@ -51,7 +52,7 @@ scripts/issue-workflow.sh init <issue-id>
 scripts/issue-workflow.sh seal <issue-id>
 ```
 
-5. 报告计划文件位置、配置模式、是否已自动提交或建议提交信息。
+5. 报告 workspace root、计划文件位置、配置模式、任务数量和下一步执行命令。
 
 ## 禁止事项
 
@@ -62,4 +63,4 @@ scripts/issue-workflow.sh seal <issue-id>
 
 ## 输出
 
-用中文说明：计划文件位置、任务数量、影响画像、验证模型、配置模式、下一步执行命令。
+用中文说明：workspace root、计划文件位置、任务数量、影响画像、验证模型、配置模式、下一步执行命令。

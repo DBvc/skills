@@ -91,6 +91,141 @@
         "all_required": true,
         "min_score": 0.85
       }
+    },
+    {
+      "id": "multi-repo-manual-snapshot",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-implement-feature，在虚拟 workspace 下执行一个会改 solo 和 solo-web 的 sealed task；task 已写 提交类型: feat，workspace.commit=manual。",
+      "expected_behavior": "Run the current task from workspace root, keep artifacts under .plan-first/issues/<issue-id>/, record review-ready snapshots per discovered repo, do not stage or commit in manual mode, and use the task's 提交类型 metadata for the suggested deterministic commit subject instead of guessing from the diff.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-implement-feature",
+            "required": true
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "git.plan_files",
+            "required": true
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "review-ready",
+            "required": true
+          },
+          {
+            "type": "must_contain",
+            "value": "solo:",
+            "required": true
+          },
+          {
+            "type": "must_contain",
+            "value": "solo-web:",
+            "required": true
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "根据 diff 判断提交类型",
+            "required": true
+          },
+          {
+            "type": "must_not_contain",
+            "value": "--repo solo",
+            "required": true
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-mode-post-review-dirty-files",
+      "kind": "failure_mode",
+      "prompt": "使用 $dbx-software-plan-first-implement-feature，已经 review-ready 了，但我又在另一个 repo 新增了文件；你直接 complete 吧。",
+      "expected_behavior": "Do not complete. Detect that the reviewed repo diff boundary changed after review-ready, require rerunning review-ready, and do not mark tasks.md complete.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-implement-feature",
+            "required": true
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "重新 review-ready",
+            "required": true
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "状态：complete",
+            "required": true
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "- [x]",
+            "required": true
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-mode-post-review-repo-boundary",
+      "kind": "failure_mode",
+      "prompt": "使用 $dbx-software-plan-first-implement-feature，workspace.commit=manual，已经 review-ready 了，但 workspace 下面又新增了一个 Git repo；你直接 complete 吧。",
+      "expected_behavior": "Do not complete. Detect that the workspace repo manifest changed after review-ready, require rerunning review-ready, and do not mark tasks.md complete.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-implement-feature",
+            "required": true
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "重新 review-ready",
+            "required": true
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "状态：complete",
+            "required": true
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "- [x]",
+            "required": true
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
     }
   ]
 }

@@ -91,6 +91,101 @@
         "all_required": true,
         "min_score": 0.85
       }
+    },
+    {
+      "id": "workspace-root-local-artifacts",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-finalize-plan，在一个非 Git 的虚拟 workspace 根下为跨仓 issue 写计划并 seal，计划文件不要提交。",
+      "expected_behavior": "Use the workspace root as the plan-first state owner even when it is not a Git repo; bare init from the workspace root may bootstrap .plan-first/config.toml; write plan.md/tasks.md under .plan-first/issues/<issue-id>/; do not create tracked plans/ artifacts; report workspace root, local artifact paths, task count, and commit mode.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-finalize-plan",
+            "required": true
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "git.plan_files",
+            "required": true
+          },
+          {
+            "type": "must_contain",
+            "value": ".plan-first/config.toml",
+            "required": true
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": ".plan-first/issues",
+            "required": true
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "plans/issue-",
+            "required": true
+          },
+          {
+            "type": "must_not_contain",
+            "value": "vcs.repos",
+            "required": true
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-mode-no-configurable-artifacts",
+      "kind": "failure_mode",
+      "prompt": "使用 $dbx-software-plan-first-finalize-plan，把 plan artifacts 放到 plans/issue-123，配置 git.plan_files=true，并给虚拟 workspace 配 vcs.repos。",
+      "expected_behavior": "Reject the old configurable artifact/repo model. Keep artifacts fixed under .plan-first/issues/<issue-id>/, do not accept git.plan_files or vcs.repos, and explain that repo discovery belongs to the workflow script.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-finalize-plan",
+            "required": true
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "git.plan_files",
+            "required": true
+          },
+          {
+            "type": "must_not_contain",
+            "value": "vcs.repos",
+            "required": true
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": ".plan-first/issues",
+            "required": true
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "plans/issue-123",
+            "required": true
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
     }
   ]
 }

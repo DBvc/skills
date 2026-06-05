@@ -21,9 +21,18 @@
 
 ## 提交流程
 
-计划文件是否提交由 `.plan-first/config.toml` 的 `git.plan_files` 决定：
+`.plan-first/` 是本地 workflow 状态。配置、计划文件、任务文件、runs、seal、review snapshot 和验证日志都不作为任务提交产物：
 
-- `tracked`：`plan.md`、`tasks.md` 和 `runs/` 是仓库内过程产物。
-- `local`：这些文件存放在 `.plan-first/issues/issue-<id>/`，不进入仓库。
+```text
+.plan-first/
+```
 
-无论哪种模式，都必须保留 seal、review snapshot、验证日志和证据记录。
+提交策略只影响代码变更：
+
+- `workspace.commit = "none"`：不 stage、不 commit、不生成提交建议。
+- `workspace.commit = "manual"`：输出建议提交信息，记录整个 workspace 已发现 repo 的 review snapshot。
+- `workspace.commit = "auto"`：单 repo 可自动提交；多 repo 必须在 `review-ready` 显式传 `--repo <name>`。
+
+`manual` / `none` 模式下不能用 `--repo` 缩窄 review 范围。`review-ready` 后、`complete` 前，任何被 review repo 的 diff 边界变化都会导致 complete 失败。
+
+无论哪种模式，都必须保留 seal、review snapshot、验证日志和证据记录；这些记录仍然是本地 workflow 状态，不进入 task commit。

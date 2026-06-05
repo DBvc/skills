@@ -18,6 +18,25 @@ from typing import Any
 NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$")
 CANONICAL_EVAL_KINDS = {"positive", "negative", "near_miss", "failure_mode", "safety"}
 OPTIONAL_SKILL_DIRS = {"references", "scripts", "assets", "evals", "agents", "examples", "checklists"}
+PLAN_FIRST_PREFIX = "dbx-software-plan-first-"
+PLAN_FIRST_SHARED_FILES = [
+    "references/artifact-evidence-boundary.md",
+    "references/config.md",
+    "references/control-model.md",
+    "references/feedback-and-proof.md",
+    "references/impact-profiles.md",
+    "references/implement-notes.md",
+    "references/output-format.md",
+    "references/plan-issue-rules.md",
+    "references/plan-template.md",
+    "references/review-checks.md",
+    "references/tasks-template.md",
+    "references/workflow-rules.md",
+    "references/worktree-safety.md",
+    "scripts/issue-workflow.sh",
+    "scripts/issue_workflow.py",
+    "scripts/repo_context.py",
+]
 
 
 @dataclass
@@ -299,6 +318,34 @@ def validate_skill(skill_dir: Path, root: Path) -> SkillReport:
     return report
 
 
+def validate_plan_first_sync(root: Path) -> list[Issue]:
+    skills_dir = root / "skills"
+    package_dirs = sorted(p for p in skills_dir.iterdir() if p.is_dir() and p.name.startswith(PLAN_FIRST_PREFIX))
+    if len(package_dirs) <= 1:
+        return []
+
+    issues: list[Issue] = []
+    canonical = package_dirs[0]
+    for rel_path in PLAN_FIRST_SHARED_FILES:
+        source = canonical / rel_path
+        if not source.exists():
+            issues.append(Issue("error", str(source), "Missing canonical plan-first shared file."))
+            continue
+        source_bytes = source.read_bytes()
+        for package_dir in package_dirs[1:]:
+            target = package_dir / rel_path
+            if not target.exists():
+                issues.append(Issue("error", str(target), "Missing plan-first shared file."))
+                continue
+            if target.read_bytes() != source_bytes:
+                issues.append(Issue(
+                    "error",
+                    str(target),
+                    f"Plan-first shared file drifted from {canonical.name}/{rel_path}.",
+                ))
+    return issues
+
+
 def scan(root: Path) -> tuple[list[SkillReport], list[Issue]]:
     issues: list[Issue] = []
     skills_dir = root / "skills"
@@ -321,6 +368,7 @@ def scan(root: Path) -> tuple[list[SkillReport], list[Issue]]:
                 issues.append(Issue("warning", str(index), f"DBX_SKILL_INDEX.md does not mention {report.name}."))
     else:
         issues.append(Issue("warning", str(index), "Missing DBX_SKILL_INDEX.md."))
+    issues.extend(validate_plan_first_sync(root))
 
     return reports, issues
 
