@@ -14,6 +14,7 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-work-commit-pr`](skills/dbx-work-commit-pr/) | 工作场景的中文合同式 commit/PR 写作。Contract-style commit messages and PR descriptions for work contexts. |
 | [`dbx-diff-review-control`](skills/dbx-diff-review-control/) | 精确选择 PR/diff/staged/commit/file review 范围，并输出高信号风险发现。Scoped code-change review control for concrete diffs. |
 | [`dbx-linus-review`](skills/dbx-linus-review/) | 严格、实用主义、证据驱动的技术方案、模型和合并风险判断。Strict pragmatic technical judgment. |
+| [`dbx-code-ratchet`](skills/dbx-code-ratchet/) | 可修改代码的有界 review-repair-revalidation 元技能：调度 diff/Linus review，triage findings，局部自动修复，验证并在方向错误或风险发散时停止。Bounded code ratchet for concrete diffs. |
 | [`dbx-skill-architect`](skills/dbx-skill-architect/) | 场景优先的 skill 创建、评审、改进与评测。Scenario-first skill architecture, critique, improvement, and eval design. |
 | [`dbx-skill-portfolio-auditor`](skills/dbx-skill-portfolio-auditor/) | 已安装技能组合审计与全局/项目/显式触发/禁用/卸载范围决策。Audit installed skill portfolios and recommend global, project, explicit-only, disable, or uninstall placement. |
 | [`dbx-product-judgment-control`](skills/dbx-product-judgment-control/) | 证据边界内判断产品、功能、PRD、交互、信息架构、实现对齐、路线图或竞品定位是否产品正确。Evidence-bounded product judgment across artifacts and decisions. |

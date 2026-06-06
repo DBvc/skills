@@ -53,6 +53,7 @@ Current DBX graph:
 | --- | --- |
 | `dbx-diff-review-control` precedes commit/PR skills | If user asks to review concrete code changes and then write PR text, review the selected change set first. |
 | `dbx-diff-review-control` precedes `dbx-linus-review` for concrete diffs | If strict pragmatic judgment is requested on a diff with staged/branch/file ambiguity, establish the target first. |
+| `dbx-code-ratchet` composes review skills for bounded repair | Only for explicit code ratchet / review-repair-revalidation requests; may modify code, but must stop on direction failure, unsafe scope, or diverging risk. |
 | `dbx-linus-review` handles explicit strict critique | Use for Linus-style, harsh, over-engineering, model, plan, or merge/readiness judgment. |
 | `dbx-decision-framing` precedes `dbx-goal-writer` | If user has not decided whether to do the work, decide before writing a Codex goal. |
 | `dbx-skill-architect` precedes new skill creation | If request is one-off, triage before full skill creation. |
@@ -76,6 +77,7 @@ Examples:
 | User request | Preferred routing |
 | --- | --- |
 | “Review this completed diff and write a PR description.” | `dbx-diff-review-control` first, then appropriate commit/PR skill. |
+| “Run L2 code ratchet on staged changes and auto-fix clear findings, but do not commit.” | `dbx-code-ratchet`. |
 | “Use Linus-style review on this staged diff before the PR description.” | `dbx-diff-review-control` to lock target, then `dbx-linus-review`, then appropriate commit/PR skill. |
 | “Should I split this monorepo?” | `dbx-decision-framing`, not `dbx-linus-review` unless code/design evidence dominates. |
 | “Make this message less harsh.” | `dbx-conversation-align` compact rewrite, not full decision analysis. |

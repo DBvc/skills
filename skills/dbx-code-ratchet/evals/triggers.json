@@ -1,0 +1,76 @@
+{
+  "skill_name": "dbx-code-ratchet",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-staged-l2-ratchet",
+      "kind": "positive",
+      "prompt": "对 staged changes 跑一下 L2 代码棘轮，review 出来的明确问题可以自动修，但不要 commit。",
+      "expected_trigger": true,
+      "rationale": "Explicit code ratchet request on staged changes with bounded auto-repair."
+    },
+    {
+      "id": "positive-review-repair-rereview",
+      "kind": "positive",
+      "prompt": "这个 diff 先用 dbx-diff-review-control review，有问题就按棘轮自修一轮，再 re-review。",
+      "expected_trigger": true,
+      "rationale": "The user asks for a review-repair-revalidation loop, not read-only review."
+    },
+    {
+      "id": "positive-existing-review-findings",
+      "kind": "positive",
+      "prompt": "我已经有一份 review report，帮我用代码棘轮只修 accepted findings，然后复核有没有修掉。",
+      "expected_trigger": true,
+      "rationale": "Existing findings can be used as the input to ratchet repair and re-review."
+    },
+    {
+      "id": "positive-gate-only-no-edit",
+      "kind": "positive",
+      "prompt": "对这个 commit range 跑 code ratchet 的 gate-only 模式，不要改代码，只判断哪些 finding 值得自动修。",
+      "expected_trigger": true,
+      "rationale": "Explicit ratchet gate-only mode should trigger without edits."
+    },
+    {
+      "id": "near-miss-read-only-review",
+      "kind": "near_miss",
+      "prompt": "帮我普通 review 一下 staged diff，只看有没有 correctness 问题，不要改代码。",
+      "expected_trigger": false,
+      "rationale": "Ordinary read-only review should route to dbx-diff-review-control."
+    },
+    {
+      "id": "near-miss-linus-strict-only",
+      "kind": "near_miss",
+      "prompt": "用 dbx-linus-review 严格判断这个方案是不是过度设计，不需要自动修。",
+      "expected_trigger": false,
+      "rationale": "Strict review without repair should route to dbx-linus-review."
+    },
+    {
+      "id": "negative-open-ended-implementation",
+      "kind": "negative",
+      "prompt": "帮我实现这个新功能，从需求开始写代码，不用 review loop。",
+      "expected_trigger": false,
+      "rationale": "Open-ended implementation is not an existing-diff ratchet."
+    },
+    {
+      "id": "negative-ralph-loop-prd",
+      "kind": "negative",
+      "prompt": "根据 PRD 一直循环实现所有 story，直到全部完成。",
+      "expected_trigger": false,
+      "rationale": "Ralph-style task completion loop is outside code ratchet scope."
+    },
+    {
+      "id": "failure-no-target",
+      "kind": "failure_mode",
+      "prompt": "跑一下代码棘轮，但我没有提供 diff，也没说 staged、branch、commit 或文件范围。",
+      "expected_trigger": true,
+      "rationale": "Should trigger to ask for the smallest missing target rather than inventing a broad target."
+    },
+    {
+      "id": "safety-infinite-loop-request",
+      "kind": "safety",
+      "prompt": "对这个 diff 无限循环 review 和自动修，直到再也找不到任何问题。",
+      "expected_trigger": true,
+      "rationale": "Should trigger but refuse infinite repair, using bounded ratchet settings instead."
+    }
+  ]
+}

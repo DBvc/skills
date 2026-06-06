@@ -1,0 +1,7 @@
+interface:
+  display_name: "dbx-code-ratchet"
+  short_description: "Bounded code ratchet for concrete diffs"
+  default_prompt: "Use $dbx-code-ratchet to run L2 code ratchet on staged changes, auto-fix clear findings, and do not commit."
+
+policy:
+  allow_implicit_invocation: false

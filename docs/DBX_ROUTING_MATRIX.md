@@ -19,6 +19,7 @@ Read it when:
 | Write open-source commit/PR artifact | `dbx-open-source-commit-pr` | `dbx-linus-review`, unless review is requested. |
 | Write work/internal commit/PR artifact | `dbx-work-commit-pr` | `dbx-open-source-commit-pr`. |
 | Review concrete PR/diff/staged/commit/file changes | `dbx-diff-review-control` | `dbx-linus-review`, unless strict pragmatic critique is explicit. |
+| Run explicit bounded review-repair-revalidation on concrete code changes | `dbx-code-ratchet` | Read-only review skills or open-ended implementation workflows. |
 | Judge architecture plans, data models, over-engineering, or explicit strict technical risk | `dbx-linus-review` | `dbx-diff-review-control`, unless a concrete diff target must be selected first. |
 | Make a high-impact real decision | `dbx-decision-framing` | `dbx-linus-review`, unless code/design evidence dominates. |
 | Route noisy mixed inbox, saved content, tasks, ideas, signals, courses, tools, notes, or external-system metadata | `dbx-attention-control` | Product-specific tagging/write workflows, unless adapter dry-run is requested. |
@@ -46,6 +47,7 @@ Current graph:
 | --- | --- |
 | `dbx-diff-review-control` precedes commit/PR skills | Review concrete code-change risk before writing the final PR artifact when both are requested. |
 | `dbx-diff-review-control` precedes `dbx-linus-review` for ambiguous concrete diffs | Establish staged/unstaged/branch/commit/file scope before applying strict pragmatic judgment. |
+| `dbx-code-ratchet` composes `dbx-diff-review-control` and conditionally `dbx-linus-review` | Use only when the user explicitly asks for code ratchet or automatic review-repair-revalidation; it may modify code and must stop on direction failure or diverging risk. |
 | `dbx-linus-review` handles explicit strict critique | Use it when the user asks for Linus-style, harsh, over-engineering, model, or merge/readiness judgment. |
 | `dbx-decision-framing` precedes `dbx-goal-writer` | Decide whether/what to do before writing a Codex execution contract. |
 | `dbx-skill-architect` precedes new skill creation | Triage repeatability, stable task distribution, evaluability, safety, and placement. |
@@ -63,6 +65,10 @@ Current graph:
 ### Review before PR writing
 
 If the user asks to review concrete code changes and write PR text, run `dbx-diff-review-control` first, then write commit/PR artifacts from the final diff and accepted findings. If the user explicitly asks for strict pragmatic judgment, establish the diff target first and then apply `dbx-linus-review`.
+
+### Code ratchet
+
+Use `dbx-code-ratchet` only when the user explicitly asks for code ratchet, 棘轮自修, or automatic review-repair-revalidation on a concrete diff target. It is a bounded modifying workflow: it delegates review to `dbx-diff-review-control`, invokes `dbx-linus-review` for direction/complexity gates when needed, repairs only accepted local findings, and stops rather than continuing if direction or progress gates fail.
 
 ### Decision before execution contract
 
@@ -90,6 +96,7 @@ The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do no
 | --- | --- |
 | “帮我解释一下这个 PR 改了什么。” | Direct answer, not commit/PR skill unless artifact requested. |
 | “帮我普通 review 一下 staged diff。” | `dbx-diff-review-control`. |
+| “对 staged changes 跑 L2 代码棘轮，明确问题可以自动修，不要 commit。” | `dbx-code-ratchet`. |
 | “用 Linus 风格严厉判断这个 staged diff 能不能合。” | `dbx-diff-review-control` to establish target, then `dbx-linus-review`. |
 | “帮我审一下这个架构方案有没有明显问题。” | `dbx-linus-review` if evidence/code/design risk dominates; `dbx-decision-framing` if trade-off dominates. |
 | “我该不该做这个项目？” | `dbx-decision-framing`. |

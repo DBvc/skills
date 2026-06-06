@@ -1,0 +1,28 @@
+{
+  "ratchet_state_version": 1,
+  "run_id": "",
+  "target": {
+    "source": "staged",
+    "base": "",
+    "head": "",
+    "included_files": [],
+    "selected_files": [],
+    "out_of_scope_dirty_files": [],
+    "partial_out_of_scope_files": [],
+    "target_assumption": ""
+  },
+  "profile": "l2_safe_default",
+  "iteration": 0,
+  "max_repair_rounds": 2,
+  "validation": {
+    "pre": [],
+    "post": []
+  },
+  "findings": [],
+  "triage": [],
+  "accepted_fixes": [],
+  "deferred_findings": [],
+  "rejected_findings": [],
+  "escalations": [],
+  "final_state": "in_progress"
+}

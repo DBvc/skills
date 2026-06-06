@@ -1,0 +1,141 @@
+version: 1
+profile: l2_safe_default
+
+rounds:
+  max_full_reviews: 1
+  max_repair_rounds: 2
+  max_re_reviews: 2
+  max_same_finding_attempts: 1
+  full_review_after_repair: false
+
+side_effects:
+  may_modify_code: true
+  commit_changes: false
+  push_changes: false
+  complete_software_task: false
+
+host:
+  primary: codex
+  subagents:
+    default: use_when_available
+    reviewer_context: fork_context=false
+    repair_context: minimal_task_context
+  model_policy:
+    controller: strongest_available_highest_reasoning
+    reviewer: strongest_available_highest_reasoning
+    strict_reviewer: strongest_available_highest_reasoning
+    repair_worker: strongest_available_highest_reasoning
+    re_reviewer: strongest_available_highest_reasoning
+    hard_code_model_version: false
+    auto_downgrade_critical_roles: false
+
+reviewers:
+  primary:
+    skill: dbx-diff-review-control
+    mode: standard
+    write_access: false
+    request_ratchet_signals: true
+  re_review:
+    skill: dbx-diff-review-control
+    mode: re-review
+    write_access: false
+    request_ratchet_signals: true
+  strict_direction:
+    skill: dbx-linus-review
+    mode: diff_strict
+    write_access: false
+    request_ratchet_signals: true
+    trigger_when:
+      - multiple_findings_same_root_cause
+      - direction_symptom_detected
+      - wrong_state_owner_or_data_model
+      - compatibility_or_public_api_change
+      - complexity_budget_exceeded_or_unclear
+      - over_engineering_signal
+      - user_requested_strict
+
+triage:
+  auto_fix:
+    severities:
+      - S0
+      - S1
+    allow_s2_categories:
+      - correctness
+      - state_ownership
+      - data_model
+      - compatibility
+      - validation_gap
+    requires:
+      - concrete_evidence
+      - current_diff_introduced_or_worsened
+      - local_fixable
+      - no_scope_expansion
+      - no_human_decision
+  defer:
+    severities:
+      - S3
+    low_confidence: true
+    style_only: true
+    generic_test_request_without_invariant: true
+  reject:
+    false_positive: true
+    pre_existing_not_worsened: true
+    out_of_target: true
+  escalate:
+    human_decision_required: true
+    product_semantics: true
+    architecture_direction: true
+    public_api_change: true
+    new_dependency: true
+    schema_or_migration: true
+    cross_module_ownership: true
+    reviewer_conflict: true
+
+gates:
+  stop_on_direction_failure: true
+  stop_on_new_s0_s1: true
+  stop_on_risk_not_decreased: true
+  stop_on_complexity_budget_exceeded: true
+  stop_on_scope_expansion_required: true
+  stop_on_validation_worse: true
+  stop_on_same_finding_failed_twice: true
+
+risk_score_weights:
+  S0: 100
+  S1: 25
+  S2: 5
+  S3: 1
+
+complexity_budget:
+  allow_new_dependency: false
+  allow_public_api_change: false
+  allow_schema_or_migration: false
+  allow_unrelated_cleanup: false
+  max_new_files: 2
+  max_loc_growth_ratio: 0.25
+  watch_signals:
+    - new_exported_symbols
+    - new_shared_abstractions
+    - new_cache_or_state_owner
+    - new_config_or_feature_flag
+    - new_adapter_layer
+    - broad_module_move
+    - one_implementation_interface
+    - speculative_performance_optimization
+
+repair:
+  executor: codex_worker
+  one_writer_at_a_time: true
+  receives_only:
+    - accepted_findings
+    - repair_contract
+    - target_summary
+    - validation_hints
+  forbidden:
+    - new_dependency_without_user_approval
+    - public_api_change_without_user_approval
+    - schema_or_migration_without_user_approval
+    - unrelated_cleanup
+    - deferred_finding_fix
+    - test_deletion_or_weakening
+    - broad_refactor

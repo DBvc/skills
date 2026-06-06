@@ -278,3 +278,19 @@ You may not claim tests passed, behavior was verified, or the change is safe unl
 ## Scripts
 
 - `scripts/validate-pragmatic-review.py`: optional shape checker for saved strict pragmatic review reports.
+
+## Optional ratchet signals compatibility
+
+When a meta workflow such as `dbx-code-ratchet` explicitly requests ratchet-compatible strict signals, append a fenced `ratchet_signals` JSON block after the normal strict pragmatic review.
+
+This block is optional for ordinary strict review. It should not replace blunt human-readable judgment.
+
+The block provides direction and complexity signals, not final ratchet decisions. `dbx-code-ratchet` still performs triage, direction gate, repair contract, progress gate, and final stop/pass decisions.
+
+Use `references/ratchet-signals.md` for the schema.
+
+For `direction_health`:
+
+- `ok`: local repair is probably appropriate.
+- `suspect`: local repair may work, but direction or complexity deserves gate scrutiny.
+- `failed`: continuing local repair is likely to make the code worse.

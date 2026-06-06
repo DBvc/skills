@@ -312,3 +312,20 @@ You may not say the change is safe, verified, tested, ready, or green unless the
 
 - `scripts/collect-review-context.py`: safe local context collector with explicit target modes. It reads git/package metadata and suggests validation commands. It does not run project commands.
 - `scripts/validate-review-report.py`: optional report sanity checker for saved Markdown review reports.
+
+## Optional ratchet signals compatibility
+
+When a meta workflow such as `dbx-code-ratchet` explicitly requests ratchet-compatible output, append a fenced `ratchet_signals` JSON block after the normal human-readable review.
+
+This block is optional for ordinary review. Do not make normal PR review noisy.
+
+The block provides signals, not decisions. `dbx-code-ratchet` still performs triage, direction gate, repair contract, progress gate, and final stop/pass decisions.
+
+Use `references/ratchet-signals.md` for the schema. Prefer `unknown` or omission over fake certainty.
+
+Important fields:
+
+- `local_fixable_signal`: local bounded repair appears plausible.
+- `direction_symptom_signal`: finding may indicate wrong model, state owner, identity boundary, source of truth, or cache lifetime.
+- `scope_expansion_required_signal`: likely fix crosses API, schema, dependency, architecture, or module ownership boundaries.
+- `human_decision_required_signal`: likely fix needs user, product, architecture, compatibility, or migration judgment.
