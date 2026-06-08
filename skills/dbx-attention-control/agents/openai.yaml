@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-attention-control"
+  short_description: "Mixed inbox attention routing"
+  default_prompt: "Use $dbx-attention-control to route this mixed inbox batch by evidence and suggest any attention profile updates."
