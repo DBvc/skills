@@ -71,7 +71,7 @@ python3 scripts/create_skill_skeleton.py --name example-skill --description "Use
 
 The eval runner validates schema and can score saved outputs. Use `--outputs-dir` for per-case files named `<eval-id>.md` or `--captured-output` with an explicit `--case-id`. It refuses to score one captured output against every eval case. It does not call an LLM.
 
-## Files touched by this update
+## Package Files
 
 ```text
 SKILL.md

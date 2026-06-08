@@ -55,9 +55,13 @@ Current DBX graph:
 | `dbx-diff-review` precedes `dbx-linus-review` for concrete diffs | If strict pragmatic judgment is requested on a diff with staged/branch/file ambiguity, establish the target first. |
 | `dbx-code-ratchet` composes review skills for bounded repair | Only for explicit code ratchet / review-repair-revalidation requests; may modify code, but must stop on direction failure, unsafe scope, or diverging risk. |
 | `dbx-linus-review` handles explicit strict critique | Use for Linus-style, harsh, over-engineering, model, plan, or merge/readiness judgment. |
+| `dbx-product-judgment` handles product correctness judgment | Use when product artifacts, target users/jobs, evidence boundaries, or product decisions dominate; route ordinary concrete diff review to `dbx-diff-review`. |
 | `dbx-decision-framing` precedes `dbx-goal-writer` | If user has not decided whether to do the work, decide before writing a Codex goal. |
 | `dbx-skill-architect` precedes new skill creation | If request is one-off, triage before full skill creation. |
+| `dbx-skill-portfolio-auditor` supports collection placement decisions | Explicit/manual-only portfolio audit for installed or repository skills; routes single-skill design, critique, or improvement to `dbx-skill-architect`. |
+| `dbx-attention-routing` precedes product-specific tagging/write workflows | Route mixed inputs through the stable attention kernel before mapping to external task, note, or metadata systems. |
 | `dbx-subagent-context` supports `dbx-goal-writer` | Goal contracts may include subagent context strategy when Codex subagents are involved. |
+| `dbx-agent-handoff` produces restart packets | Use for AI agent/session continuation and context-compaction handoffs; do not use for human workplace handoff documents. |
 | `dbx-conversation-align` competes with `dbx-decision-framing` | Use conversation-align for wording/boundaries; decision-framing for real action trade-offs. |
 | `dbx-open-source-commit-pr` competes with `dbx-work-commit-pr` | Choose based on public/open-source vs work/internal context. |
 | `dbx-software-plan-first-*` forms a manual-only phase chain | Plan issue -> ground plan -> finalize plan -> implement feature; showhand is the gated automation variant. |
@@ -79,10 +83,13 @@ Examples:
 | “Review this completed diff and write a PR description.” | `dbx-diff-review` first, then appropriate commit/PR skill. |
 | “Run L2 code ratchet on staged changes and auto-fix clear findings, but do not commit.” | `dbx-code-ratchet`. |
 | “Use Linus-style review on this staged diff before the PR description.” | `dbx-diff-review` to lock target, then `dbx-linus-review`, then appropriate commit/PR skill. |
+| “Is this feature product-correct for the target user?” | `dbx-product-judgment`. |
 | “Should I split this monorepo?” | `dbx-decision-framing`, not `dbx-linus-review` unless code/design evidence dominates. |
 | “Make this message less harsh.” | `dbx-conversation-align` compact rewrite, not full decision analysis. |
 | “Turn this reusable workflow into a skill.” | `dbx-skill-architect` triage, then create/improve if gates pass. |
+| “Use $dbx-skill-portfolio-auditor to audit my installed skills.” | `dbx-skill-portfolio-auditor`. |
 | “Write a Codex goal for this already-approved task.” | `dbx-goal-writer`. |
+| “Make a restart packet so the next AI agent can continue.” | `dbx-agent-handoff`. |
 | “Use $dbx-software-plan-first-finalize-plan to seal the agreed plan.” | `dbx-software-plan-first-finalize-plan`. |
 | “先 plan-first 一下，不要写代码。” | Direct planning, not DBX Software Plan-First phase skills unless explicitly named. |
 

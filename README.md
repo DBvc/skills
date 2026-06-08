@@ -54,7 +54,8 @@ Start here when creating or changing a skill:
 ## Local Checks
 
 ```bash
-# Check frontmatter, directory structure, eval JSON, and index consistency.
+# Check frontmatter, directory structure, eval JSON, README/index mentions,
+# and plan-first shared-file sync.
 python3 scripts/validate_skills.py --root .
 
 # Generate Markdown or JSON inventory.
@@ -92,16 +93,28 @@ npx add-skill dbvc/skills --list
 git clone https://github.com/dbvc/skills.git
 cd skills
 
-# Codex
+# Codex / Agent Skills current user scope
+mkdir -p ~/.agents/skills
+for skill in skills/dbx-*; do
+  ln -sf "$(pwd)/$skill" ~/.agents/skills/
+done
+
+# Legacy or custom Codex setups
+mkdir -p ~/.codex/skills
 for skill in skills/dbx-*; do
   ln -sf "$(pwd)/$skill" ~/.codex/skills/
 done
 
 # Cursor
+mkdir -p ~/.cursor/skills
 for skill in skills/dbx-*; do
   ln -sf "$(pwd)/$skill" ~/.cursor/skills/
 done
 ```
+
+Use `~/.agents/skills` for the current Codex / Agent Skills user scope. Keep
+`~/.codex/skills` only for legacy or custom Codex setups that still discover
+skills there.
 
 ## Creating a New Skill
 

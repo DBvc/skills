@@ -42,6 +42,7 @@ Maturity values below reflect current repository artifacts. All current stable s
 | `dbx-decision-framing` | Frame high-impact real decisions. | decision | L5 | YAML/user-visible ceremony and over-analysis for low-stakes tasks. | Use before `dbx-goal-writer` when the task itself is not yet decided. | Hide boundary YAML by default for lightweight decisions; preserve internal self-check. |
 | `dbx-subagent-context` | Set Codex subagent context inheritance strategy. | coordination + host-specific | L5 | Codex feature drift and host portability. | Supports `dbx-goal-writer` only when Codex subagents or `fork_context` are explicit. | Keep `docs/DBX_CODEX_COMPATIBILITY.md` current. |
 | `dbx-goal-writer` | Create, start, and audit Codex goal contracts. | procedure + host-specific | L5 | Codex `/goal` may be feature-gated or surface-dependent. | Use after decision is made; do not use for generic planning. | Add fixture tests for invented slash syntax and unsupported package mode. |
+| `dbx-agent-handoff` | Create restart handoffs for future AI agent sessions. | coordination + handoff | L5 | Ambiguous "handoff" requests can be confused with human workplace handoff docs; stale or overbroad context can mislead the next agent. | Use only for AI agent/session continuation; ask one clarification on ambiguous handoff requests; not for human status docs. | Add regression cases from real session resumes. |
 | `dbx-software-plan-first-plan-issue` | Manual-only Software Plan-First chat convergence before repository grounding. | procedure + coordination + stateful workflow | L5 | Wrong trigger could turn ordinary planning into ceremonial workflow. | Use only when explicitly named; precedes `dbx-software-plan-first-ground-plan` or `dbx-software-plan-first-finalize-plan`. | Add baseline comparison after first real issue workflow. |
 | `dbx-software-plan-first-ground-plan` | Manual-only read-only grounding of project facts, rules, source-of-truth, surfaces, and validation. | procedure + knowledge + tool | L5 | Scanner hints may be mistaken for verified facts. | Follows `dbx-software-plan-first-plan-issue`; hands off to `dbx-software-plan-first-finalize-plan`. | Add fixture repo for grounding output regression. |
 | `dbx-software-plan-first-finalize-plan` | Manual-only writing of Chinese `plan.md` and `tasks.md`, plus workflow seal. | procedure + stateful workflow + tool | L5 | Incomplete decisions may be sealed as if final. | Follows plan convergence and grounding; precedes implementation. | Add structural checker for generated `plan.md` / `tasks.md` examples. |
@@ -63,6 +64,7 @@ Important relationships:
 - `dbx-product-judgment` handles product-correctness judgment when a product artifact, target user/job, evidence boundary, or product decision is in scope; route ordinary code diff review to `dbx-diff-review` and non-product high-impact trade-offs to `dbx-decision-framing`.
 - `dbx-attention-routing` handles mixed inbox/information/idea/task attention routing before product-specific tagging or external metadata writes.
 - `dbx-subagent-context` supports Codex planning only for explicit subagent context questions.
+- `dbx-agent-handoff` handles AI agent/session continuation packets; do not use it for human workplace handoff docs or general summaries.
 - `dbx-conversation-align` and `dbx-decision-framing` compete in some communication/choice scenarios; choose by primary intent.
 - `dbx-software-plan-first-*` skills form a manual-only phase chain: plan issue -> ground plan -> finalize plan -> implement one task, with showhand as the gated automation variant.
 - Do not route ordinary planning, repository reading, or implementation into `dbx-software-plan-first-*` unless the user explicitly names the DBX-prefixed phase skill.
@@ -75,7 +77,6 @@ Do not add these until real repeated cases exist.
 | --- | --- | --- |
 | `dbx-frontend-debug` | User has strong frontend background; ASCT includes a synthetic frontend-debug example; debugging has clear process/evidence/control surfaces. | 10 to 20 real bug cases showing baseline agent patch-stacking, weak root-cause loops, or false completion. |
 | `dbx-project-memory` | Could preserve project glossary, ADRs, out-of-scope records, and agent briefs. | Repeated failures where agent forgets project terms or decisions despite current context. |
-| `dbx-agent-handoff` | Could make long-running work transferable across agents/sessions. | Repeated handoff failures with missing state, validation, or next action. |
 
 ## Collection Priorities
 

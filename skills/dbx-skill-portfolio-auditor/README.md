@@ -5,36 +5,27 @@ It also flags likely trigger overlap between skills by comparing descriptions an
 
 This skill is intentionally configured as explicit-only for Codex through `agents/openai.yaml` because portfolio audits are infrequent, privacy-sensitive, and should not accidentally trigger during normal work.
 
-## Install in DBX skills
+## Repository Status
 
-Unzip this package at the repository root:
+This skill is already integrated in this repository at:
+
+```text
+skills/dbx-skill-portfolio-auditor/
+```
+
+Run repository checks from the repo root after changing it:
 
 ```bash
-cd /path/to/DBvc/skills
-unzip /path/to/dbx-skill-portfolio-auditor.zip
 python3 scripts/validate_skills.py --root .
 python3 scripts/run_trigger_evals.py --root . --validate-only
 ```
 
-Then add the skill to repository-level docs.
+## Routing
 
-Suggested `README.md` stable-skill row:
-
-```markdown
-[dbx-skill-portfolio-auditor](skills/dbx-skill-portfolio-auditor) Audit installed skills and decide global, project-scoped, explicit-only, disabled, or uninstall/archive placement.
-```
-
-Suggested `DBX_SKILL_INDEX.md` row:
-
-```markdown
-| `dbx-skill-portfolio-auditor` | Audit installed skills and recommend global/repo/explicit/disable cleanup. | meta + collection workflow + tool | L5 | Usage evidence and privacy boundaries can be weak if the user does not provide data. | Explicit/manual trigger; supports collection governance and may hand off single-skill creation to `dbx-skill-architect`. | Add baseline comparison with a real local portfolio audit after first use. |
-```
-
-Suggested routing note:
-
-```markdown
-- `dbx-skill-portfolio-auditor` is for installed-skill portfolio optimization. `dbx-skill-architect` remains the route for creating, critiquing, or improving one skill.
-```
+This skill is explicit/manual-only. Use it when the user names
+`$dbx-skill-portfolio-auditor` or launches it from the skill UI. For generic
+skill cleanup questions, ask whether to run it. Use `dbx-skill-architect` for
+creating, critiquing, improving, or evaluating one skill.
 
 ## Typical usage
 

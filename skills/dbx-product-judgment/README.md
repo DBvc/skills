@@ -2,29 +2,27 @@
 
 A DBX skill for evidence-bounded product correctness judgment across domains.
 
-## Install
+## Repository Status
 
-This zip is shaped for the `DBvc/skills` repository root:
-
-```bash
-unzip dbx-product-judgment.zip -d /path/to/skills-repo
-python3 scripts/validate_skills.py --root /path/to/skills-repo
-python3 scripts/run_trigger_evals.py --root /path/to/skills-repo --validate-only
-```
-
-The skill directory will land at:
+This skill is already integrated in this repository at:
 
 ```text
 skills/dbx-product-judgment/
 ```
 
-## Suggested `DBX_SKILL_INDEX.md` row
+Run repository checks from the repo root after changing it:
 
-Add this row to the Current Stable Skills table when merging:
-
-```markdown
-| `dbx-product-judgment` | Evidence-bounded judgment of whether a product, feature, PRD, live UX, IA, interaction, content, implementation, roadmap, or competitor position is product-correct. | product audit + decision + research + implementation alignment | L5 | Unsupported certainty when target user, product artifact, or evidence is missing. | Use for product/feature correctness judgment; if the request becomes ordinary concrete diff review, hand off to `dbx-diff-review`; if it becomes skill creation, hand off to `dbx-skill-architect`. | Add baseline comparison cases after several real audits. |
+```bash
+python3 scripts/validate_skills.py --root .
+python3 scripts/run_trigger_evals.py --root . --validate-only
 ```
+
+## Routing
+
+Use for evidence-bounded product correctness judgment. If the request becomes
+ordinary concrete code diff review, route that part to `dbx-diff-review`. If it
+becomes a high-impact non-product go/no-go decision, route to
+`dbx-decision-framing`.
 
 ## Shape
 
