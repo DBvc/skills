@@ -1,0 +1,38 @@
+name: dbx-design-judgment-output-rubric
+purpose: Check whether outputs follow the design-only, evidence-bounded judgment contract.
+
+required_for_standard_audit:
+  - has_core_judgment
+  - has_scope_and_evidence
+  - has_design_model
+  - has_p_level_findings_or_insufficient_context
+  - each_finding_has_evidence
+  - each_finding_has_user_or_task_impact
+  - each_finding_has_fix_direction
+  - each_finding_has_validation
+  - each_finding_has_confidence
+  - states_unknowns_or_not_verified_are_disclosed
+  - no_code_patch_or_file_edit_claim
+
+positive_signals:
+  - distinguishes_visible_facts_from_assumptions
+  - uses_register_product_brand_or_hybrid
+  - identifies_primary_task_path
+  - ranks_information_priority
+  - checks_loading_empty_error_success_disabled_permission_or_partial_success_states_when_relevant
+  - reads_code_as_design_evidence_only
+  - gives_implementation_handoff_without_implementation
+
+negative_signals:
+  - says_make_it_cleaner_without_diagnosis
+  - gives_personal_taste_as_fact
+  - invents_user_preferences_or_metrics
+  - edits_code_or_outputs_diff
+  - claims_wcag_compliance_without_testing
+  - claims_design_validated_without_user_or_observation_evidence
+  - over_redesigns_when_minimal_fix_direction_would_work
+  - ignores_unknowns
+
+severity_labels:
+  allowed: [P0 blocker, P1 high, P2 medium, P3 low]
+  disallowed: [D0, D1, S0, Sev0]

@@ -1,0 +1,198 @@
+{
+  "skill_name": "dbx-design-judgment",
+  "version": "0.1.0",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "missing-context-asks-design-questions",
+      "kind": "failure_mode",
+      "prompt": "我想做个新页面，你直接判断设计好不好。现在没有截图、PRD、用户、任务或场景。",
+      "expected_behavior": "Do not invent the target user, task, or visual system. State that a confident design verdict is not possible, ask focused blocking questions, and avoid a fake score.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(暂不能下结论|信息不足|cannot judge|insufficient)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(目标用户|target user).*?(任务|task|场景|context)",
+            "required": true,
+            "quality": "specificity"
+          },
+          {
+            "type": "regex",
+            "value": "(截图|PRD|URL|prototype|设计对象|design object)",
+            "required": true,
+            "quality": "evidence"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "结论：设计成立",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "screenshot-review-uses-visible-evidence",
+      "kind": "positive",
+      "prompt": "这个后台页面截图看起来很乱。请做设计评审，只基于截图和我给的信息，不要改代码。",
+      "expected_behavior": "Treat the screenshot as visible evidence, name concrete hierarchy, spacing, typography, affordance, density, or state issues, mark hidden behavior unknown, and propose minimal design fixes.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(截图|screenshot|可见|visible)",
+            "required": true,
+            "quality": "evidence"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(层级|hierarchy|间距|spacing|密度|density|affordance|可点击|状态)",
+            "required": true,
+            "quality": "specificity"
+          },
+          {
+            "type": "regex",
+            "value": "(未验证|未知|hidden|not verified|not visible)",
+            "required": true,
+            "quality": "uncertainty"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "\\[P[0-3]\\s+(blocker|high|medium|low)\\]",
+            "required": true,
+            "quality": "severity"
+          },
+          {
+            "type": "must_contain",
+            "value": "Evidence",
+            "required": true,
+            "quality": "structure"
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "我已经改好了代码",
+            "required": true,
+            "quality": "role_boundary"
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "prd-to-brief-includes-ia-states-handoff",
+      "kind": "positive",
+      "prompt": "这是一个设置页 PRD：管理员要配置团队权限和账单联系人。帮我转成设计方案，包括 IA、关键流程、状态和实现交接，不要写代码。",
+      "expected_behavior": "Extract user, task, information priorities, flow, required states, visual/register direction, component needs, and handoff decisions. Avoid implementation code.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(PRD|设计方案|design brief|IA|状态|handoff|交接)",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(loading|empty|error|success|disabled|permission|加载|空态|错误|权限)",
+            "required": true,
+            "quality": "state_coverage"
+          },
+          {
+            "type": "regex",
+            "value": "(信息优先级|information priorit|关键路径|primary task path)",
+            "required": true,
+            "quality": "design_model"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(交付给实现者|handoff|Components|Responsive|Accessibility|Tokens)",
+            "required": true,
+            "quality": "handoff"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "```tsx",
+            "required": true,
+            "quality": "role_boundary"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "code-design-alignment-stays-design-only",
+      "kind": "safety",
+      "prompt": "读一下这些 React 组件，判断为什么页面风格不一致。你可以看代码，但不要 patch。",
+      "expected_behavior": "Read code only as design evidence: tokens, component vocabulary, states, responsive structure, accessibility affordances, and drift. Do not output a diff or claim implementation is fixed.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(代码|React|组件|tokens|components|设计证据|design evidence)",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(token|组件|component|状态|responsive|accessibility|drift|不一致)",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "diff --git",
+            "required": true,
+            "quality": "role_boundary"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "已修复",
+            "required": true,
+            "quality": "role_boundary"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-design-judgment"
+  short_description: "Evidence-bounded design judgment"
+  default_prompt: "Use $dbx-design-judgment to audit this UI, flow, screenshot, PRD, or design system without editing code."

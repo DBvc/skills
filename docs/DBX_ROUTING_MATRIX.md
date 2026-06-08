@@ -22,6 +22,7 @@ Read it when:
 | Run explicit bounded review-repair-revalidation on concrete code changes | `dbx-code-ratchet` | Read-only review skills or open-ended implementation workflows. |
 | Judge architecture plans, data models, over-engineering, or explicit strict technical risk | `dbx-linus-review` | `dbx-diff-review`, unless a concrete diff target must be selected first. |
 | Judge product, feature, PRD, UX, IA, content, implementation alignment, roadmap, or competitor correctness | `dbx-product-judgment` | `dbx-diff-review`, unless ordinary code-change review is primary; `dbx-decision-framing`, unless non-product trade-off dominates. |
+| Judge or shape UI, flow, screenshot, prototype, PRD-to-design brief, component, design system, or code-backed interface design | `dbx-design-judgment` | Implementation/frontend coding skills when the user asks to edit files; `dbx-product-judgment` when product viability or business correctness dominates. |
 | Make a high-impact real decision | `dbx-decision-framing` | `dbx-linus-review`, unless code/design evidence dominates. |
 | Route noisy mixed inbox, saved content, tasks, ideas, signals, courses, tools, notes, or external-system metadata | `dbx-attention-routing` | Product-specific tagging/write workflows, unless adapter dry-run is requested. |
 | Rewrite risky conversation or boundary message | `dbx-conversation-align` | `dbx-decision-framing`, unless real action trade-off dominates. |
@@ -53,6 +54,7 @@ Current graph:
 | `dbx-code-ratchet` composes `dbx-diff-review` and conditionally `dbx-linus-review` | Use only when the user explicitly asks for code ratchet or automatic review-repair-revalidation; it may modify code and must stop on direction failure or diverging risk. |
 | `dbx-linus-review` handles explicit strict critique | Use it when the user asks for Linus-style, harsh, over-engineering, model, or merge/readiness judgment. |
 | `dbx-product-judgment` handles product correctness judgment | Use it when a product artifact, target user/job, evidence boundary, or product decision dominates; route ordinary code diffs to `dbx-diff-review` and non-product trade-offs to `dbx-decision-framing`. |
+| `dbx-design-judgment` handles design correctness and design shaping | Use it when a design surface, task path, IA, visual hierarchy, interaction states, visual system, accessibility, responsive behavior, or design handoff dominates; it may read code as design evidence but must not edit files. |
 | `dbx-decision-framing` precedes `dbx-goal-writer` | Decide whether/what to do before writing a Codex execution contract. |
 | `dbx-skill-architect` precedes new skill creation | Triage repeatability, stable task distribution, evaluability, safety, and placement. |
 | `dbx-skill-portfolio-auditor` supports collection placement decisions | Use only after explicit/manual invocation for installed-skill portfolio audits; hand off single-skill creation, critique, or improvement to `dbx-skill-architect`. |
@@ -83,6 +85,10 @@ If the user is unsure whether to do the work, use decision framing before writin
 ### Product judgment
 
 Use `dbx-product-judgment` when product correctness is the primary question: whether a product, feature, PRD, UX flow, IA, content, implementation, roadmap, or competitor position is coherent, valuable, usable, or worth building. If the task turns into ordinary concrete diff review, route that part to `dbx-diff-review`; if it turns into a high-impact non-product go/no-go decision, route to `dbx-decision-framing`.
+
+### Design judgment
+
+Use `dbx-design-judgment` when the design surface is the primary question: UI, flow, screenshot, prototype, PRD-to-design brief, component, design system, visual hierarchy, interaction states, responsive behavior, accessibility, or code-backed interface consistency. It is read-only and design-only: if the user asks to patch CSS/React or implement the design, route that execution to the appropriate coding/frontend workflow after producing a handoff. If the question is mainly product viability, business value, roadmap, or market positioning, route to `dbx-product-judgment`.
 
 ### Skill triage before skill creation
 
@@ -118,6 +124,8 @@ The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do no
 | “用 Linus 风格严厉判断这个 staged diff 能不能合。” | `dbx-diff-review` to establish target, then `dbx-linus-review`. |
 | “帮我审一下这个架构方案有没有明显问题。” | `dbx-linus-review` if evidence/code/design risk dominates; `dbx-decision-framing` if trade-off dominates. |
 | “这个功能从产品上到底对不对？” | `dbx-product-judgment`. |
+| “这个截图为什么看起来很乱？只做设计评审，不要改代码。” | `dbx-design-judgment`. |
+| “读这个 PRD，给我 IA、交互状态和设计交接，不要实现。” | `dbx-design-judgment`. |
 | “我该不该做这个项目？” | `dbx-decision-framing`. |
 | “帮我把这一堆收藏、课程、想法和任务分一下：哪些做、哪些存、哪些丢。” | `dbx-attention-routing`. |
 | “帮我把这个 prompt 写好一点，只用一次。” | Direct answer, not `dbx-skill-architect` full skill. |
