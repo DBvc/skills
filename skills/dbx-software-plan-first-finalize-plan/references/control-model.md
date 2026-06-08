@@ -20,7 +20,7 @@
    不能只说“完成了”。必须记录验证命令、review-only 原因、变更文件和证据路径。
 
 6. **Git 是适配器，不是工作流本体**  
-   提交风格和是否自动提交由 `.plan-first/config.toml` 控制；计划过程产物固定属于本地 `.plan-first/issues/<issue-id>/` 状态，不进入 task commit。工作流完整性由 seal、root marker 和完整 review snapshot 保证。
+   提交风格、是否自动提交、以及计划文档是否提升为可提交项目文档由 `.plan-first/config.toml` 控制。默认 `.plan-first/issues/<issue-id>/` 是本地 workflow 状态，不进入 task commit；显式 `plan_docs.mode = "tracked"` 时，只提交同步到项目文档路径的 `plan.md` 和 `tasks.md`。工作流完整性由 seal、root marker 和完整 review snapshot 保证。
 
 ## 主要失败模式
 
@@ -29,6 +29,7 @@
 - 为了让实现通过而临时发明 API、字段、错误语义、UI 状态、数据迁移或部署假设。
 - 只验证 happy path，不验证失败、边界、权限、异步、回归或系统可见影响。
 - 把用户已有工作、未提交改动、生成产物或临时原型混入提交。
+- 在 local 模式下把 commit message 指向 `.plan-first/` 本地过程文件，导致长期提交记录引用失效。
 - `tasks.md` 被手动改写，导致 review 的任务和 complete 的任务不是同一个。
 - showhand 在不适合自动化的高主观、高风险或 source-of-truth 缺失任务上一路执行。
 

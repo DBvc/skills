@@ -129,7 +129,7 @@
       "id": "workspace-root-local-artifacts",
       "kind": "positive",
       "prompt": "使用 $dbx-software-plan-first-finalize-plan，在一个非 Git 的虚拟 workspace 根下为跨仓 issue 写计划并 seal，计划文件不要提交。",
-      "expected_behavior": "Use the workspace root as the plan-first state owner even when it is not a Git repo; bare init from the workspace root may bootstrap .plan-first/config.toml; write plan.md/tasks.md under .plan-first/issues/<issue-id>/; do not create tracked plans/ artifacts; report workspace root, local artifact paths, task count, and commit mode.",
+      "expected_behavior": "Use the workspace root as the plan-first state owner even when it is not a Git repo; bare init from the workspace root may bootstrap .plan-first/config.toml; write plan.md/tasks.md under .plan-first/issues/<issue-id>/; with the default plan_docs.mode=local, do not create tracked plan artifacts; report workspace root, local artifact paths, task count, plan docs mode, and commit mode.",
       "checks": {
         "trigger": [
           {

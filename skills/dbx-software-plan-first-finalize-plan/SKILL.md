@@ -25,7 +25,7 @@ description: Manual trigger only. Use only when the user explicitly names `dbx-s
 - 如果计划会新增、移动或固定 source/config/test/doc 产物，产物归属必须已经由项目事实或用户确认支持；归属未定时不要 seal，先返回 grounding 或澄清。
 - 写入中文 `plan.md` 和 `tasks.md`。
 - 运行 `scripts/issue-workflow.sh seal <issue-id>` 建立 seal。
-- 计划过程产物固定写入 `.plan-first/issues/<issue-id>/`，不作为提交产物。
+- 计划过程产物固定写入 `.plan-first/issues/<issue-id>/`，不作为提交产物；若 `.plan-first/config.toml` 显式配置 `plan_docs.mode = "tracked"`，只提交同步到项目文档路径的 `plan.md` 和 `tasks.md` 副本。
 - 是否自动提交以及提交格式由 `.plan-first/config.toml` 控制。
 
 ## 必须读取

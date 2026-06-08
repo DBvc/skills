@@ -40,7 +40,7 @@ scripts/issue-workflow.sh --repo <repo-name> review-ready <issue-id>
 1. 运行 `scripts/issue-workflow.sh init <issue-id>` 创建中文 `plan.md` 和 `tasks.md` 模板。
 2. 填写计划和任务。
 3. 运行 `scripts/issue-workflow.sh seal <issue-id>` 写入 seal。
-4. 报告本地计划文件位置、任务数量、workspace root 和提交模式。计划过程产物固定写在 `.plan-first/issues/<issue-id>/`，不自动提交。
+4. 报告本地计划文件位置、任务数量、workspace root、plan docs 模式和提交模式。计划过程产物固定写在 `.plan-first/issues/<issue-id>/`；默认 `plan_docs.mode = "local"` 时不自动提交。`plan_docs.mode = "tracked"` 时，同步后的 `plan.md` 和 `tasks.md` 会写入配置的项目文档路径。
 
 ## implement-feature 阶段
 
@@ -48,13 +48,15 @@ scripts/issue-workflow.sh --repo <repo-name> review-ready <issue-id>
 2. 只实现第一个未完成 task。
 3. 运行 `review-ready` 执行 task 验证、shared check、必要时 final validation，并生成完整 review snapshot。
 4. 等用户 review 通过后运行 `complete`。
-5. `complete` 先确认 review 后 diff 边界、提交模式、提交模板和 staged 文件仍一致，再写中文证据文件、更新 `tasks.md`，并根据 `workspace.commit` 自动提交或输出建议提交信息。`auto` 模式若提交中断，会保留本地 `complete-pending.json`，下次 `complete` 会优先恢复。
+5. `complete` 先确认 review 后 diff 边界、提交模式、提交模板和 staged 文件仍一致，再写中文证据文件、更新本地 `tasks.md`；tracked 模式会同步项目文档 `tasks.md`。之后根据 `workspace.commit` 自动提交或输出建议提交信息。`auto` 模式若提交中断，会保留本地 `complete-pending.json`，下次 `complete` 会优先恢复。
 
 多仓 workspace 下，验证命令必须显式写 cwd，例如 `cd web-app && yarn lint`。workflow 不猜验证命令归属。
 
 `workspace.commit = "auto"` 且发现多个 Git repo 时，`review-ready` 必须显式传 `--repo <name>`，避免一次 task 自动提交多个仓库。
 
 `workspace.commit = "none"` 不生成提交建议。`workspace.commit = "manual"` 输出 deterministic commit subject/body；提交类型来自 task 的 `提交类型:` 或 `commit.default_type`，不能从 diff 猜。
+
+`plan_docs.mode = "local"` 时，提交模板不能引用本地过程路径。`plan_docs.mode = "tracked"` 时，`review-ready` 会把同步后的 `plan.md` 和 `tasks.md` 纳入 review snapshot；`workspace.commit = "auto"` 要求 tracked 文档位于被 review 的同一个 repo 中。
 
 ## showhand 阶段
 

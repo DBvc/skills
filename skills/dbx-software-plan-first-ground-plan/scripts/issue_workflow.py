@@ -13,7 +13,7 @@ import subprocess
 import sys
 import textwrap
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
@@ -36,8 +36,15 @@ DEFAULT_CONFIG: Dict[str, Any] = {
             "",
             "Issue: {issue_id}",
             "Task: {task_id}",
-            "Evidence: {evidence_file}",
+            "",
+            "Validation:",
+            "{validation_summary}",
         ]),
+    },
+    "plan_docs": {
+        "mode": "local",
+        "plan_path": "docs/plan-first/{issue_id}/plan.md",
+        "tasks_path": "docs/plan-first/{issue_id}/tasks.md",
     },
 }
 
@@ -46,6 +53,9 @@ EN_NO_VALIDATION = "# no-programmatic-validation:"
 CONFIG_REL = Path(".plan-first") / "config.toml"
 ISSUES_REL = Path(".plan-first") / "issues"
 ISSUE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+TEMPLATE_RE = re.compile(r"{([A-Za-z_][A-Za-z0-9_]*)}")
+LOCAL_STATE_TEMPLATE_VARS = {"evidence_file", "validation_log"}
+TRACKED_DOC_TEMPLATE_VARS = {"plan_file", "tasks_file"}
 
 
 def die(message: str, code: int = 1) -> None:
@@ -106,6 +116,9 @@ def default_config_text() -> str:
 
     [workspace]
     commit = "manual"
+
+    [plan_docs]
+    mode = "local"
     """)
 
 
@@ -241,6 +254,27 @@ def parse_config_text(text: str, cfg_path: Path) -> Dict[str, Any]:
     return parse_minimal_toml(text, cfg_path)
 
 
+def template_vars(template: str) -> set[str]:
+    return set(TEMPLATE_RE.findall(template or ""))
+
+
+def validate_commit_template_lifetime(cfg: Dict[str, Any]) -> None:
+    mode = cfg["plan_docs"]["mode"]
+    banned = set(LOCAL_STATE_TEMPLATE_VARS)
+    if mode == "local":
+        banned |= TRACKED_DOC_TEMPLATE_VARS
+    fields = [("commit.task_subject", cfg["commit"]["task_subject"])]
+    if cfg["commit"].get("include_body", True):
+        fields.append(("commit.body_template", cfg["commit"].get("body_template", "")))
+    for label, template in fields:
+        used = template_vars(template)
+        conflicts = sorted(used & banned)
+        if conflicts:
+            if mode == "local":
+                die(f"{label} 在 plan_docs.mode=local 下不能引用本地/未提交过程变量：{', '.join(conflicts)}。")
+            die(f"{label} 不能引用本地 workflow 状态变量：{', '.join(conflicts)}。请使用 {{validation_summary}} 或 tracked 文档变量。")
+
+
 def load_config(root: Path) -> Dict[str, Any]:
     cfg_path = root / CONFIG_REL
     cfg = DEFAULT_CONFIG
@@ -251,11 +285,13 @@ def load_config(root: Path) -> Dict[str, Any]:
             die(f"无法解析 {cfg_path}: {exc}")
         if not isinstance(data, dict):
             die(f"{cfg_path} 必须是 TOML table。")
-        reject_unknown(data, {"version", "workspace", "commit"}, "config.toml")
+        reject_unknown(data, {"version", "workspace", "commit", "plan_docs"}, "config.toml")
         if "workspace" in data:
             reject_unknown(data["workspace"], {"commit"}, "workspace")
         if "commit" in data:
             reject_unknown(data["commit"], {"task_subject", "default_type", "include_body", "body_template"}, "commit")
+        if "plan_docs" in data:
+            reject_unknown(data["plan_docs"], {"mode", "plan_path", "tasks_path"}, "plan_docs")
         cfg = deep_merge(DEFAULT_CONFIG, data)
     if cfg.get("version") != 1:
         die("配置 version 只能是 1。")
@@ -271,6 +307,13 @@ def load_config(root: Path) -> Dict[str, Any]:
         die("配置 commit.include_body 必须是 boolean。")
     if not isinstance(commit_cfg.get("body_template"), str):
         die("配置 commit.body_template 必须是字符串。")
+    plan_docs = cfg.get("plan_docs", {})
+    if plan_docs.get("mode") not in {"local", "tracked"}:
+        die('配置 plan_docs.mode 只能是 "local" 或 "tracked"。')
+    for field in ("plan_path", "tasks_path"):
+        if not isinstance(plan_docs.get(field), str) or not plan_docs.get(field, "").strip():
+            die(f"配置 plan_docs.{field} 必须是非空字符串。")
+    validate_commit_template_lifetime(cfg)
     return cfg
 
 
@@ -434,6 +477,207 @@ def issue_paths(issue_id: str, ctx: Context) -> Paths:
         pending_complete_file=state_dir / "complete-pending.json",
         validation_log=state_dir / "validation.log",
     )
+
+
+def render_doc_path_template(ctx: Context, paths: Paths, field: str) -> str:
+    template = ctx.cfg["plan_docs"][field]
+    unknown = sorted(template_vars(template) - {"issue_id"})
+    if unknown:
+        die(f"plan_docs.{field} 包含不支持的变量：{', '.join(unknown)}。当前只支持 {{issue_id}}。")
+    rendered = TEMPLATE_RE.sub(paths.issue_id, template).strip().replace("\\", "/")
+    posix = PurePosixPath(rendered)
+    if not rendered or posix.is_absolute() or any(part in {"", ".", ".."} for part in posix.parts):
+        die(f"plan_docs.{field} 必须渲染为 workspace 内的安全相对路径。")
+    if any(part == ".plan-first" for part in posix.parts):
+        die(f"plan_docs.{field} 不能写入 .plan-first；tracked 模式必须使用项目文档路径。")
+    if any(part == ".git" for part in posix.parts):
+        die(f"plan_docs.{field} 不能写入 Git 内部目录。")
+    return str(posix)
+
+
+def plan_docs_tracked(ctx: Context) -> bool:
+    return ctx.cfg["plan_docs"]["mode"] == "tracked"
+
+
+def tracked_doc_rel_paths(ctx: Context, paths: Paths) -> Tuple[str, str]:
+    plan_rel = render_doc_path_template(ctx, paths, "plan_path")
+    tasks_rel = render_doc_path_template(ctx, paths, "tasks_path")
+    if plan_rel == tasks_rel:
+        die("plan_docs.plan_path 和 plan_docs.tasks_path 不能渲染为同一个路径。")
+    return plan_rel, tasks_rel
+
+
+def repo_for_workspace_path(ctx: Context, path: Path) -> Optional[Tuple[Repo, str]]:
+    resolved = path.resolve()
+    for repo in sorted(ctx.repos, key=lambda r: len(str(r.root)), reverse=True):
+        try:
+            rel_path = resolved.relative_to(repo.root.resolve())
+        except ValueError:
+            continue
+        return repo, str(rel_path).replace(os.sep, "/")
+    return None
+
+
+def git_file_tracked(repo: Repo, name: str) -> bool:
+    cp = run(["git", "ls-files", "--error-unmatch", "--", name], cwd=repo.root, check=False)
+    return cp.returncode == 0
+
+
+def git_file_ignored(repo: Repo, name: str) -> bool:
+    cp = run(["git", "check-ignore", "-q", "--", name], cwd=repo.root, check=False)
+    return cp.returncode == 0
+
+
+def git_file_has_delete_status(repo: Repo, name: str) -> bool:
+    cp = run(["git", "status", "--porcelain=v1", "--", name], cwd=repo.root)
+    for line in cp.stdout.splitlines():
+        if len(line) >= 2 and "D" in line[:2]:
+            return True
+    return False
+
+
+def ensure_tracked_doc_target_trackable(repo: Repo, repo_file: str, rel_path: str) -> None:
+    parts = PurePosixPath(repo_file).parts
+    if any(part == ".git" for part in parts):
+        die(f"tracked plan 文档不能写入 Git 内部目录：{rel_path}")
+    if not git_file_tracked(repo, repo_file) and git_file_ignored(repo, repo_file):
+        die(f"tracked plan 文档路径被 Git ignore，不能稳定纳入 review/commit：{rel_path}")
+
+
+def tracked_doc_repo_files(ctx: Context, paths: Paths) -> Dict[str, List[str]]:
+    if not plan_docs_tracked(ctx):
+        return {}
+    out: Dict[str, List[str]] = {}
+    for rel_path in tracked_doc_rel_paths(ctx, paths):
+        target = ctx.root / rel_path
+        match = repo_for_workspace_path(ctx, target)
+        if match is None:
+            die(f"tracked plan 文档必须位于已发现的 Git repo 中：{rel_path}")
+        repo, repo_file = match
+        ensure_tracked_doc_target_trackable(repo, repo_file, rel_path)
+        out.setdefault(repo.name, []).append(repo_file)
+    return out
+
+
+def tracked_doc_target_hashes(ctx: Context, paths: Paths) -> Dict[str, str]:
+    hashes: Dict[str, str] = {}
+    if not plan_docs_tracked(ctx):
+        return hashes
+    for rel_path in tracked_doc_rel_paths(ctx, paths):
+        target = ctx.root / rel_path
+        if target.exists() and target.is_file():
+            hashes[rel_path] = sha256_file(target)
+    return hashes
+
+
+def ensure_safe_tracked_doc_write(ctx: Context, rel_path: str, source_text: str, allowed_hashes: Dict[str, str]) -> None:
+    target = ctx.root / rel_path
+    match = repo_for_workspace_path(ctx, target)
+    if match is None:
+        die(f"tracked plan 文档必须位于已发现的 Git repo 中：{rel_path}")
+    repo, repo_file = match
+    ensure_tracked_doc_target_trackable(repo, repo_file, rel_path)
+    if git_file_has_delete_status(repo, repo_file):
+        die(
+            "tracked plan 文档已被删除或 staged 删除，不能自动重建。请先确认删除意图或重新运行 review-ready：\n"
+            f"- {rel_path}"
+        )
+    if not target.exists():
+        return
+    if not target.is_file():
+        die(f"tracked plan 文档目标不是普通文件，不能覆盖：{rel_path}")
+    current_text = target.read_text(encoding="utf-8")
+    if current_text == source_text:
+        return
+    if repo_file not in set(status_files(ctx, repo)):
+        return
+    current_hash = sha256_file(target)
+    if allowed_hashes.get(rel_path) == current_hash:
+        return
+    die(
+        "tracked plan 文档已有未提交改动，不能覆盖。请先合并、提交或恢复该文件后重试：\n"
+        f"- {rel_path}"
+    )
+
+
+def sync_tracked_plan_docs(
+    ctx: Context,
+    paths: Paths,
+    allowed_hashes: Optional[Dict[str, str]] = None,
+    allowed_repo_names: Optional[set[str]] = None,
+) -> Dict[str, List[str]]:
+    if not plan_docs_tracked(ctx):
+        return {}
+    if not paths.plan_file.exists() or not paths.task_file.exists():
+        die("缺少 plan.md 或 tasks.md，无法同步 tracked plan 文档。")
+    allowed_hashes = allowed_hashes or {}
+    repo_files = tracked_doc_repo_files(ctx, paths)
+    if allowed_repo_names is not None:
+        outside = sorted(set(repo_files) - allowed_repo_names)
+        if outside:
+            die("workspace.commit=auto 且 plan_docs.mode=tracked 时，tracked plan 文档必须位于被 review 的 repo 中：\n" + "\n".join(f"- {name}" for name in outside))
+    plan_rel, tasks_rel = tracked_doc_rel_paths(ctx, paths)
+    targets = [
+        (paths.plan_file, ctx.root / plan_rel),
+        (paths.task_file, ctx.root / tasks_rel),
+    ]
+    for source, target in targets:
+        source_text = source.read_text(encoding="utf-8")
+        target_rel = rel(ctx.root, target)
+        ensure_safe_tracked_doc_write(ctx, target_rel, source_text, allowed_hashes)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(source_text, encoding="utf-8")
+    return repo_files
+
+
+def plan_docs_review_state(ctx: Context, paths: Paths) -> Dict[str, Any]:
+    state: Dict[str, Any] = {"mode": ctx.cfg["plan_docs"]["mode"]}
+    if plan_docs_tracked(ctx):
+        plan_rel, tasks_rel = tracked_doc_rel_paths(ctx, paths)
+        state.update({
+            "plan_path": plan_rel,
+            "tasks_path": tasks_rel,
+            "repo_files": tracked_doc_repo_files(ctx, paths),
+        })
+    return state
+
+
+def verify_plan_docs_review_state(ctx: Context, paths: Paths, review: Dict[str, Any]) -> None:
+    expected = review.get("plan_docs")
+    if not isinstance(expected, dict):
+        die("review-ready 快照缺少 plan_docs 边界。请重新 review-ready。")
+    current = plan_docs_review_state(ctx, paths)
+    if current != expected:
+        die("review-ready 后 plan_docs 配置或 tracked 文档路径发生变化。请重新 review-ready。")
+
+
+def merge_tracked_doc_files(
+    ctx: Context,
+    paths: Paths,
+    changed_repos: Dict[str, Dict[str, Any]],
+    include_clean: bool = False,
+) -> Dict[str, Dict[str, Any]]:
+    if not plan_docs_tracked(ctx):
+        return changed_repos
+    repos_by_name = {repo.name: repo for repo in ctx.repos}
+    merged = json.loads(json.dumps(changed_repos, ensure_ascii=False))
+    for repo_name, files in tracked_doc_repo_files(ctx, paths).items():
+        repo = repos_by_name[repo_name]
+        dirty_files = set(status_files(ctx, repo))
+        payload = merged.setdefault(repo_name, {"path": repo.rel_path, "files": {}})
+        payload.setdefault("files", {})
+        for name in files:
+            if not include_clean and name not in dirty_files:
+                continue
+            path = repo.root / name
+            payload["files"][name] = sha256_file(path) if path.exists() and path.is_file() else "__missing__"
+    return non_empty_snapshot(merged)
+
+
+def tracked_doc_template_values(ctx: Context, paths: Paths) -> Tuple[str, str]:
+    if not plan_docs_tracked(ctx):
+        return "", ""
+    return tracked_doc_rel_paths(ctx, paths)
 
 
 def ensure_templates() -> Tuple[Path, Path]:
@@ -625,9 +869,6 @@ def verify_seal(ctx: Context, paths: Paths) -> Dict[str, Any]:
     return seal
 
 
-TEMPLATE_RE = re.compile(r"{([A-Za-z_][A-Za-z0-9_]*)}")
-
-
 def task_commit_type(ctx: Context, task: Optional[Task]) -> str:
     if task is None:
         return ""
@@ -643,6 +884,9 @@ def render_template(
     evidence_file: str = "",
     validation_log: str = "",
     changed_files: str = "",
+    validation_summary: str = "",
+    plan_file: str = "",
+    tasks_file: str = "",
 ) -> str:
     values = {
         "issue_id": issue_id,
@@ -652,6 +896,9 @@ def render_template(
         "evidence_file": evidence_file,
         "validation_log": validation_log,
         "changed_files": changed_files,
+        "validation_summary": validation_summary,
+        "plan_file": plan_file,
+        "tasks_file": tasks_file,
     }
 
     def replace(match: re.Match[str]) -> str:
@@ -665,8 +912,15 @@ def render_template(
     return TEMPLATE_RE.sub(replace, template)
 
 
-def render_task_subject(ctx: Context, issue_id: str, task: Task) -> str:
-    return render_template(ctx, ctx.cfg["commit"]["task_subject"], issue_id, task).strip()
+def render_task_subject(ctx: Context, issue_id: str, task: Task, plan_file: str = "", tasks_file: str = "") -> str:
+    return render_template(
+        ctx,
+        ctx.cfg["commit"]["task_subject"],
+        issue_id,
+        task,
+        plan_file=plan_file,
+        tasks_file=tasks_file,
+    ).strip()
 
 
 def render_task_body(
@@ -676,6 +930,9 @@ def render_task_body(
     evidence_file: str,
     validation_log: str,
     changed_files: str,
+    validation_summary: str,
+    plan_file: str = "",
+    tasks_file: str = "",
 ) -> Optional[str]:
     if not ctx.cfg["commit"].get("include_body", True):
         return None
@@ -687,6 +944,9 @@ def render_task_body(
         evidence_file=evidence_file,
         validation_log=validation_log,
         changed_files=changed_files,
+        validation_summary=validation_summary,
+        plan_file=plan_file,
+        tasks_file=tasks_file,
     ).strip()
     return body or None
 
@@ -774,6 +1034,13 @@ def changed_files_text(changed_repos: Dict[str, Dict[str, Any]]) -> str:
         for name in sorted(files):
             lines.append(f"{repo_name}:{name}")
     return "\n".join(lines)
+
+
+def validation_summary_text(review: Dict[str, Any]) -> str:
+    lines = [str(item) for item in review.get("validation_summary", []) if str(item).strip()]
+    if not lines:
+        return "- 未记录验证摘要"
+    return "\n".join(f"- {line}" for line in lines)
 
 
 def git_add(repo: Repo, files: List[str]) -> None:
@@ -978,6 +1245,7 @@ def command_init(ctx: Context, paths: Paths) -> None:
         info(f"- {rel(ctx.root, paths.task_file)}")
     info(f"Workspace root：{ctx.root}")
     info(f"提交模式：workspace.commit={ctx.cfg['workspace']['commit']}")
+    info(f"Plan docs 模式：plan_docs.mode={ctx.cfg['plan_docs']['mode']}")
     info("下一步：填写 plan.md/tasks.md 后运行 `scripts/issue-workflow.sh seal <issue-id>`。")
 
 
@@ -985,11 +1253,17 @@ def command_seal(ctx: Context, paths: Paths) -> None:
     if not paths.plan_file.exists() or not paths.task_file.exists():
         die("缺少 plan.md 或 tasks.md。请先运行 init 并填写计划。")
     tasks = parse_tasks(paths.task_file, require_valid=True)
+    tracked_files = sync_tracked_plan_docs(ctx, paths)
     write_seal(ctx, paths, "finalize-plan seal")
     info("已写入 workflow seal：")
     info(f"- {rel(ctx.root, paths.seal_file)}")
+    if tracked_files:
+        info("已同步 tracked plan 文档：")
+        for plan_rel in tracked_doc_rel_paths(ctx, paths):
+            info(f"- {plan_rel}")
+        info("同步后的项目文档会纳入后续 review snapshot 和 task commit 边界。")
     info(f"任务数量：{len(tasks)}")
-    info("计划过程产物是本地 workflow 状态，不自动提交。")
+    info("`.plan-first/` 计划过程产物是本地 workflow 状态，不自动提交。")
 
 
 def command_status(ctx: Context, paths: Paths) -> None:
@@ -1006,6 +1280,11 @@ def command_status(ctx: Context, paths: Paths) -> None:
     info(f"计划文件：{rel(ctx.root, paths.plan_file)}")
     info(f"任务文件：{rel(ctx.root, paths.task_file)}")
     info(f"提交模式：workspace.commit={ctx.cfg['workspace']['commit']}")
+    info(f"Plan docs 模式：plan_docs.mode={ctx.cfg['plan_docs']['mode']}")
+    if plan_docs_tracked(ctx):
+        plan_rel, tasks_rel = tracked_doc_rel_paths(ctx, paths)
+        info(f"Tracked plan 文档：{plan_rel}")
+        info(f"Tracked tasks 文档：{tasks_rel}")
     if ctx.repos:
         info("Git repos：")
         for repo in ctx.repos:
@@ -1098,6 +1377,8 @@ def command_review_ready(ctx: Context, paths: Paths, selected_repo: Optional[str
         info("所有任务已完成，无需 review-ready。")
         return
     repos = prepare_review_repos(ctx, selected_repo)
+    allowed_repo_names = {repo.name for repo in repos} if ctx.cfg["workspace"]["commit"] == "auto" else None
+    tracked_files = sync_tracked_plan_docs(ctx, paths, allowed_repo_names=allowed_repo_names)
     is_last = completed_count(tasks) == len(tasks) - 1
     ok, summary, _ = run_validations(ctx, paths, task, is_last)
     if not ok:
@@ -1130,6 +1411,7 @@ def command_review_ready(ctx: Context, paths: Paths, selected_repo: Optional[str
         "validation_summary": summary,
         "validation_log": rel(ctx.root, paths.validation_log),
         "commit_mode": ctx.cfg["workspace"]["commit"],
+        "plan_docs": plan_docs_review_state(ctx, paths),
     }
     paths.state_dir.mkdir(parents=True, exist_ok=True)
     paths.review_state_file.write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -1319,16 +1601,22 @@ def command_complete(ctx: Context, paths: Paths) -> None:
     mode = ctx.cfg["workspace"]["commit"]
     if review.get("commit_mode") != mode:
         die("当前 workspace.commit 与 review-ready 时不一致。请重新 review-ready。")
+    verify_plan_docs_review_state(ctx, paths, review)
     repo_snapshots = verify_review_snapshot(ctx, review)
     changed_repos = non_empty_snapshot(repo_snapshots)
-    changed_text = changed_files_text(changed_repos)
     evidence_file = paths.runs_dir / f"task-{task.number:03d}-{task.task_id}.md"
     evidence_rel = rel(ctx.root, evidence_file)
+    sync_tracked_plan_docs(ctx, paths)
+    tracked_doc_hashes_before_complete = tracked_doc_target_hashes(ctx, paths)
+    predicted_changed_repos = merge_tracked_doc_files(ctx, paths, changed_repos, include_clean=True)
+    changed_text = changed_files_text(predicted_changed_repos)
+    plan_file, tasks_file = tracked_doc_template_values(ctx, paths)
+    validation_summary = validation_summary_text(review)
 
     subject: Optional[str] = None
     body: Optional[str] = None
     if mode in {"manual", "auto"}:
-        subject = render_task_subject(ctx, paths.issue_id, task)
+        subject = render_task_subject(ctx, paths.issue_id, task, plan_file=plan_file, tasks_file=tasks_file)
         body = render_task_body(
             ctx,
             paths.issue_id,
@@ -1336,24 +1624,30 @@ def command_complete(ctx: Context, paths: Paths) -> None:
             evidence_file=evidence_rel,
             validation_log=str(review.get("validation_log", "")),
             changed_files=changed_text,
+            validation_summary=validation_summary,
+            plan_file=plan_file,
+            tasks_file=tasks_file,
         )
 
     repos_by_name = {repo.name: repo for repo in ctx.repos}
     if mode == "auto":
-        if len(changed_repos) > 1:
+        if len(predicted_changed_repos) > 1:
             die("workspace.commit=auto 不允许一次 complete 多个 repo；请重新 review-ready --repo <name>。")
-        for repo_name, payload in changed_repos.items():
+        for repo_name, payload in predicted_changed_repos.items():
             repo = repos_by_name[repo_name]
             files = sorted(payload.get("files", {}).keys())
             unexpected = staged_non_allowed(repo, files)
             if unexpected:
                 die("检测到不属于当前任务的 staged 文件，不能自动提交：\n" + "\n".join(f"- {repo.name}:{x}" for x in unexpected))
 
+    mark_task_complete(paths, task)
+    sync_tracked_plan_docs(ctx, paths, allowed_hashes=tracked_doc_hashes_before_complete)
+    changed_repos = merge_tracked_doc_files(ctx, paths, changed_repos)
+    changed_text = changed_files_text(changed_repos)
     evidence = build_evidence_lines(ctx, paths, task, review, changed_text)
     if mode == "auto":
         write_complete_pending(paths, task, changed_repos, subject or "", body, evidence_rel, evidence)
 
-    mark_task_complete(paths, task)
     paths.runs_dir.mkdir(parents=True, exist_ok=True)
     evidence_file.write_text("\n".join(evidence) + "\n", encoding="utf-8")
 
