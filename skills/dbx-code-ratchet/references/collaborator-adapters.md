@@ -14,7 +14,7 @@ parent controller
   - final report
 
 primary reviewer
-  - skill: dbx-diff-review-control
+  - skill: dbx-diff-review
   - read-only
   - independent context when Codex subagents are available
 
@@ -29,7 +29,7 @@ repair worker
   - receives repair contract only
 
 re-reviewer
-  - skill: dbx-diff-review-control
+  - skill: dbx-diff-review
   - read-only
   - mode: re-review
 ```
@@ -60,12 +60,12 @@ Lightweight models may be considered only for non-critical file scanning or log 
 Use this as an internal brief when delegating to a reviewer. Do not print this whole block unless the user asks to audit prompts.
 
 ```text
-Use dbx-diff-review-control as an independent Codex reviewer.
+Use dbx-diff-review as an independent Codex reviewer.
 Context mode: fork_context=false.
 Scope: <target contract>.
 Background summary: <3-8 lines: goal, known non-goals, target boundaries, main risk surfaces>.
 Mode: standard | deep | quick.
-Output: normal dbx-diff-review-control Markdown. If practical, append an optional fenced `ratchet_signals` JSON block using version 1. Do not modify files.
+Output: normal dbx-diff-review Markdown. If practical, append an optional fenced `ratchet_signals` JSON block using version 1. Do not modify files.
 Stop condition: return findings with evidence, impact, fix direction, confidence, and validation status. Do not assume access to the parent thread.
 ```
 
@@ -93,7 +93,7 @@ If the minimal fix is impossible under these constraints, stop and return escala
 ## Re-review prompt skeleton
 
 ```text
-Use dbx-diff-review-control in re-review mode.
+Use dbx-diff-review in re-review mode.
 Scope: only accepted findings <ids> and direct regressions introduced by the repair diff.
 Do not restart a full review. Do not report new S2/S3 issues unless they are direct regressions or reveal direction failure. Do not modify files.
 ```

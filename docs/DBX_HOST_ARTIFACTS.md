@@ -103,7 +103,7 @@ Mechanism in another host: validation command
 Mechanism in a third host: explicit checklist in SKILL.md
 ```
 
-DBX skills should stay portable unless the skill is intentionally host-specific, such as `dbx-goal-writer` and `dbx-subagent-context-control`.
+DBX skills should stay portable unless the skill is intentionally host-specific, such as `dbx-goal-writer` and `dbx-subagent-context`.
 
 ## 4. When to Add Host Artifacts
 

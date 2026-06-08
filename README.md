@@ -12,16 +12,16 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | --- | --- |
 | [`dbx-open-source-commit-pr`](skills/dbx-open-source-commit-pr/) | 面向开源仓库的英文 commit/PR 写作。Generate English commit messages and PR descriptions for open-source repositories. |
 | [`dbx-work-commit-pr`](skills/dbx-work-commit-pr/) | 工作场景的中文合同式 commit/PR 写作。Contract-style commit messages and PR descriptions for work contexts. |
-| [`dbx-diff-review-control`](skills/dbx-diff-review-control/) | 精确选择 PR/diff/staged/commit/file review 范围，并输出高信号风险发现。Scoped code-change review control for concrete diffs. |
+| [`dbx-diff-review`](skills/dbx-diff-review/) | 精确选择 PR/diff/staged/commit/file review 范围，并输出高信号风险发现。Scoped code-change review for concrete diffs. |
 | [`dbx-linus-review`](skills/dbx-linus-review/) | 严格、实用主义、证据驱动的技术方案、模型和合并风险判断。Strict pragmatic technical judgment. |
 | [`dbx-code-ratchet`](skills/dbx-code-ratchet/) | 可修改代码的有界 review-repair-revalidation 元技能：调度 diff/Linus review，triage findings，局部自动修复，验证并在方向错误或风险发散时停止。Bounded code ratchet for concrete diffs. |
 | [`dbx-skill-architect`](skills/dbx-skill-architect/) | 场景优先的 skill 创建、评审、改进与评测。Scenario-first skill architecture, critique, improvement, and eval design. |
 | [`dbx-skill-portfolio-auditor`](skills/dbx-skill-portfolio-auditor/) | 已安装技能组合审计与全局/项目/显式触发/禁用/卸载范围决策。Audit installed skill portfolios and recommend global, project, explicit-only, disable, or uninstall placement. |
-| [`dbx-product-judgment-control`](skills/dbx-product-judgment-control/) | 证据边界内判断产品、功能、PRD、交互、信息架构、实现对齐、路线图或竞品定位是否产品正确。Evidence-bounded product judgment across artifacts and decisions. |
-| [`dbx-attention-control`](skills/dbx-attention-control/) | 混合输入的注意力分流内核：把收藏、想法、任务、课程、工具、消息等路由为行动、构建、实验、追踪、存档、孵化、丢弃、风险保护或澄清，并支持个人配置和外部系统 dry-run 映射。Product-agnostic attention-allocation controller for mixed inputs with profile and adapter layers. |
+| [`dbx-product-judgment`](skills/dbx-product-judgment/) | 证据边界内判断产品、功能、PRD、交互、信息架构、实现对齐、路线图或竞品定位是否产品正确。Evidence-bounded product judgment across artifacts and decisions. |
+| [`dbx-attention-routing`](skills/dbx-attention-routing/) | 混合输入的注意力分流内核：把收藏、想法、任务、课程、工具、消息等路由为行动、构建、实验、追踪、存档、孵化、丢弃、风险保护或澄清，并支持个人配置和外部系统 dry-run 映射。Product-agnostic attention router for mixed inputs with profile and adapter layers. |
 | [`dbx-conversation-align`](skills/dbx-conversation-align/) | 对话卡点诊断、措辞改写与边界沟通。Diagnose stuck conversations, rewrite risky messages, and plan boundaries. |
 | [`dbx-decision-framing`](skills/dbx-decision-framing/) | 高影响真实决策的分支门禁、取舍分析与验证动作。Frame high-impact decisions with gates, trade-offs, and validation steps. |
-| [`dbx-subagent-context-control`](skills/dbx-subagent-context-control/) | Codex subagent 上下文继承控制。Control Codex subagent context inheritance. |
+| [`dbx-subagent-context`](skills/dbx-subagent-context/) | Codex subagent 上下文继承策略。Set Codex subagent context inheritance strategy. |
 | [`dbx-goal-writer`](skills/dbx-goal-writer/) | Codex goal 合同生成、启动与审计。Create, start, and audit Codex goal contracts. |
 | [`dbx-agent-handoff`](skills/dbx-agent-handoff/) | AI agent/session 续跑交接包生成。Create restart handoffs for future AI sessions. |
 | [`dbx-software-plan-first-plan-issue`](skills/dbx-software-plan-first-plan-issue/) | 手动触发的软件 Plan-First 对话收敛阶段：不读仓库、不写计划文件、不实现代码。Manual-only plan convergence phase. |

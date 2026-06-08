@@ -30,14 +30,14 @@ Default behavior:
 
 ## Collaborators
 
-- `dbx-diff-review-control`: primary review and re-review.
+- `dbx-diff-review`: primary review and re-review.
 - `dbx-linus-review`: direction, complexity, over-engineering, data-model, state-owner, and compatibility gate when needed.
-- `dbx-subagent-context-control`: Codex subagent context isolation when available.
+- `dbx-subagent-context`: Codex subagent context isolation when available.
 
 ## Local helpers
 
 ```bash
-python3 skills/dbx-code-ratchet/scripts/normalize-findings.py --input review.md --producer dbx-diff-review-control
+python3 skills/dbx-code-ratchet/scripts/normalize-findings.py --input review.md --producer dbx-diff-review
 python3 skills/dbx-code-ratchet/scripts/score-ratchet-progress.py --before before.json --after after.json
 python3 skills/dbx-code-ratchet/scripts/validate-ratchet-state.py .ratchet/state.json
 ```

@@ -6,7 +6,7 @@ Strict pragmatic technical review for code changes, architecture plans, data mod
 
 This is not a normal diff-review skill. It is the sharper judgment layer for cases where the user explicitly wants strict critique, over-engineering judgment, data-model critique, compatibility risk, or merge/readiness decision.
 
-Use `dbx-diff-review-control` for ordinary concrete PR/diff/staged/commit/file review.
+Use `dbx-diff-review` for ordinary concrete PR/diff/staged/commit/file review.
 
 ## Safety
 

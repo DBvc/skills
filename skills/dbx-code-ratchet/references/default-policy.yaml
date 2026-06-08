@@ -31,12 +31,12 @@ host:
 
 reviewers:
   primary:
-    skill: dbx-diff-review-control
+    skill: dbx-diff-review
     mode: standard
     write_access: false
     request_ratchet_signals: true
   re_review:
-    skill: dbx-diff-review-control
+    skill: dbx-diff-review
     mode: re-review
     write_access: false
     request_ratchet_signals: true

@@ -18,15 +18,15 @@ Read it when:
 | --- | --- | --- |
 | Write open-source commit/PR artifact | `dbx-open-source-commit-pr` | `dbx-linus-review`, unless review is requested. |
 | Write work/internal commit/PR artifact | `dbx-work-commit-pr` | `dbx-open-source-commit-pr`. |
-| Review concrete PR/diff/staged/commit/file changes | `dbx-diff-review-control` | `dbx-linus-review`, unless strict pragmatic critique is explicit. |
+| Review concrete PR/diff/staged/commit/file changes | `dbx-diff-review` | `dbx-linus-review`, unless strict pragmatic critique is explicit. |
 | Run explicit bounded review-repair-revalidation on concrete code changes | `dbx-code-ratchet` | Read-only review skills or open-ended implementation workflows. |
-| Judge architecture plans, data models, over-engineering, or explicit strict technical risk | `dbx-linus-review` | `dbx-diff-review-control`, unless a concrete diff target must be selected first. |
+| Judge architecture plans, data models, over-engineering, or explicit strict technical risk | `dbx-linus-review` | `dbx-diff-review`, unless a concrete diff target must be selected first. |
 | Make a high-impact real decision | `dbx-decision-framing` | `dbx-linus-review`, unless code/design evidence dominates. |
-| Route noisy mixed inbox, saved content, tasks, ideas, signals, courses, tools, notes, or external-system metadata | `dbx-attention-control` | Product-specific tagging/write workflows, unless adapter dry-run is requested. |
+| Route noisy mixed inbox, saved content, tasks, ideas, signals, courses, tools, notes, or external-system metadata | `dbx-attention-routing` | Product-specific tagging/write workflows, unless adapter dry-run is requested. |
 | Rewrite risky conversation or boundary message | `dbx-conversation-align` | `dbx-decision-framing`, unless real action trade-off dominates. |
 | Create/review/improve/evaluate a skill | `dbx-skill-architect` | other runtime skills. |
 | Create/start/audit Codex `/goal` contract | `dbx-goal-writer` | `dbx-skill-architect`, unless designing a reusable skill. |
-| Control Codex subagent context inheritance | `dbx-subagent-context-control` | generic coordination advice. |
+| Set Codex subagent context inheritance strategy | `dbx-subagent-context` | generic coordination advice. |
 | Manually execute a Software Plan-First phase | The explicitly named `dbx-software-plan-first-*` phase skill | Any phase skill when the request is only ordinary planning, repo reading, or implementation. |
 | Establish project memory, ADR, glossary, or agent brief | No current runtime skill; direct answer or design one with `dbx-skill-architect`. | `dbx-goal-writer`, unless writing a Codex goal. |
 | Explicit multi-skill macro workflow | No current command layer; use this matrix and direct orchestration. | A single overloaded skill. |
@@ -45,14 +45,14 @@ Current graph:
 
 | Relationship | Rule |
 | --- | --- |
-| `dbx-diff-review-control` precedes commit/PR skills | Review concrete code-change risk before writing the final PR artifact when both are requested. |
-| `dbx-diff-review-control` precedes `dbx-linus-review` for ambiguous concrete diffs | Establish staged/unstaged/branch/commit/file scope before applying strict pragmatic judgment. |
-| `dbx-code-ratchet` composes `dbx-diff-review-control` and conditionally `dbx-linus-review` | Use only when the user explicitly asks for code ratchet or automatic review-repair-revalidation; it may modify code and must stop on direction failure or diverging risk. |
+| `dbx-diff-review` precedes commit/PR skills | Review concrete code-change risk before writing the final PR artifact when both are requested. |
+| `dbx-diff-review` precedes `dbx-linus-review` for ambiguous concrete diffs | Establish staged/unstaged/branch/commit/file scope before applying strict pragmatic judgment. |
+| `dbx-code-ratchet` composes `dbx-diff-review` and conditionally `dbx-linus-review` | Use only when the user explicitly asks for code ratchet or automatic review-repair-revalidation; it may modify code and must stop on direction failure or diverging risk. |
 | `dbx-linus-review` handles explicit strict critique | Use it when the user asks for Linus-style, harsh, over-engineering, model, or merge/readiness judgment. |
 | `dbx-decision-framing` precedes `dbx-goal-writer` | Decide whether/what to do before writing a Codex execution contract. |
 | `dbx-skill-architect` precedes new skill creation | Triage repeatability, stable task distribution, evaluability, safety, and placement. |
-| `dbx-attention-control` precedes product-specific tagging/write workflows | Route mixed inputs through the stable kernel before mapping to tags, task fields, note metadata, queues, or other external systems. |
-| `dbx-subagent-context-control` supports Codex planning | Use only when Codex subagents or `fork_context` are explicit. |
+| `dbx-attention-routing` precedes product-specific tagging/write workflows | Route mixed inputs through the stable kernel before mapping to tags, task fields, note metadata, queues, or other external systems. |
+| `dbx-subagent-context` supports Codex planning | Use only when Codex subagents or `fork_context` are explicit. |
 | `dbx-conversation-align` competes with `dbx-decision-framing` | Communication wording vs real-world trade-off. |
 | `dbx-open-source-commit-pr` competes with `dbx-work-commit-pr` | Public OSS artifact vs internal work artifact. |
 | `dbx-software-plan-first-plan-issue` handoff to `dbx-software-plan-first-ground-plan` | Use only after explicit invocation and only when repository facts are needed before finalizing a plan. |
@@ -64,11 +64,11 @@ Current graph:
 
 ### Review before PR writing
 
-If the user asks to review concrete code changes and write PR text, run `dbx-diff-review-control` first, then write commit/PR artifacts from the final diff and accepted findings. If the user explicitly asks for strict pragmatic judgment, establish the diff target first and then apply `dbx-linus-review`.
+If the user asks to review concrete code changes and write PR text, run `dbx-diff-review` first, then write commit/PR artifacts from the final diff and accepted findings. If the user explicitly asks for strict pragmatic judgment, establish the diff target first and then apply `dbx-linus-review`.
 
 ### Code ratchet
 
-Use `dbx-code-ratchet` only when the user explicitly asks for code ratchet, 棘轮自修, or automatic review-repair-revalidation on a concrete diff target. It is a bounded modifying workflow: it delegates review to `dbx-diff-review-control`, invokes `dbx-linus-review` for direction/complexity gates when needed, repairs only accepted local findings, and stops rather than continuing if direction or progress gates fail.
+Use `dbx-code-ratchet` only when the user explicitly asks for code ratchet, 棘轮自修, or automatic review-repair-revalidation on a concrete diff target. It is a bounded modifying workflow: it delegates review to `dbx-diff-review`, invokes `dbx-linus-review` for direction/complexity gates when needed, repairs only accepted local findings, and stops rather than continuing if direction or progress gates fail.
 
 ### Decision before execution contract
 
@@ -95,12 +95,12 @@ The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do no
 | Prompt | Route |
 | --- | --- |
 | “帮我解释一下这个 PR 改了什么。” | Direct answer, not commit/PR skill unless artifact requested. |
-| “帮我普通 review 一下 staged diff。” | `dbx-diff-review-control`. |
+| “帮我普通 review 一下 staged diff。” | `dbx-diff-review`. |
 | “对 staged changes 跑 L2 代码棘轮，明确问题可以自动修，不要 commit。” | `dbx-code-ratchet`. |
-| “用 Linus 风格严厉判断这个 staged diff 能不能合。” | `dbx-diff-review-control` to establish target, then `dbx-linus-review`. |
+| “用 Linus 风格严厉判断这个 staged diff 能不能合。” | `dbx-diff-review` to establish target, then `dbx-linus-review`. |
 | “帮我审一下这个架构方案有没有明显问题。” | `dbx-linus-review` if evidence/code/design risk dominates; `dbx-decision-framing` if trade-off dominates. |
 | “我该不该做这个项目？” | `dbx-decision-framing`. |
-| “帮我把这一堆收藏、课程、想法和任务分一下：哪些做、哪些存、哪些丢。” | `dbx-attention-control`. |
+| “帮我把这一堆收藏、课程、想法和任务分一下：哪些做、哪些存、哪些丢。” | `dbx-attention-routing`. |
 | “帮我把这个 prompt 写好一点，只用一次。” | Direct answer, not `dbx-skill-architect` full skill. |
 | “帮我写一句不那么冲的回复。” | `dbx-conversation-align` compact rewrite, not full diagnosis. |
 | “这个需求先 plan-first 一下，别急着写代码。” | Direct planning or Plan mode behavior, not `dbx-software-plan-first-*` unless explicitly named. |
@@ -122,9 +122,9 @@ Before adding a skill, update this matrix if the new skill:
 
 If you cannot state how the new skill interacts with the existing collection, you are not done designing it.
 
-## dbx-attention-control routing note
+## dbx-attention-routing routing note
 
-Use `dbx-attention-control` when the user asks to route a noisy collection of mixed inputs or build a reusable attention profile. It should run before any product-specific metadata/tagging/task/note write workflow.
+Use `dbx-attention-routing` when the user asks to route a noisy collection of mixed inputs or build a reusable attention profile. It should run before any product-specific metadata/tagging/task/note write workflow.
 
 Do not route ordinary summaries, explanations, recommendations, coding tasks, or single-topic research through this skill unless the user explicitly asks for attention allocation.
 

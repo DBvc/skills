@@ -5,7 +5,7 @@ This document tracks compatibility policy for DBX skills that depend on Codex-sp
 Current Codex-bound skills:
 
 - `dbx-goal-writer`
-- `dbx-subagent-context-control`
+- `dbx-subagent-context`
 
 ## 1. Compatibility Principle
 
@@ -32,7 +32,7 @@ If a capability is feature-gated, host-dependent, or unclear, the skill should a
 - Do not invent flags, package formats, or slash syntax.
 - Goal validation commands must come from repo evidence or user-provided commands.
 
-### `dbx-subagent-context-control`
+### `dbx-subagent-context`
 
 - Only trigger for Codex subagent context inheritance or explicit `fork_context` discussion.
 - Do not generalize to Claude, Cursor, Gemini, or business “agent” concepts.

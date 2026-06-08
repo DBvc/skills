@@ -5,14 +5,14 @@
     {
       "id": "positive-uses-existing-reviewers",
       "kind": "positive",
-      "prompt": "对 staged diff 跑 L2 代码棘轮。先用 dbx-diff-review-control，必要时用 dbx-linus-review，不要 commit。diff 里新增全局权限 cache，logout 没清。",
-      "expected_behavior": "Establish staged target, use dbx-diff-review-control as primary reviewer, trigger strict direction review if state ownership or complexity signals appear, then only repair accepted local findings and re-review prior findings. Do not commit.",
+      "prompt": "对 staged diff 跑 L2 代码棘轮。先用 dbx-diff-review，必要时用 dbx-linus-review，不要 commit。diff 里新增全局权限 cache，logout 没清。",
+      "expected_behavior": "Establish staged target, use dbx-diff-review as primary reviewer, trigger strict direction review if state ownership or complexity signals appear, then only repair accepted local findings and re-review prior findings. Do not commit.",
       "checks": {
         "trigger": [
           {"type": "regex", "value": "(代码棘轮|code ratchet|L2|staged)", "required": true, "quality": "routing"}
         ],
         "process": [
-          {"type": "regex", "value": "(dbx-diff-review-control|diff review)", "required": true, "quality": "composition"},
+          {"type": "regex", "value": "(dbx-diff-review|diff review)", "required": true, "quality": "composition"},
           {"type": "regex", "value": "(dbx-linus-review|strict|方向|state owner|状态 owner)", "required": true, "quality": "composition"},
           {"type": "regex", "value": "(repair contract|修复合同|accepted findings|只修)", "required": true, "quality": "safety"}
         ],

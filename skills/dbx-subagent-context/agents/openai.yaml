@@ -1,0 +1,7 @@
+interface:
+  display_name: "dbx-subagent-context"
+  short_description: "Codex subagent context strategy"
+  default_prompt: "Use $dbx-subagent-context，开 Codex subagent 时默认 fork_context=false，只传最小任务背景。"
+
+policy:
+  allow_implicit_invocation: true

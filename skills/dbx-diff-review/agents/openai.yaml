@@ -1,0 +1,3 @@
+interface:
+  display_name: "dbx-diff-review"
+  short_description: "Concrete diff review"

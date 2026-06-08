@@ -12,7 +12,7 @@
     {
       "id": "positive-review-repair-rereview",
       "kind": "positive",
-      "prompt": "这个 diff 先用 dbx-diff-review-control review，有问题就按棘轮自修一轮，再 re-review。",
+      "prompt": "这个 diff 先用 dbx-diff-review review，有问题就按棘轮自修一轮，再 re-review。",
       "expected_trigger": true,
       "rationale": "The user asks for a review-repair-revalidation loop, not read-only review."
     },
@@ -35,7 +35,7 @@
       "kind": "near_miss",
       "prompt": "帮我普通 review 一下 staged diff，只看有没有 correctness 问题，不要改代码。",
       "expected_trigger": false,
-      "rationale": "Ordinary read-only review should route to dbx-diff-review-control."
+      "rationale": "Ordinary read-only review should route to dbx-diff-review."
     },
     {
       "id": "near-miss-linus-strict-only",

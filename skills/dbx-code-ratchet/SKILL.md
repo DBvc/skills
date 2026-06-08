@@ -5,7 +5,7 @@ description: >
 ---
 # DBX Code Ratchet
 
-代码棘轮是一个可修改代码的 meta skill。它不替代 `dbx-diff-review-control` 或 `dbx-linus-review`，而是调度它们，然后控制一个有界的 review -> triage -> repair -> validation -> re-review 循环。
+代码棘轮是一个可修改代码的 meta skill。它不替代 `dbx-diff-review` 或 `dbx-linus-review`，而是调度它们，然后控制一个有界的 review -> triage -> repair -> validation -> re-review 循环。
 
 核心目标不是清空所有 finding，而是在明确边界内让当前改动的风险单调下降。风险不下降、复杂度膨胀、方向可疑时，棘轮必须停下来。
 
@@ -33,7 +33,7 @@ Use this skill only when the user explicitly asks for one of these:
 
 Do not use this skill for:
 
-- Ordinary read-only review. Use `dbx-diff-review-control`.
+- Ordinary read-only review. Use `dbx-diff-review`.
 - Explicit strict/pragmatic review without repair. Use `dbx-linus-review`.
 - Open-ended feature implementation from requirements. Use the relevant implementation workflow.
 - Ralph-style autonomous PRD/story completion loops.
@@ -110,9 +110,9 @@ If a target is missing, ask for the smallest missing input. If the user clearly 
 
 Default collaborators:
 
-- `dbx-diff-review-control`: primary concrete diff reviewer and re-reviewer.
+- `dbx-diff-review`: primary concrete diff reviewer and re-reviewer.
 - `dbx-linus-review`: optional strict direction, data-model, state-owner, compatibility, and over-engineering reviewer.
-- `dbx-subagent-context-control`: Codex subagent context isolation helper when delegation is used.
+- `dbx-subagent-context`: Codex subagent context isolation helper when delegation is used.
 
 Selection rules:
 
@@ -124,7 +124,7 @@ collaborator_priority:
   4: this_skill_default
 ```
 
-Use `dbx-diff-review-control` for the initial full review by default. Trigger `dbx-linus-review` when any of these are true:
+Use `dbx-diff-review` for the initial full review by default. Trigger `dbx-linus-review` when any of these are true:
 
 - Multiple findings point to the same root cause.
 - A finding mentions wrong state owner, wrong identity boundary, wrong data model, duplicated source of truth, compatibility break, or patching over a bad representation.
@@ -153,7 +153,7 @@ Run only safe, relevant commands when project evidence supports them, such as ty
 
 ### 3. Primary review
 
-Invoke `dbx-diff-review-control` on the exact target. Use `standard` unless the diff is tiny, high-risk, or the user requests another mode.
+Invoke `dbx-diff-review` on the exact target. Use `standard` unless the diff is tiny, high-risk, or the user requests another mode.
 
 The review should produce evidence-rich findings. If asked for ratchet compatibility, include signals, not final auto-fix decisions.
 
@@ -164,7 +164,7 @@ Normalize findings into this shape:
 ```yaml
 finding:
   id: F-001
-  source_skill: dbx-diff-review-control | dbx-linus-review | third_party | manual
+  source_skill: dbx-diff-review | dbx-linus-review | third_party | manual
   severity: S0 | S1 | S2 | S3
   category: correctness | state_ownership | data_model | compatibility | maintainability | validation_gap | complexity | scope_drift | security | performance | other
   title: ""
@@ -260,7 +260,7 @@ Run relevant deterministic checks again when possible. Record what was run and w
 
 ### 10. Scoped re-review
 
-Use `dbx-diff-review-control` in `re-review` mode.
+Use `dbx-diff-review` in `re-review` mode.
 
 Re-review scope:
 

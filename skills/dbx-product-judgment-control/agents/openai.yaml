@@ -1,4 +1,0 @@
-interface:
-  display_name: "dbx-product-judgment-control"
-  short_description: "Evidence-bounded product judgment"
-  default_prompt: "Use $dbx-product-judgment-control to judge whether this product decision is product-correct from the available evidence."

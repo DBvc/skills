@@ -1,0 +1,76 @@
+{
+  "skill_name": "dbx-diff-review",
+  "version": "1.1",
+  "cases": [
+    {
+      "id": "positive-normal-pr-review",
+      "kind": "positive",
+      "prompt": "帮我 review 这个 PR，重点看有没有影响用户的功能问题和数据模型问题。",
+      "expected_trigger": true,
+      "rationale": "Ordinary concrete PR review focused on user impact and model correctness."
+    },
+    {
+      "id": "positive-review-then-pr-writing",
+      "kind": "positive",
+      "prompt": "Review this completed diff and write a PR description.",
+      "expected_trigger": true,
+      "rationale": "Concrete diff review should run before handing final facts to the appropriate commit/PR skill."
+    },
+    {
+      "id": "positive-staged-subset",
+      "kind": "positive",
+      "prompt": "只 review 已 staged 的 diff，另外两个 unstaged 文件是调试代码，不用管。",
+      "expected_trigger": true,
+      "rationale": "Explicit staged/index target and out-of-scope dirty files."
+    },
+    {
+      "id": "positive-selected-files",
+      "kind": "positive",
+      "prompt": "只看 src/store/user.ts 和 src/api/user.ts 这两个文件的改动。",
+      "expected_trigger": true,
+      "rationale": "File-scoped code change review."
+    },
+    {
+      "id": "positive-commit-range",
+      "kind": "positive",
+      "prompt": "帮我 review main..HEAD 这几个 commit 有没有 correctness 问题。",
+      "expected_trigger": true,
+      "rationale": "Commit-range review is a concrete change-set review."
+    },
+    {
+      "id": "positive-rereview",
+      "kind": "positive",
+      "prompt": "根据上次的 review，再看一下这些问题是否都修掉了。",
+      "expected_trigger": true,
+      "rationale": "Re-review mode for prior findings."
+    },
+    {
+      "id": "near-miss-explicit-linus",
+      "kind": "near_miss",
+      "prompt": "用 Linus 风格严厉评审这个方案是不是过度设计。",
+      "expected_trigger": false,
+      "rationale": "Explicit strict pragmatic plan critique should route to dbx-linus-review."
+    },
+    {
+      "id": "negative-implementation-only",
+      "kind": "negative",
+      "prompt": "帮我直接实现这个 React hook，不要 review。",
+      "expected_trigger": false,
+      "rationale": "Implementation request, not review."
+    },
+    {
+      "id": "negative-explanation",
+      "kind": "negative",
+      "prompt": "解释一下这段 reducer 代码怎么运行，不需要评审。",
+      "expected_trigger": false,
+      "rationale": "Generic explanation is not diff review."
+    },
+    {
+      "id": "failure-missing-target",
+      "kind": "failure_mode",
+      "prompt": "帮我 review 一下，但我没有 diff，也没说看哪个 commit 或文件。",
+      "expected_trigger": true,
+      "rationale": "Should trigger to ask for the smallest missing target rather than invent findings."
+    }
+  ]
+}

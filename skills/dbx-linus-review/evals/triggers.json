@@ -42,7 +42,7 @@
       "kind": "near_miss",
       "prompt": "帮我普通 review 一下这个 PR，主要看看有没有明显 bug，语气正常就行。",
       "expected_trigger": false,
-      "rationale": "Ordinary review should route to dbx-diff-review-control."
+      "rationale": "Ordinary review should route to dbx-diff-review."
     },
     {
       "id": "near-miss-selected-files-normal-review",

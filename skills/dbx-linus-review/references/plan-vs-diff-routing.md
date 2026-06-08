@@ -20,7 +20,7 @@ Both plan review and diff review care about:
 | Review type | Evidence source | Main failure mode | Better controller |
 | --- | --- | --- | --- |
 | Plan/proposal review | assumptions, diagrams, API sketches, migration plan, stated trade-offs | approving a wrong direction because it sounds coherent | `dbx-linus-review` |
-| Diff/PR review | actual changed lines, call paths, tests, project rules, dirty/staged state | reviewing wrong target or producing generic comments | `dbx-diff-review-control` |
+| Diff/PR review | actual changed lines, call paths, tests, project rules, dirty/staged state | reviewing wrong target or producing generic comments | `dbx-diff-review` |
 
 ## Decision rule
 
@@ -32,7 +32,7 @@ Use `dbx-linus-review` when the user asks:
 - “这个模型/抽象对不对？”
 - “这个改动够不够合并？别客气。”
 
-Use `dbx-diff-review-control` when the user asks:
+Use `dbx-diff-review` when the user asks:
 
 - “review 这个 PR/diff。”
 - “只看 staged。”

@@ -10,7 +10,7 @@ Use fenced JSON:
 ```ratchet_signals
 {
   "ratchet_signals_version": 1,
-  "producer_skill": "dbx-diff-review-control",
+  "producer_skill": "dbx-diff-review",
   "review_mode": "standard",
   "target": {
     "source": "staged",

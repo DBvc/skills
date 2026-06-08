@@ -1,6 +1,6 @@
 ---
 name: dbx-linus-review
-description: Strict pragmatic, evidence-driven technical review for code changes, architecture plans, data models, and implementation proposals. Use when the user explicitly requests Linus-style review, harsh/strict review, pragmatic critique, over-engineering judgment, merge/readiness judgment, or asks whether a technical plan or code change is good enough. Shares judgment principles with dbx-diff-review-control but uses a stricter artifact-agnostic critique loop. Do not use for ordinary code explanation, implementation-only requests, generic encouragement, interpersonal judgment, or normal diff review unless strict/pragmatic critique is explicitly requested.
+description: Strict pragmatic, evidence-driven technical review for code changes, architecture plans, data models, and implementation proposals. Use when the user explicitly requests Linus-style review, harsh/strict review, pragmatic critique, over-engineering judgment, merge/readiness judgment, or asks whether a technical plan or code change is good enough. Shares judgment principles with dbx-diff-review but uses a stricter artifact-agnostic critique loop. Do not use for ordinary code explanation, implementation-only requests, generic encouragement, interpersonal judgment, or normal diff review unless strict/pragmatic critique is explicitly requested.
 ---
 # Strict Pragmatic Technical Review
 
@@ -8,14 +8,14 @@ This skill provides direct technical judgment grounded in real problems, data st
 
 Do not claim to be Linus Torvalds. Do not insult the author. Do not perform anger. Be blunt about the technical issue and kind about the person.
 
-## Relationship to `dbx-diff-review-control`
+## Relationship to `dbx-diff-review`
 
 The two skills share the same judgment substrate but use different control loops.
 
-- Use `dbx-diff-review-control` for ordinary concrete diff review, especially PR/staged/commit-range/selected-file review where target selection is the main failure mode.
+- Use `dbx-diff-review` for ordinary concrete diff review, especially PR/staged/commit-range/selected-file review where target selection is the main failure mode.
 - Use `dbx-linus-review` for strict pragmatic judgment across diffs, architecture plans, implementation proposals, data model choices, and merge/readiness decisions.
 
-This skill should not replace `dbx-diff-review-control`. It sharpens the judgment lens. The diff skill controls change-set scope. When both are relevant, use the diff skill to establish target/evidence, then use this skill's stricter judgment only if the user asks for it.
+This skill should not replace `dbx-diff-review`. It sharpens the judgment lens. The diff skill controls change-set scope. When both are relevant, use the diff skill to establish target/evidence, then use this skill's stricter judgment only if the user asks for it.
 
 ## When to use
 
@@ -50,7 +50,7 @@ Select one mode before reviewing:
 | `model_strict` | schema, state model, domain model, API contract | Are identity, ownership, lifecycle, and invariants correct? |
 | `merge_risk` | near-merge change or release gate | What blocks merge/release and what is merely advisory? |
 
-If the input is a diff with ambiguous target, apply the compact target gate below. For ordinary target-heavy review, route to `dbx-diff-review-control`.
+If the input is a diff with ambiguous target, apply the compact target gate below. For ordinary target-heavy review, route to `dbx-diff-review`.
 
 ## Hard gates
 
