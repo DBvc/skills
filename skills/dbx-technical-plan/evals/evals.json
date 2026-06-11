@@ -1,0 +1,202 @@
+{
+  "skill_name": "dbx-technical-plan",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "migration-plan-has-inventory-and-validation",
+      "kind": "positive",
+      "prompt": "先别写代码，给我一个把 legacy fetch wrapper 迁移到 typed HttpClient 的计划，要求能被 review 和分批执行。",
+      "expected_behavior": "Produce a technical plan with evidence boundary, source of truth, inventory, partition/batch strategy, compatibility risks, validation model, and handoff. Do not implement code.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(技术计划结论|快速技术计划|migration|迁移)",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(Inventory|inventory|清点|盘点|调用点)",
+            "required": true,
+            "quality": "domain"
+          },
+          {
+            "type": "regex",
+            "value": "(Partition|partition|分批|批次|batch)",
+            "required": true,
+            "quality": "domain"
+          },
+          {
+            "type": "regex",
+            "value": "(compatibility|兼容|contract|契约)",
+            "required": true,
+            "quality": "domain"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(验证模型|Validation|Automated|Manual|Not covered)",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "regex",
+            "value": "(不变量|invariant|source of truth|Source of truth)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "我已经修改",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "bug-fix-strategy-requires-repro-and-regression",
+      "kind": "positive",
+      "prompt": "用户切换账号后还能看到上一个账号的数据。先不要修，给我修复策略和回归测试计划。",
+      "expected_behavior": "Use bug_fix_strategy shape: identify invariant, repro, hypotheses, source of truth, minimal patch path, regression test, and stop conditions.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(修复策略|bug_fix_strategy|技术计划结论|快速技术计划)",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(repro|复现|重现)",
+            "required": true,
+            "quality": "domain"
+          },
+          {
+            "type": "regex",
+            "value": "(hypothes|假设|根因)",
+            "required": true,
+            "quality": "domain"
+          },
+          {
+            "type": "regex",
+            "value": "(账号|用户|identity|cache|缓存|source of truth)",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(回归测试|regression|验证模型|Validation)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "(Stop if|停止|重新判断|blocked)",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "missing-grounding-does-not-invent-repo-facts",
+      "kind": "failure_mode",
+      "prompt": "帮我规划把整个 monorepo 的状态管理迁移到新方案，但我没有提供仓库结构、包名、状态 owner、测试命令。",
+      "expected_behavior": "Trigger the skill but mark needs-grounding or blocked, list unknowns, and avoid inventing package names, files, tests, or repository architecture.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(needs-grounding|blocked|需要先确认|证据边界|未知)",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(仓库结构|状态 owner|测试命令|source of truth|未知)",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "src/store",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "pnpm test",
+            "required": false,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "near-miss-linus-plan-critique",
+      "kind": "near_miss",
+      "prompt": "用 Linus 风格严厉批判这个方案是不是过度设计，不是让我写实施计划。",
+      "expected_behavior": "Do not output the technical plan contract. Route to strict pragmatic plan critique instead.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "## 技术计划结论",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(Linus|严厉|过度设计|dbx-linus-review|严格)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "实施切片",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    }
+  ]
+}

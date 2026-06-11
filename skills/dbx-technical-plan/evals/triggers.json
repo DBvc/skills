@@ -1,0 +1,76 @@
+{
+  "skill_name": "dbx-technical-plan",
+  "version": "0.1",
+  "cases": [
+    {
+      "id": "positive-plan-before-code",
+      "kind": "positive",
+      "prompt": "先别写代码，给我一个把 legacy fetch wrapper 迁移到 typed HttpClient 的技术实施计划。",
+      "expected_trigger": true,
+      "rationale": "Explicit technical implementation planning before code for a migration."
+    },
+    {
+      "id": "positive-refactor-plan",
+      "kind": "positive",
+      "prompt": "帮我规划一下 auth/session/cache 的重构路径，重点是 source of truth 和验证模型。",
+      "expected_trigger": true,
+      "rationale": "Architecture/state ownership planning before implementation."
+    },
+    {
+      "id": "positive-bug-fix-strategy",
+      "kind": "positive",
+      "prompt": "这个缓存 bug 先不要修，先给修复策略、回归测试和 stop condition。",
+      "expected_trigger": true,
+      "rationale": "Bug-fix strategy before patching."
+    },
+    {
+      "id": "positive-validation-plan",
+      "kind": "positive",
+      "prompt": "这个权限逻辑改动我准备做，先帮我设计验证计划和风险覆盖。",
+      "expected_trigger": true,
+      "rationale": "Validation planning for high-risk software change."
+    },
+    {
+      "id": "near-miss-linus-review",
+      "kind": "near_miss",
+      "prompt": "用 Linus 风格严厉批判这个架构方案是不是过度设计。",
+      "expected_trigger": false,
+      "rationale": "Strict critique of an existing plan should route to dbx-linus-review."
+    },
+    {
+      "id": "near-miss-plan-first-formal",
+      "kind": "near_miss",
+      "prompt": "用 dbx-software-plan-first-finalize-plan 写入 plan.md 和 tasks.md。",
+      "expected_trigger": false,
+      "rationale": "Explicit stateful plan-first phase should use the requested plan-first skill."
+    },
+    {
+      "id": "negative-direct-implementation",
+      "kind": "negative",
+      "prompt": "直接帮我实现这个 React hook，不要先写方案。",
+      "expected_trigger": false,
+      "rationale": "Implementation-only request with explicit no-plan preference."
+    },
+    {
+      "id": "negative-diff-review",
+      "kind": "negative",
+      "prompt": "review 我 staged 的 diff，看有没有 correctness 问题。",
+      "expected_trigger": false,
+      "rationale": "Concrete diff review should route to dbx-diff-review."
+    },
+    {
+      "id": "negative-product-judgment",
+      "kind": "negative",
+      "prompt": "这个功能到底值不值得做，帮我判断产品方向。",
+      "expected_trigger": false,
+      "rationale": "Product decision/judgment should route upstream, not technical planning."
+    },
+    {
+      "id": "failure-missing-grounding",
+      "kind": "failure_mode",
+      "prompt": "帮我规划全仓迁移到新状态管理方案，但我没有提供仓库结构、现有状态 owner 或验证方式。",
+      "expected_trigger": true,
+      "rationale": "Should trigger but mark needs-grounding or ask blocking questions rather than invent repo facts."
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-technical-plan"
+  short_description: "Evidence-bound software implementation planning"
+  default_prompt: "Use $dbx-technical-plan to turn this software change into a scoped technical plan before coding."
