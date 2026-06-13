@@ -7,8 +7,8 @@
 1. **先收敛，再实现**  
    目标、范围、方案、验证、影响画像、影响边界不完整时，不进入实现。
 
-2. **先 grounding，再写计划**  
-   需要仓库事实时，必须通过只读 grounding 确认项目规则、路径、命令、契约和验证方式。
+2. **按需 grounding，再写计划**
+   需要仓库事实时，必须通过只读 grounding 确认项目规则、路径、命令、契约和验证方式；如果当前上下文或用户确认已经提供足够事实，可以直接进入 finalize。
 
 3. **计划文件是执行契约**  
    `plan.md` 和 `tasks.md` 一旦 seal，不允许实现阶段静默改写。发现计划错误时，停止并重新 finalize/reseal。
@@ -32,12 +32,13 @@
 - 在 local 模式下把 commit message 指向 `.plan-first/` 本地过程文件，导致长期提交记录引用失效。
 - `tasks.md` 被手动改写，导致 review 的任务和 complete 的任务不是同一个。
 - showhand 在不适合自动化的高主观、高风险或 source-of-truth 缺失任务上一路执行。
+- 把 phase entry gate 误读成每次必须跑满所有阶段，或反过来在证据门未满足时跳到 seal / implement。
 
 ## 控制面
 
 - **Activation Control**：只在需要 plan-first 的软件工程任务上触发。
 - **State Control**：状态由 `plan.md`、`tasks.md`、`.plan-first` seal、review snapshot 和证据文件维护。
-- **Trajectory Control**：强制 `plan-issue -> ground-plan -> finalize-plan -> implement-feature -> review/complete`。
+- **Trajectory Control**：强制按证据门推进：决策未收敛先 `plan-issue`，需要仓库事实先 `ground-plan`，完整决策和必要证据后才能 `finalize-plan`，sealed task 后才能 `implement-feature -> review/complete`。入口可以跳过已满足的上游阶段，但不能跳过证据门。
 - **Execution Control**：任务只能按顺序执行，不能跳 task，不能静默改计划。
 - **Completion Control**：完成声明必须绑定验证结果和证据。
 - **Evolution Control**：通过 evals、配置边界和项目规则文档避免技能漂移。

@@ -7,8 +7,12 @@
 - 不读取仓库。
 - 不写 `plan.md` 或 `tasks.md`。
 - 不执行 `issue-workflow.sh`。
+- 不调用任何会写入文件、修改工作区或产生实现 diff 的工具，包括 `apply_patch`、formatter、codegen、package manager install、迁移命令和测试自动修复命令。
+- 不继续串到 `ground-plan`、`finalize-plan` 或 `implement-feature`；只能输出本阶段结果和下一阶段 handoff。
 - 不把未确认的路径、框架、命令、契约、设计、文案或验证方式当成事实。
 - 不把阻塞问题推给实现阶段。
+
+如果用户在同一请求里要求“先 plan-issue，然后顺手读仓库 / 写计划文件 / 改代码 / complete”，本阶段必须忽略后续执行部分并停止在 `clarifying`、`blocked` 或 `proposal-ready`。只有用户后续显式触发对应阶段，才能继续。
 
 ## Mandatory Decision Gate
 
@@ -49,3 +53,5 @@
 - 原生命令和验证路径。
 - contract/design/content/test/CI/architecture 约束。
 - deprecated/protected/generated 文件。
+
+不需要仓库事实的情况必须明确说明 `Grounding Producer: none`，并写明事实来源来自用户确认或当前上下文。不能因为形式上有 `ground-plan` 阶段就要求无意义 grounding；也不能因为想加速而跳过必要 grounding。

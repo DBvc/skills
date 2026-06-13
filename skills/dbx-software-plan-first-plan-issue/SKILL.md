@@ -22,8 +22,10 @@ description: Manual trigger only. Use only when the user explicitly names `dbx-s
 
 - 这是对话收敛阶段，不是仓库探索阶段。
 - 不读取仓库，不写 `plan.md`，不写 `tasks.md`，不执行实现。
+- 不调用写文件、改代码、格式化、安装依赖、迁移、codegen 或自动修复工具。
 - 当决策不完整时，输出 `clarifying` 或 `blocked`。
 - 当决策完整时，输出 `proposal-ready`，并说明是否需要 `dbx-software-plan-first-ground-plan`。
+- 输出本阶段结果后停止，不在同一轮继续执行 sibling phase；即使用户要求“顺手”读仓库、finalize 或 implement，也只给下一阶段 handoff。
 - 所有沟通、计划摘要和过程说明使用中文。
 
 ## 必须读取

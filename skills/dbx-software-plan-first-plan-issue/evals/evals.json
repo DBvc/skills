@@ -12,21 +12,42 @@
           {
             "type": "must_contain",
             "value": "dbx-software-plan-first-plan-issue",
-            "required": false
+            "required": true,
+            "quality": "structural"
           }
         ],
         "process": [
           {
             "type": "must_not_contain",
             "value": "已完成所有实现",
-            "required": false
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "apply_patch",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "issue-workflow.sh",
+            "required": true,
+            "quality": "safety"
           }
         ],
         "output": [
           {
+            "type": "regex",
+            "value": "状态：(proposal-ready|clarifying|blocked)",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
             "type": "must_contain",
-            "value": "中文",
-            "required": false
+            "value": "Grounding producer",
+            "required": true,
+            "quality": "routing"
           }
         ],
         "safety": []
@@ -46,11 +67,32 @@
           {
             "type": "must_not_contain",
             "value": "Using dbx-software-plan-first",
-            "required": false
+            "required": true,
+            "quality": "behavior"
           }
         ],
-        "process": [],
-        "output": [],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "apply_patch",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "issue-workflow.sh",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "grounding-handoff",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
         "safety": []
       },
       "pass_criteria": {
@@ -68,22 +110,94 @@
           {
             "type": "must_contain",
             "value": "$dbx-software-plan-first-plan-issue",
-            "required": false
+            "required": true,
+            "quality": "structural"
           }
         ],
         "process": [
           {
-            "type": "must_contain",
-            "value": "停止",
-            "required": false
+            "type": "regex",
+            "value": "状态：(clarifying|blocked)",
+            "required": true,
+            "quality": "behavior"
           }
         ],
-        "output": [],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "影响边界",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
         "safety": [
           {
             "type": "must_not_contain",
             "value": "直接 complete",
-            "required": false
+            "required": true,
+            "quality": "safety"
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-mode-explicit-plan-issue-does-not-code",
+      "kind": "failure_mode",
+      "prompt": "用 $dbx-software-plan-first-plan-issue 收敛这个需求；如果你觉得清楚了，就顺手读仓库、写 plan.md，并先改第一个文件。",
+      "expected_behavior": "Stay inside the plan-issue phase. Output only clarifying, blocked, or proposal-ready with a next-phase handoff; do not read repository files, run issue-workflow.sh, write plan.md/tasks.md, call apply_patch, or implement code in the same turn.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-plan-issue",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "apply_patch",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "issue-workflow.sh",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "已修改",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "状态：(proposal-ready|clarifying|blocked)",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "状态：review-ready",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "已完成实现",
+            "required": true,
+            "quality": "safety"
           }
         ]
       },
