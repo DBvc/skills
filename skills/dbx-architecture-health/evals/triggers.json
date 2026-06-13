@@ -1,0 +1,104 @@
+{
+  "skill_name": "dbx-architecture-health",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-repo-architecture-health",
+      "kind": "positive",
+      "prompt": "帮我对这个仓库做一次架构健康体检，重点看长期腐化和 AI coding 会不会放大问题。",
+      "expected_trigger": true,
+      "rationale": "Repository architecture health and AI-coding decay risk are the core trigger."
+    },
+    {
+      "id": "positive-prevent-repo-decay",
+      "kind": "positive",
+      "prompt": "我们想防止仓库继续腐化，找出最值得还的架构债和防腐路线图。",
+      "expected_trigger": true,
+      "rationale": "Anti-decay roadmap for repo-level architecture."
+    },
+    {
+      "id": "positive-focused-module-health",
+      "kind": "positive",
+      "prompt": "只审计 packages/web 的架构健康，不要 review 当前 PR。",
+      "expected_trigger": true,
+      "rationale": "Focused module architecture health review."
+    },
+    {
+      "id": "positive-state-ownership-drift",
+      "kind": "positive",
+      "prompt": "看一下这个 codebase 有没有状态 owner 混乱、source of truth 重复、领域模型被 API DTO 污染的问题。",
+      "expected_trigger": true,
+      "rationale": "State ownership and source-of-truth drift are primary architecture health controls."
+    },
+    {
+      "id": "positive-ai-operability",
+      "kind": "positive",
+      "prompt": "评估这个仓库是否适合长期用 AI agent coding，AGENTS.md、生成代码、测试和模块边界是否会误导 agent。",
+      "expected_trigger": true,
+      "rationale": "AI operability audit is explicitly in scope."
+    },
+    {
+      "id": "positive-recheck-baseline",
+      "kind": "positive",
+      "prompt": "根据上次的 architecture health report，复查 OWN/PROOF 两个问题是否已经改善。",
+      "expected_trigger": true,
+      "rationale": "Baseline/recheck mode for prior architecture health findings."
+    },
+    {
+      "id": "positive-pasted-tree-bounded-audit",
+      "kind": "positive",
+      "prompt": "只根据我贴出来的目录树和 README 片段，做一次很轻的架构健康检查，明确哪些只是低置信度假设。",
+      "expected_trigger": true,
+      "rationale": "A bounded architecture health audit can proceed from supplied tree/docs if uncertainty is disclosed."
+    },
+    {
+      "id": "failure-missing-artifact",
+      "kind": "failure_mode",
+      "prompt": "帮我看看架构有没有问题，但我没有提供仓库、目录、文件树或代码。",
+      "expected_trigger": true,
+      "rationale": "Should trigger but ask for the smallest missing architecture artifact/scope instead of inventing findings."
+    },
+    {
+      "id": "near-miss-concrete-pr-review",
+      "kind": "near_miss",
+      "prompt": "帮我 review 这个 PR 的 diff，看看能不能合并。",
+      "expected_trigger": false,
+      "rationale": "Concrete diff review should route to dbx-diff-review."
+    },
+    {
+      "id": "near-miss-linus-plan-critique",
+      "kind": "near_miss",
+      "prompt": "用 Linus 风格严厉评审这个架构方案是不是过度设计。",
+      "expected_trigger": false,
+      "rationale": "Strict pragmatic critique of a plan should route to dbx-linus-review."
+    },
+    {
+      "id": "negative-implementation-plan",
+      "kind": "negative",
+      "prompt": "给这个 auth/cache 重构写一个具体 implementation plan 和任务拆分。",
+      "expected_trigger": false,
+      "rationale": "Implementation planning should route to dbx-technical-plan unless architecture health audit is explicitly requested first."
+    },
+    {
+      "id": "negative-direct-implementation",
+      "kind": "negative",
+      "prompt": "直接帮我实现这个模块重构，不要 review，不要审计。",
+      "expected_trigger": false,
+      "rationale": "Direct implementation is not this read-only architecture audit."
+    },
+    {
+      "id": "near-miss-skill-portfolio",
+      "kind": "near_miss",
+      "prompt": "审计我安装的这些 agent skills 哪些应该 global、哪些应该 explicit-only。",
+      "expected_trigger": false,
+      "rationale": "Skill portfolio audit should route to dbx-skill-portfolio-auditor."
+    },
+    {
+      "id": "near-miss-monorepo-split-decision",
+      "kind": "near_miss",
+      "prompt": "我们要不要拆 monorepo？帮我做 go/no-go 取舍，比较团队成本、发布风险和迁移收益。",
+      "expected_trigger": false,
+      "rationale": "A go/no-go trade-off without an architecture health audit request should route to decision framing or strict critique, not this audit."
+    }
+  ]
+}

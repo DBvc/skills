@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-architecture-health"
+  short_description: "Repository architecture health audits"
+  default_prompt: "Use $dbx-architecture-health to audit this repository's architecture health, long-term decay risks, and AI-coding operability without changing code."

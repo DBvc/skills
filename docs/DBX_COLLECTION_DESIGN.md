@@ -54,6 +54,7 @@ Current DBX graph:
 | `dbx-diff-review` precedes commit/PR skills | If user asks to review concrete code changes and then write PR text, review the selected change set first. |
 | `dbx-diff-review` precedes `dbx-linus-review` for concrete diffs | If strict pragmatic judgment is requested on a diff with staged/branch/file ambiguity, establish the target first. |
 | `dbx-code-ratchet` composes review skills for bounded repair | Only for explicit code ratchet / review-repair-revalidation requests; may modify code, but must stop on direction failure, unsafe scope, or diverging risk. |
+| `dbx-architecture-health` diagnoses architecture decay read-only | Use for repository/module architecture health, anti-decay roadmaps, and AI-coding operability; hand off implementation planning, concrete diffs, strict proposal critique, or bounded repair to the matching skill. |
 | `dbx-linus-review` handles explicit strict critique | Use for Linus-style, harsh, over-engineering, model, plan, or merge/readiness judgment. |
 | `dbx-product-judgment` handles product correctness judgment | Use when product artifacts, target users/jobs, evidence boundaries, or product decisions dominate; route ordinary concrete diff review to `dbx-diff-review`. |
 | `dbx-design-judgment` handles design correctness and design shaping | Use when UI surfaces, screenshots, prototypes, PRDs-to-design, design systems, or code-backed interface consistency dominate; it may read evidence but must not edit files. |
@@ -83,6 +84,7 @@ Examples:
 | --- | --- |
 | “Review this completed diff and write a PR description.” | `dbx-diff-review` first, then appropriate commit/PR skill. |
 | “Run L2 code ratchet on staged changes and auto-fix clear findings, but do not commit.” | `dbx-code-ratchet`. |
+| “Audit this repo's architecture health and AI-coding decay risks, but do not change code.” | `dbx-architecture-health`. |
 | “Use Linus-style review on this staged diff before the PR description.” | `dbx-diff-review` to lock target, then `dbx-linus-review`, then appropriate commit/PR skill. |
 | “Is this feature product-correct for the target user?” | `dbx-product-judgment`. |
 | “Audit this screenshot/prototype design and give a handoff, but do not implement.” | `dbx-design-judgment`. |

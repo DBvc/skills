@@ -1,0 +1,194 @@
+{
+  "skill_name": "dbx-architecture-health",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "positive-ai-coding-architecture-health-uses-core-controls",
+      "kind": "positive",
+      "prompt": "帮我对这个仓库做一次架构健康体检，重点看 AI coding 会不会放大长期腐化。已知 src/domain/user/status.ts、src/api/userDto.ts 和 src/features/billing/userStatus.ts 各有一份用户状态定义；CLAUDE.md 还让 agent 往 src/types/api.ts 写 API 类型，但现在 API 类型已经由 src/generated/api 生成。",
+      "expected_behavior": "Use architecture-health report shape, classify as repo/module health rather than PR review, and report root controls such as OWN/PROOF/CTX with evidence, impact, AI-coding failure mode, fix, validation, and confidence.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(架构健康|architecture health|审计模式|standard_repo_health|ai_operability)", "required": true, "quality": "structural"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(OWN|source of truth|状态 owner|状态|所有权|invariant|不变量)", "required": true, "quality": "domain"},
+          {"type": "regex", "value": "(CTX|CLAUDE.md|AGENTS|generated|生成|agent|上下文)", "required": true, "quality": "domain"},
+          {"type": "regex", "value": "(未来变化|future change|change class|AI-coding failure mode|agent.*(漏|miss|copy|复制|误读))", "required": true, "quality": "behavior"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "Evidence", "required": true, "quality": "structural"},
+          {"type": "must_contain", "value": "Impact", "required": true, "quality": "structural"},
+          {"type": "must_contain", "value": "AI-coding failure mode", "required": true, "quality": "structural"},
+          {"type": "must_contain", "value": "Validation", "required": true, "quality": "structural"},
+          {"type": "must_contain", "value": "Confidence", "required": true, "quality": "structural"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-does-not-promote-proxy-smells",
+      "kind": "positive",
+      "prompt": "审计这个模块：有一个 600 行的 checkout.ts，但它是线性流程；真正的问题是 pricing rule 同时写在 checkout.ts、discountBanner.tsx 和 analytics mapper 里，测试只覆盖 UI snapshot。",
+      "expected_behavior": "Avoid reporting large file as primary issue. Identify duplicated pricing decision and missing proof as OWN/PROOF root risk with future-change and AI-coding failure path.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(架构|审计|健康|architecture)", "required": true, "quality": "structural"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(pricing|价格|discount|折扣|source of truth|OWN|PROOF|snapshot)", "required": true, "quality": "domain"},
+          {"type": "regex", "value": "(不是.*600|large file.*not|大文件.*不是|线性流程)", "required": false, "quality": "behavior"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(Evidence|Impact|Fix|Validation|Confidence)", "required": true, "quality": "structural"},
+          {"type": "regex", "value": "^(?![\\s\\S]*600 行.*\\[S1)", "required": true, "quality": "behavior"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "near-miss-pr-review-routes-away",
+      "kind": "near_miss",
+      "prompt": "帮我 review staged diff，看看能不能合并。里面改了 auth cache 和 logout。",
+      "expected_behavior": "Do not use architecture-health audit sections. Route to dbx-diff-review or state that concrete diff review belongs there.",
+      "checks": {
+        "trigger": [
+          {"type": "must_not_contain", "value": "架构控制图", "required": true, "quality": "placement"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(dbx-diff-review|diff review|staged|PR|具体 diff)", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "AI-coding failure mode", "required": true, "quality": "placement"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-missing-scope-asks-smallest-input",
+      "kind": "failure_mode",
+      "prompt": "帮我看看架构有没有问题，但我没有仓库、目录树、代码或文档。",
+      "expected_behavior": "Ask for the smallest missing artifact/scope instead of inventing architecture findings or generic principles.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(仓库|目录|文件树|代码|文档|scope|范围|artifact|证据)", "required": true, "quality": "behavior"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(需要|请提供|无法|不能|最小)", "required": true, "quality": "safety"}
+        ],
+        "output": [
+          {"type": "regex", "value": "^(?![\\s\\S]*\\[S[0-3])", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-roadmap-hands-off-implementation",
+      "kind": "positive",
+      "prompt": "做一次 architecture health audit。已知问题：packages/web/src/shared 里堆了很多 feature-private 配置；packages/api 暴露的 DTO 被 web store 直接持久化；没有 contract test。审计后不要改代码，只给防腐路线图。",
+      "expected_behavior": "Produce read-only architecture health audit with Now/Next/Later anti-decay roadmap and handoff suggestions, without modifying code or writing implementation plan details.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(防腐路线图|Now|Next|Later|Do not do|审计范围)", "required": true, "quality": "structural"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(shared|feature-private|DTO|store|contract test|OWN|LOC|PROOF)", "required": true, "quality": "specificity"},
+          {"type": "regex", "value": "(dbx-technical-plan|dbx-diff-review|dbx-code-ratchet|交接)", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "我已经修改", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "tests passed", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-simple-system-avoids-over-architecture",
+      "kind": "positive",
+      "prompt": "快速审计这个内部 CRUD prototype：只有 6 个 route、一个 SQLite 表、两个页面，预计只给 3 个人用两周。目录很扁平，没有 domain layer，也没有复杂测试。看架构健康，但不要把它当大系统。",
+      "expected_behavior": "Use quick_map or a compact bounded audit. Apply the simple-system guard, avoid treating missing DDD/layering/extensive tests as a main finding, and report only concrete future-change or invariant risks if evidence supports them.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(quick_map|快速|compact|轻|bounded|受限)", "required": true, "quality": "behavior"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(CRUD|prototype|小|simple system|内部|两周|3 个人)", "required": true, "quality": "specificity"},
+          {"type": "regex", "value": "(不需要|不要|避免|over-architect|过度架构|simple-system guard|小系统)", "required": true, "quality": "behavior"}
+        ],
+        "output": [
+          {"type": "regex", "value": "^(?![\\s\\S]*(缺少|没有).*(DDD|Clean Architecture|domain layer).*(\\[S1|\\[S2))", "required": true, "quality": "behavior"},
+          {"type": "regex", "value": "(Evidence|证据|未验证|低置信度|Confidence|置信度)", "required": true, "quality": "validation"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-thin-evidence-bounds-claims",
+      "kind": "failure_mode",
+      "prompt": "只给你这些信息：目录树里有 apps/web、packages/api、packages/shared，还有 README 说 shared 放通用工具。没有代码、没有测试、没有 import 图。请判断架构是不是 high-risk。",
+      "expected_behavior": "Do not invent concrete findings or claim the repo is high-risk/healthy. Produce a bounded or blocked response that states missing evidence, confidence limits, and the smallest next artifacts needed.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(信息不足|证据不足|bounded|blocked|无法|不能|missing|缺少)", "required": true, "quality": "validation"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(目录树|README|import|测试|代码|证据|artifact|范围)", "required": true, "quality": "specificity"},
+          {"type": "regex", "value": "(需要|请提供|下一步|最小|smallest|low confidence|低置信度)", "required": true, "quality": "behavior"}
+        ],
+        "output": [
+          {"type": "regex", "value": "^(?![\\s\\S]*(结论|Conclusion)[:：]\\s*(high-risk|stable|healthy|健康|高风险))", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "^(?![\\s\\S]*\\[S[0-1])", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "near-miss-monorepo-split-routes-away",
+      "kind": "near_miss",
+      "prompt": "我们要不要拆 monorepo？请比较组织成本、发布节奏、迁移风险、可逆性，最后给 go/no-go 建议。没有要求做 repo 体检。",
+      "expected_behavior": "Do not produce the architecture-health audit contract. Route to dbx-decision-framing or dbx-linus-review depending on whether the task is trade-off decision or strict technical critique.",
+      "checks": {
+        "trigger": [
+          {"type": "must_not_contain", "value": "架构控制图", "required": true, "quality": "placement"},
+          {"type": "must_not_contain", "value": "健康维度", "required": true, "quality": "placement"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(dbx-decision-framing|decision framing|go/no-go|取舍|dbx-linus-review|strict critique)", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "AI-coding failure mode", "required": true, "quality": "placement"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "negative-clean-architecture-definition-routes-away",
+      "kind": "negative",
+      "prompt": "解释一下 Clean Architecture 是什么，给一个简单例子，不需要看我的仓库。",
+      "expected_behavior": "Do not start a repository architecture-health audit. Answer the concept question directly and avoid architecture-health report sections.",
+      "checks": {
+        "trigger": [
+          {"type": "must_not_contain", "value": "架构控制图", "required": true, "quality": "placement"},
+          {"type": "must_not_contain", "value": "standard_repo_health", "required": true, "quality": "placement"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(Clean Architecture|整洁架构|干净架构|依赖方向|分层)", "required": true, "quality": "domain"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "AI-coding failure mode", "required": true, "quality": "placement"},
+          {"type": "regex", "value": "(Clean Architecture|整洁架构|干净架构)", "required": true, "quality": "domain"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    }
+  ]
+}
