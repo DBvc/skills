@@ -5,6 +5,7 @@ This script intentionally stays lightweight and dependency-free. It provides evi
 leads, not final review conclusions. It does not run tests, install dependencies,
 access the network, or modify files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -13,168 +14,57 @@ import os
 import re
 import subprocess
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 IGNORE_DIRS = {
-    ".git",
-    ".hg",
-    ".svn",
-    "node_modules",
-    ".next",
-    ".nuxt",
-    ".turbo",
-    ".cache",
-    ".parcel-cache",
-    "dist",
-    "build",
-    "coverage",
-    ".coverage",
-    "target",
-    "out",
-    "vendor",
-    "__pycache__",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ruff_cache",
-    ".venv",
-    "venv",
-    "env",
-    ".tox",
-    ".idea",
-    ".vscode",
+    ".git", ".hg", ".svn", "node_modules", ".next", ".nuxt", ".turbo", ".cache",
+    ".parcel-cache", "dist", "build", "coverage", ".coverage", "target", "out", "vendor",
+    "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache", ".venv", "venv", "env",
+    ".tox", ".idea", ".vscode",
 }
 
 GENERATED_HINTS = (
-    "generated",
-    "__generated__",
-    "gen",
-    "autogen",
-    "codegen",
-    "swagger",
-    "openapi",
-    "graphql",
-    "proto",
-    "snapshot",
-    "snapshots",
+    "generated", "__generated__", "gen", "autogen", "codegen", "swagger", "openapi",
+    "graphql", "proto", "snapshot", "snapshots",
 )
 
 TEXT_EXTS = {
-    ".js",
-    ".jsx",
-    ".ts",
-    ".tsx",
-    ".mjs",
-    ".cjs",
-    ".py",
-    ".go",
-    ".rs",
-    ".java",
-    ".kt",
-    ".kts",
-    ".cs",
-    ".rb",
-    ".php",
-    ".scala",
-    ".swift",
-    ".md",
-    ".mdx",
-    ".txt",
-    ".json",
-    ".yaml",
-    ".yml",
-    ".toml",
-    ".xml",
-    ".proto",
-    ".graphql",
-    ".gql",
-    ".sql",
-    ".sh",
-    ".bash",
-    ".zsh",
-    ".fish",
-    ".css",
-    ".scss",
-    ".html",
+    ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".py", ".go", ".rs", ".java",
+    ".kt", ".kts", ".cs", ".rb", ".php", ".scala", ".swift", ".md", ".mdx",
+    ".txt", ".json", ".yaml", ".yml", ".toml", ".xml", ".proto", ".graphql", ".gql",
+    ".sql", ".sh", ".bash", ".zsh", ".fish", ".css", ".scss", ".html",
 }
 
 MANIFEST_NAMES = {
-    "package.json",
-    "pnpm-workspace.yaml",
-    "pnpm-workspace.yml",
-    "turbo.json",
-    "nx.json",
-    "tsconfig.json",
-    "tsconfig.base.json",
-    "vite.config.ts",
-    "vite.config.js",
-    "next.config.js",
-    "next.config.mjs",
-    "webpack.config.js",
-    "rollup.config.js",
-    "pyproject.toml",
-    "setup.py",
-    "setup.cfg",
-    "requirements.txt",
-    "requirements-dev.txt",
-    "poetry.lock",
-    "uv.lock",
-    "go.mod",
-    "Cargo.toml",
-    "pom.xml",
-    "build.gradle",
-    "build.gradle.kts",
-    "settings.gradle",
-    "settings.gradle.kts",
-    "deno.json",
-    "deno.jsonc",
-    "Makefile",
-    "justfile",
-    "Jenkinsfile",
-    "Dockerfile",
-    "docker-compose.yml",
-    "docker-compose.yaml",
+    "package.json", "pnpm-workspace.yaml", "pnpm-workspace.yml", "turbo.json", "nx.json",
+    "tsconfig.json", "tsconfig.base.json", "vite.config.ts", "vite.config.js", "next.config.js",
+    "next.config.mjs", "webpack.config.js", "rollup.config.js", "pyproject.toml", "setup.py",
+    "setup.cfg", "requirements.txt", "requirements-dev.txt", "poetry.lock", "uv.lock", "go.mod",
+    "Cargo.toml", "pom.xml", "build.gradle", "build.gradle.kts", "settings.gradle",
+    "settings.gradle.kts", "deno.json", "deno.jsonc", "Makefile", "justfile", "Jenkinsfile",
+    "Dockerfile", "docker-compose.yml", "docker-compose.yaml",
 }
 
 VALIDATION_NAMES = {
-    "jest.config.js",
-    "jest.config.ts",
-    "vitest.config.ts",
-    "vitest.config.js",
-    "playwright.config.ts",
-    "playwright.config.js",
-    "cypress.config.ts",
-    "cypress.config.js",
-    "pytest.ini",
-    "tox.ini",
-    "noxfile.py",
-    "ruff.toml",
-    ".pre-commit-config.yaml",
-    "eslint.config.js",
-    "eslint.config.mjs",
-    "eslint.config.cjs",
-    ".eslintrc",
-    ".eslintrc.js",
-    ".eslintrc.json",
-    "biome.json",
-    ".github/workflows",
-    ".gitlab-ci.yml",
+    "jest.config.js", "jest.config.ts", "vitest.config.ts", "vitest.config.js",
+    "playwright.config.ts", "playwright.config.js", "cypress.config.ts", "cypress.config.js",
+    "pytest.ini", "tox.ini", "noxfile.py", "ruff.toml", ".pre-commit-config.yaml",
+    "eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", ".eslintrc", ".eslintrc.js",
+    ".eslintrc.json", "biome.json", ".github/workflows", ".gitlab-ci.yml",
 }
 
 INSTRUCTION_NAMES = {
-    "AGENTS.md",
-    "CLAUDE.md",
-    "GEMINI.md",
-    "README.md",
-    "README.mdx",
-    "CONTRIBUTING.md",
-    "REVIEW.md",
-    "CODEOWNERS",
-    "llms.txt",
-    ".cursorrules",
-    ".windsurfrules",
+    "AGENTS.md", "CLAUDE.md", "GEMINI.md", "README.md", "README.mdx", "CONTRIBUTING.md",
+    "REVIEW.md", "CODEOWNERS", "llms.txt", ".cursorrules", ".windsurfrules",
 }
+
+COMMITMENT_HINTS = (
+    "migration", "migrations", "schema", "schemas", "sdk", "public", "api", "openapi", "graphql",
+    "proto", "package", "release", "changelog", "auth", "permission", "payment", "billing", "tenant",
+    "privacy", "security",
+)
 
 JS_IMPORT_RE = re.compile(
     r"(?:import\s+(?:[^'\"]+?\s+from\s+)?|export\s+[^'\"]+?\s+from\s+|require\(|import\()\s*['\"]([^'\"]+)['\"]"
@@ -186,13 +76,8 @@ EXPORT_RE = re.compile(r"^\s*export\s+(?:type\s+|interface\s+|class\s+|function\
 def run_git(root: Path, args: List[str], timeout: int = 5) -> Optional[str]:
     try:
         proc = subprocess.run(
-            ["git", *args],
-            cwd=str(root),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            text=True,
-            timeout=timeout,
-            check=False,
+            ["git", *args], cwd=str(root), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            text=True, timeout=timeout, check=False,
         )
     except (OSError, subprocess.SubprocessError):
         return None
@@ -232,6 +117,11 @@ def is_generated_or_snapshot_candidate(rel: str) -> bool:
     return any(token in GENERATED_HINTS for token in generated_path_tokens(rel))
 
 
+def is_commitment_candidate(rel: str) -> bool:
+    low = rel.lower()
+    return any(token in low for token in COMMITMENT_HINTS)
+
+
 def relpath(path: Path, root: Path) -> str:
     try:
         return path.relative_to(root).as_posix()
@@ -240,7 +130,7 @@ def relpath(path: Path, root: Path) -> str:
 
 
 def should_skip_dir(path: Path) -> bool:
-    return path.name in IGNORE_DIRS or path.name.startswith(".") and path.name not in {".github"}
+    return path.name in IGNORE_DIRS or (path.name.startswith(".") and path.name not in {".github"})
 
 
 def walk_files(root: Path, max_files: int) -> List[Path]:
@@ -274,7 +164,6 @@ def resolve_relative_import(source_rel: str, spec: str) -> Optional[str]:
         return None
     source_dir = Path(source_rel).parent
     normalized = (source_dir / spec).as_posix()
-    # Normalize without requiring the target file to exist.
     parts: List[str] = []
     for part in normalized.split("/"):
         if part in {"", "."}:
@@ -291,7 +180,6 @@ def collect_import_edges(root: Path, files: Iterable[Path], max_edges: int) -> T
     external_imports: Counter = Counter()
     bucket_edges: Counter = Counter()
     examples: List[Dict[str, str]] = []
-
     for path in files:
         ext = path.suffix.lower()
         if ext not in {".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".py"}:
@@ -307,7 +195,6 @@ def collect_import_edges(root: Path, files: Iterable[Path], max_edges: int) -> T
         elif ext == ".py":
             for m in PY_IMPORT_RE.finditer(text):
                 specs.append(m.group(1) or m.group(2) or "")
-
         for spec in specs:
             if not spec:
                 continue
@@ -339,147 +226,6 @@ def collect_churn(root: Path, since: str, max_items: int) -> List[Dict[str, Any]
             continue
         counts[line] += 1
     return [{"path": path, "commits_touching": count} for path, count in counts.most_common(max_items)]
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser(description="Collect read-only architecture context leads.")
-    parser.add_argument("--root", default=".", help="Repository root. Default: current directory.")
-    parser.add_argument("--path", action="append", default=[], help="Optional path(s) under root to focus. Can be repeated.")
-    parser.add_argument("--format", choices=["json", "markdown"], default="json")
-    parser.add_argument("--max-files", type=int, default=5000)
-    parser.add_argument("--max-large-files", type=int, default=25)
-    parser.add_argument("--max-churn", type=int, default=25)
-    parser.add_argument("--churn-since", default="180 days ago")
-    parser.add_argument("--max-edges", type=int, default=50)
-    args = parser.parse_args()
-
-    root = Path(args.root).resolve()
-    if not root.exists() or not root.is_dir():
-        print(f"error: root is not a directory: {root}", file=sys.stderr)
-        return 2
-
-    focus_roots: List[Path]
-    if args.path:
-        focus_roots = []
-        for raw in args.path:
-            p = (root / raw).resolve()
-            if not p.exists():
-                print(f"warning: focus path does not exist: {raw}", file=sys.stderr)
-                continue
-            if root not in p.parents and p != root:
-                print(f"warning: focus path outside root ignored: {raw}", file=sys.stderr)
-                continue
-            focus_roots.append(p)
-        if not focus_roots:
-            return 2
-    else:
-        focus_roots = [root]
-
-    all_files: List[Path] = []
-    for focus in focus_roots:
-        if focus.is_file():
-            all_files.append(focus)
-        else:
-            all_files.extend(walk_files(focus, args.max_files - len(all_files)))
-        if len(all_files) >= args.max_files:
-            break
-
-    all_files = sorted(set(all_files))
-
-    ext_counts: Counter = Counter()
-    bucket_counts: Counter = Counter()
-    large_files: List[Dict[str, Any]] = []
-    manifests: List[str] = []
-    validation: List[str] = []
-    instructions: List[str] = []
-    docs: List[str] = []
-    generated_candidates: List[str] = []
-    test_files: List[str] = []
-    public_export_files: List[Dict[str, Any]] = []
-
-    for path in all_files:
-        rel = relpath(path, root)
-        ext_counts[path.suffix.lower() or "[no_ext]"] += 1
-        bucket_counts[bucket_for(rel)] += 1
-        lower_rel = rel.lower()
-        if path.name in MANIFEST_NAMES or any(path.name == name for name in MANIFEST_NAMES):
-            manifests.append(rel)
-        if path.name in VALIDATION_NAMES or ".github/workflows/" in rel or rel.startswith(".github/workflows/"):
-            validation.append(rel)
-        if path.name in INSTRUCTION_NAMES or path.name in {"AGENTS.md", "CLAUDE.md", "GEMINI.md"}:
-            instructions.append(rel)
-        if path.suffix.lower() in {".md", ".mdx"} and (rel.startswith("docs/") or "adr" in lower_rel or path.name.lower().startswith("readme")):
-            docs.append(rel)
-        if is_generated_or_snapshot_candidate(rel):
-            generated_candidates.append(rel)
-        if re.search(r"(^|/)(test|tests|__tests__|spec|specs)(/|$)", lower_rel) or re.search(r"\.(test|spec)\.[tj]sx?$", lower_rel):
-            test_files.append(rel)
-
-        try:
-            line_count = sum(1 for _ in path.open("r", encoding="utf-8", errors="replace"))
-        except OSError:
-            line_count = 0
-        if line_count >= 250 and path.suffix.lower() not in {".json", ".lock"}:
-            large_files.append({"path": rel, "lines": line_count})
-
-        if path.suffix.lower() in {".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"}:
-            text = safe_read_text(path, max_bytes=160_000)
-            if text:
-                export_count = len(EXPORT_RE.findall(text))
-                if export_count:
-                    public_export_files.append({"path": rel, "export_statements": export_count})
-
-    large_files.sort(key=lambda x: x["lines"], reverse=True)
-    public_export_files.sort(key=lambda x: x["export_statements"], reverse=True)
-
-    external_imports, bucket_edges, import_examples = collect_import_edges(root, all_files, args.max_edges)
-
-    git_branch = run_git(root, ["rev-parse", "--abbrev-ref", "HEAD"])
-    git_status = run_git(root, ["status", "--short", "--branch", "-uall"])
-    churn = collect_churn(root, args.churn_since, args.max_churn)
-
-    result: Dict[str, Any] = {
-        "root": str(root),
-        "focused_paths": [relpath(p, root) for p in focus_roots],
-        "limits": {
-            "max_files": args.max_files,
-            "files_scanned": len(all_files),
-            "truncated": len(all_files) >= args.max_files,
-        },
-        "git": {
-            "branch": git_branch,
-            "status_short_branch": git_status.splitlines()[:80] if git_status else [],
-            "churn_since": args.churn_since,
-            "top_churn_files": churn,
-        },
-        "repo_shape": {
-            "extension_counts": dict(ext_counts.most_common()),
-            "top_buckets_by_file_count": [{"bucket": k, "files": v} for k, v in bucket_counts.most_common(30)],
-            "manifests": sorted(set(manifests))[:100],
-            "validation_surfaces": sorted(set(validation))[:100],
-            "instruction_surfaces": sorted(set(instructions))[:100],
-            "docs_and_adr_surfaces": sorted(set(docs))[:100],
-            "generated_or_snapshot_candidates": sorted(set(generated_candidates))[:100],
-            "test_files_count": len(set(test_files)),
-            "test_file_examples": sorted(set(test_files))[:40],
-            "large_files": large_files[: args.max_large_files],
-            "public_export_hotspots": public_export_files[:25],
-        },
-        "dependency_leads": {
-            "top_external_imports": [{"name": k, "count": v} for k, v in external_imports.most_common(30)],
-            "cross_bucket_relative_edges": [
-                {"from_bucket": k[0], "to_bucket": k[1], "count": v}
-                for k, v in bucket_edges.most_common(50)
-            ],
-            "import_examples": import_examples,
-        },
-    }
-
-    if args.format == "json":
-        print(json.dumps(result, ensure_ascii=False, indent=2))
-    else:
-        print_markdown(result)
-    return 0
 
 
 def print_markdown(result: Dict[str, Any]) -> None:
@@ -537,6 +283,7 @@ def print_markdown(result: Dict[str, Any]) -> None:
     list_section("Instruction surfaces", shape["instruction_surfaces"])
     list_section("Docs / ADR surfaces", shape["docs_and_adr_surfaces"])
     list_section("Generated or snapshot candidates", shape["generated_or_snapshot_candidates"])
+    list_section("Commitment surface candidates", shape["commitment_surface_candidates"])
     list_section("Large files", shape["large_files"])
     list_section("Public export hotspots", shape["public_export_hotspots"])
 
@@ -550,8 +297,149 @@ def print_markdown(result: Dict[str, Any]) -> None:
     list_section("Top external imports", deps["top_external_imports"])
     list_section("Cross-bucket relative import edges", deps["cross_bucket_relative_edges"])
     list_section("Import examples", deps["import_examples"])
-
     list_section(f"Top churn files since {git.get('churn_since')}", git.get("top_churn_files") or [])
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Collect read-only architecture context leads.")
+    parser.add_argument("--root", default=".", help="Repository root. Default: current directory.")
+    parser.add_argument("--path", action="append", default=[], help="Optional path(s) under root to focus. Can be repeated.")
+    parser.add_argument("--format", choices=["json", "markdown"], default="json")
+    parser.add_argument("--max-files", type=int, default=5000)
+    parser.add_argument("--max-large-files", type=int, default=25)
+    parser.add_argument("--max-churn", type=int, default=25)
+    parser.add_argument("--churn-since", default="180 days ago")
+    parser.add_argument("--max-edges", type=int, default=50)
+    args = parser.parse_args()
+
+    root = Path(args.root).resolve()
+    if not root.exists() or not root.is_dir():
+        print(f"error: root is not a directory: {root}", file=sys.stderr)
+        return 2
+
+    if args.path:
+        focus_roots: List[Path] = []
+        for raw in args.path:
+            p = (root / raw).resolve()
+            if not p.exists():
+                print(f"warning: focus path does not exist: {raw}", file=sys.stderr)
+                continue
+            if root not in p.parents and p != root:
+                print(f"warning: focus path outside root ignored: {raw}", file=sys.stderr)
+                continue
+            focus_roots.append(p)
+        if not focus_roots:
+            return 2
+    else:
+        focus_roots = [root]
+
+    all_files: List[Path] = []
+    for focus in focus_roots:
+        if focus.is_file():
+            all_files.append(focus)
+        else:
+            all_files.extend(walk_files(focus, args.max_files - len(all_files)))
+        if len(all_files) >= args.max_files:
+            break
+    all_files = sorted(set(all_files))
+
+    ext_counts: Counter = Counter()
+    bucket_counts: Counter = Counter()
+    large_files: List[Dict[str, Any]] = []
+    manifests: List[str] = []
+    validation: List[str] = []
+    instructions: List[str] = []
+    docs: List[str] = []
+    generated_candidates: List[str] = []
+    commitment_candidates: List[str] = []
+    test_files: List[str] = []
+    public_export_files: List[Dict[str, Any]] = []
+
+    for path in all_files:
+        rel = relpath(path, root)
+        ext_counts[path.suffix.lower() or "[no_ext]"] += 1
+        bucket_counts[bucket_for(rel)] += 1
+        lower_rel = rel.lower()
+
+        if path.name in MANIFEST_NAMES:
+            manifests.append(rel)
+        if path.name in VALIDATION_NAMES or ".github/workflows/" in rel or rel.startswith(".github/workflows/"):
+            validation.append(rel)
+        if path.name in INSTRUCTION_NAMES:
+            instructions.append(rel)
+        if path.suffix.lower() in {".md", ".mdx"} and (rel.startswith("docs/") or "adr" in lower_rel or path.name.lower().startswith("readme")):
+            docs.append(rel)
+        if is_generated_or_snapshot_candidate(rel):
+            generated_candidates.append(rel)
+        if is_commitment_candidate(rel):
+            commitment_candidates.append(rel)
+        if re.search(r"(^|/)(test|tests|__tests__|spec|specs)(/|$)", lower_rel) or re.search(r"\.(test|spec)\.[tj]sx?$", lower_rel):
+            test_files.append(rel)
+
+        try:
+            line_count = sum(1 for _ in path.open("r", encoding="utf-8", errors="replace"))
+        except OSError:
+            line_count = 0
+        if line_count >= 250 and path.suffix.lower() not in {".json", ".lock"}:
+            large_files.append({"path": rel, "lines": line_count})
+
+        if path.suffix.lower() in {".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"}:
+            text = safe_read_text(path, max_bytes=160_000)
+            if text:
+                export_count = len(EXPORT_RE.findall(text))
+                if export_count:
+                    public_export_files.append({"path": rel, "export_statements": export_count})
+
+    large_files.sort(key=lambda x: x["lines"], reverse=True)
+    public_export_files.sort(key=lambda x: x["export_statements"], reverse=True)
+    external_imports, bucket_edges, import_examples = collect_import_edges(root, all_files, args.max_edges)
+
+    git_branch = run_git(root, ["rev-parse", "--abbrev-ref", "HEAD"])
+    git_status = run_git(root, ["status", "--short", "--branch", "-uall"])
+    churn = collect_churn(root, args.churn_since, args.max_churn)
+
+    result: Dict[str, Any] = {
+        "root": str(root),
+        "focused_paths": [relpath(p, root) for p in focus_roots],
+        "limits": {
+            "max_files": args.max_files,
+            "files_scanned": len(all_files),
+            "truncated": len(all_files) >= args.max_files,
+        },
+        "git": {
+            "branch": git_branch,
+            "status_short_branch": git_status.splitlines()[:80] if git_status else [],
+            "churn_since": args.churn_since,
+            "top_churn_files": churn,
+        },
+        "repo_shape": {
+            "extension_counts": dict(ext_counts.most_common()),
+            "top_buckets_by_file_count": [{"bucket": k, "files": v} for k, v in bucket_counts.most_common(30)],
+            "manifests": sorted(set(manifests))[:100],
+            "validation_surfaces": sorted(set(validation))[:100],
+            "instruction_surfaces": sorted(set(instructions))[:100],
+            "docs_and_adr_surfaces": sorted(set(docs))[:100],
+            "generated_or_snapshot_candidates": sorted(set(generated_candidates))[:100],
+            "commitment_surface_candidates": sorted(set(commitment_candidates))[:100],
+            "test_files_count": len(set(test_files)),
+            "test_file_examples": sorted(set(test_files))[:40],
+            "large_files": large_files[: args.max_large_files],
+            "public_export_hotspots": public_export_files[:25],
+        },
+        "dependency_leads": {
+            "top_external_imports": [{"name": k, "count": v} for k, v in external_imports.most_common(30)],
+            "cross_bucket_relative_edges": [
+                {"from_bucket": k[0], "to_bucket": k[1], "count": v} for k, v in bucket_edges.most_common(50)
+            ],
+            "import_examples": import_examples,
+        },
+    }
+
+    if args.format == "json":
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print_markdown(result)
+    return 0
 
 
 if __name__ == "__main__":

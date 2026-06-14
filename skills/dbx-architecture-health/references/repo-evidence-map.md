@@ -21,155 +21,122 @@ python3 skills/dbx-architecture-health/scripts/collect-architecture-context.py -
 For focused scope:
 
 ```bash
-python3 skills/dbx-architecture-health/scripts/collect-architecture-context.py --root . --path packages/web --format markdown
+python3 skills/dbx-architecture-health/scripts/collect-architecture-context.py --root . --path packages/web --format json
 ```
 
-The script provides leads:
-- repo shape;
-- manifest and config files;
-- docs and agent instruction surfaces;
-- test and CI surfaces;
-- generated/vendor candidates;
-- extension counts;
-- large files;
-- churn signals when git metadata is available;
-- simple import-edge leads for JS/TS/Python.
+The script returns leads, not final conclusions.
 
-Script output is not proof by itself. Use it to decide what files to inspect.
+## First-pass evidence
 
-## Common evidence sources
-
-### Universal
-
-- `README.md`, `docs/**`, `architecture/**`, `adr/**`, `ADRs/**`
-- `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules`, `llms.txt`
-- `.github/workflows/**`, `.gitlab-ci.yml`, `Jenkinsfile`, `Makefile`, `justfile`
-- `CODEOWNERS`, `CONTRIBUTING.md`, `REVIEW.md`
-- `schemas/**`, `proto/**`, `openapi.*`, `graphql/**`
-- generated-code configs and scripts
-
-### JavaScript / TypeScript / Frontend / Full-stack
-
-- `package.json`, `pnpm-workspace.yaml`, `yarn.lock`, `package-lock.json`, `turbo.json`, `nx.json`
-- `tsconfig*.json`, `vite.config.*`, `next.config.*`, `webpack.config.*`, `rollup.config.*`
-- `eslint.config.*`, `.eslintrc*`, `biome.json`, `prettier.config.*`
-- `vitest.config.*`, `jest.config.*`, `playwright.config.*`, `cypress.config.*`
-- `src/**`, `app/**`, `pages/**`, `components/**`, `features/**`, `domain/**`, `lib/**`, `shared/**`, `server/**`
+### Likely change scenarios
 
 Look for:
-- UI store holding API DTOs as domain state;
-- feature-private policy placed in `shared` or `lib`;
-- public barrel exports growing into de facto APIs;
-- client/server schema drift;
-- generated API clients mixed with handwritten domain logic;
-- test coverage focused on snapshots/rendering while business invariants lack tests.
 
-### Python
+- README positioning and common workflows;
+- product surface: routes, pages, CLI commands, packages, APIs;
+- recent churn hotspots if git history is available;
+- user-stated future work;
+- issue/design/ADR references if provided.
 
-- `pyproject.toml`, `setup.cfg`, `setup.py`, `requirements*.txt`, `poetry.lock`, `uv.lock`
-- `pytest.ini`, `tox.ini`, `noxfile.py`, `ruff.toml`, `.pre-commit-config.yaml`
-- package roots under `src/`, app packages, `tests/`, `migrations/`
+Record assumptions. Do not overfit a single folder name.
+
+### Risk profile and commitments
 
 Look for:
-- framework models doubling as domain truth without service/application boundary;
-- migrations without compatibility/rollback strategy;
-- settings/config drift across environments;
-- tests relying on broad fixtures or hidden database state;
-- scripts that encode production policy outside tested modules.
 
-### Go
+- public packages: package manifests, `exports`, SDKs, changelog, release config;
+- persisted data: migrations, schemas, ORM models, SQL files, storage adapters;
+- external APIs: OpenAPI, GraphQL, protobuf, route handlers, controllers;
+- user/workflow commitments: auth, payment, billing, notification, onboarding, data export;
+- operational commitments: deployment config, feature flags, rollback docs, migration scripts;
+- security/privacy: permission logic, auth middleware, tenant/user isolation, PII handling;
+- prototype signals: tiny scope, no users, local script, throwaway docs, explicit experimental status.
 
-- `go.mod`, `go.sum`, `cmd/**`, `internal/**`, `pkg/**`
-- `*_test.go`, `Makefile`, CI workflows
+Compatibility relevance is high only when these commitments are real.
 
-Look for:
-- public `pkg/` surface without compatibility owner;
-- domain logic hidden in handlers or repositories;
-- global config/state shared across packages;
-- integration boundaries without contract tests;
-- generated protobuf/OpenAPI code source-of-truth clarity.
+## Core question evidence
 
-### Java / Kotlin / JVM
+### TRUTH
 
-- `pom.xml`, `build.gradle*`, `settings.gradle*`, `gradle.properties`
-- `src/main`, `src/test`, `src/integrationTest`, migration configs
+Inspect:
 
-Look for:
-- entity classes overloaded as API DTOs and domain model;
-- service classes mixing transaction, domain policy, integration, and presentation concerns;
-- module boundaries not reflected in build/package boundaries;
-- migration/versioning and backward compatibility gaps.
+- core entity types and status enums;
+- schema and domain model definitions;
+- API DTOs and mappers;
+- stores, reducers, caches, repositories;
+- fixture/example data that appears reused as policy;
+- permission, pricing, lifecycle, workflow, and feature-flag rules.
 
-### Rust
+Useful searches:
 
-- `Cargo.toml`, `Cargo.lock`, crate boundaries, `src/lib.rs`, `src/main.rs`, `tests/`
+```bash
+rg "Status|State|Role|Permission|Plan|Price|Lifecycle|FeatureFlag|is[A-Z]|can[A-Z]" src packages apps
+rg "TODO|deprecated|legacy|source of truth|owner|invariant" .
+```
 
-Look for:
-- public API growth without semver/compatibility owner;
-- feature flags that alter core behavior without test matrix;
-- generated bindings and schema ownership;
-- unsafe blocks or FFI boundaries without proof.
+### LOCALITY
 
-## Evidence-to-control mapping
+Inspect:
 
-| Evidence | Likely control |
-|---|---|
-| Duplicate business enums, formulas, schemas | OWN |
-| API DTO used throughout domain/UI | OWN / LOC |
-| Feature-to-feature imports | LOC |
-| Shared module with feature-specific policy | LOC / OWN |
-| Public barrel exports without owner | LOC / EVO |
-| Missing contract test for public API/schema | PROOF / EVO |
-| Snapshot-heavy tests for business behavior | PROOF |
-| Conflicting README/ADR/AGENTS/CLAUDE guidance | CTX |
-| Unmarked generated code | CTX / OWN |
-| Irreversible migration | EVO |
-| Version skew across packages/generated clients | EVO / PROOF |
-| High churn hotspot with unclear owner | OWN / LOC |
+- package/module boundaries;
+- import direction;
+- shared/common/utils surfaces;
+- barrels and public exports;
+- feature-to-feature imports;
+- cross-package relative imports;
+- large/high-churn files only as leads.
 
-## Minimal inspection bundles
+Useful searches:
 
-### Quick module health
+```bash
+rg "from ['\"]\.\./\.\.|from ['\"]@/.+features|from ['\"].*shared" src packages apps
+rg "export \*|export \{" src packages apps
+```
 
-Read:
-- module entrypoint;
-- nearest README/docs;
-- public exports;
-- tests for module;
-- immediate imports and consumers.
+### PROOF
 
-Answer:
-- who owns state;
-- what changes propagate;
-- what proves behavior;
-- whether AI can find the right context.
+Inspect:
 
-### Standard repo health
+- test config and test types;
+- contract tests;
+- schema/codegen checks;
+- migration tests if migrations matter;
+- permission/payment/security regression tests if those paths exist;
+- typecheck/lint rules that encode architecture boundaries;
+- CI workflows and what they actually run.
 
-Read:
-- root README/instructions;
-- package/workspace manifests;
-- top-level source directories;
-- CI/test/lint configs;
-- docs/ADR if present;
-- generated-code indicators;
-- script output if available.
+Useful searches:
 
-Answer:
-- top 3 to 7 root risks;
-- not a full file-by-file audit.
+```bash
+find . -iname "*test*" -o -iname "*spec*"
+rg "contract|schema|migration|idempot|permission|auth|price|status|state" test tests src packages apps
+```
 
-### Deep architecture audit
+### CONTEXT
 
-Add:
-- dependency/import graph leads;
-- public API/schema/generated surfaces;
-- high-churn/hotspot files;
-- representative modules from each layer/package;
-- validation commands available and not run;
-- rollout/migration/rollback docs where relevant.
+Inspect:
 
-Answer:
-- root-cause grouping;
-- anti-decay roadmap;
-- handoff to plan/review/ratchet skill.
+- `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, `.windsurfrules`, `llms.txt`;
+- README and module READMEs;
+- ADRs and design docs;
+- generated-code headers;
+- examples and fixtures;
+- stale files with names that look authoritative.
+
+Useful searches:
+
+```bash
+find . -iname "AGENTS.md" -o -iname "CLAUDE.md" -o -iname "README.md" -o -iname "*.md"
+rg "generated|do not edit|source of truth|deprecated|legacy|agent|Claude|Cursor" .
+```
+
+## Evidence interpretation reminders
+
+- Large files are not automatically architecture decay.
+- Small files are not automatically good architecture.
+- Shared modules are not automatically dumping grounds.
+- Duplicate code is not automatically duplicate knowledge.
+- Missing docs are not automatically context risk.
+- Compatibility gaps are not automatically severe.
+- Generated code is not automatically bad.
+- A single finding can have multiple symptoms; group by root cause.

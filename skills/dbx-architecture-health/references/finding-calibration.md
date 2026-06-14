@@ -1,22 +1,25 @@
 # Finding calibration
 
-Use this reference to calibrate severity, confidence, evidence class, and false-positive guards for architecture health findings.
+Use this reference to calibrate severity, confidence, evidence class, false-positive guards, and root-cause grouping for architecture health findings.
 
 ## Required finding shape
 
 A real architecture health finding must have all of these:
 
 ```text
-root control: OWN | LOC | PROOF | CTX | EVO
+root question: TRUTH | LOCALITY | PROOF | CONTEXT
 observed evidence: concrete repo artifact or user-provided architecture fact
 future-change failure path: what becomes unsafe, expensive, or unverifiable
 AI-coding failure mode: what a coding agent is likely to copy, miss, or misread
+human-review impact: why a reviewer cannot cheaply prove safety from current structure
 bounded fix direction: a minimum useful anti-decay move
 validation path: how to prove the fix reduced risk
 confidence: high | medium | low
 ```
 
 If any field is missing, demote the item to residual risk, investigation note, or omit it.
+
+Compatibility, migration, rollout, rollback, and versioning claims must also include the relevant commitment: API, data, users, package, external client, security/money path, migration, or explicit product promise.
 
 ## Evidence classes
 
@@ -35,10 +38,12 @@ S0/S1 findings should normally require E0 or E1. E2 can become S1 only when the 
 ### [S0 blocker]
 
 Use only when architecture creates an immediate or near-immediate high-impact failure mode:
-- unsafe migration path likely to corrupt or lose data;
+
+- data loss or corruption risk on a committed data surface;
 - auth/permission ownership split likely to expose data;
+- payment/security/privacy invariant cannot be proven;
 - production-critical public contract cannot be changed safely;
-- rollback impossible for an active high-risk change;
+- unsafe migration is active and cannot be checked or rolled back;
 - CI/release path cannot verify a critical generated artifact or package output.
 
 S0 must include direct evidence and a validation/mitigation gate.
@@ -46,16 +51,18 @@ S0 must include direct evidence and a validation/mitigation gate.
 ### [S1 high]
 
 Use when a root decay mechanism is likely to cause real regressions or dangerous future changes:
+
 - duplicated source of truth for a core business rule;
 - wrong state owner or cache owner in a critical flow;
 - domain model represented by boundary DTOs across many modules;
-- public API or schema evolution with no compatibility/consumer policy;
+- public API/schema commitment has no owner or proof;
 - important invariant lacks executable proof and is actively changed;
-- AI context is actively steering code generation toward wrong owner or wrong pattern.
+- repo context is actively steering code generation toward wrong owner or wrong pattern.
 
 ### [S2 medium]
 
 Use when decay is concrete but bounded:
+
 - shared module is growing into a dumping ground but impact is localized;
 - tests cover happy path but not named edge invariants;
 - docs/context are stale around a non-critical module;
@@ -65,6 +72,7 @@ Use when decay is concrete but bounded:
 ### [S3 low]
 
 Use sparingly:
+
 - local boundary clarification;
 - small context/doc cleanup;
 - minor source-of-truth naming issue;
@@ -85,8 +93,8 @@ Severity and confidence are independent. A possible catastrophic issue with weak
 When several symptoms share one root cause, group them:
 
 ```markdown
-Root cause: user status ownership split between domain, API adapter, and UI store
-Mapped controls: OWN, LOC, PROOF
+Root cause: user status truth is split between domain, API adapter, and UI store
+Mapped questions: TRUTH, LOCALITY, PROOF
 Symptoms:
 - `src/domain/user/status.ts` and `src/api/userDto.ts` define different status sets
 - UI has a local `editableStatus` union
@@ -103,7 +111,11 @@ Check these before reporting.
 
 ### Simple system guard
 
-A small CRUD app, internal script, prototype, or one-off tool may not need layered architecture, rich domain modeling, or extensive rollout machinery. Flag only real future-change or correctness risk.
+A small CRUD app, internal script, prototype, or one-off tool may not need layered architecture, rich domain modeling, extensive rollout machinery, or full contract testing. Flag only real future-change or correctness risk.
+
+### Commitment guard
+
+Do not flag compatibility, versioning, migration, or rollback gaps unless there is a real commitment: public API, persisted data, external client, package release, user workflow, security/money path, compliance constraint, active migration, or explicit user promise.
 
 ### Bounded-context duplication guard
 
@@ -112,10 +124,11 @@ Similar terms in different bounded contexts are not automatically duplicated dec
 ### Generated projection guard
 
 Repeated code generated from a single schema/source is acceptable if:
+
 - the source is obvious;
 - generated files are marked;
 - generated artifacts are not manually edited;
-- validation catches stale generation.
+- validation catches stale generation when stale generation matters.
 
 ### Adapter glue guard
 
@@ -124,18 +137,19 @@ Adapters, composition roots, test fixtures, and integration glue may legitimatel
 ### Migration window guard
 
 Temporary duplication during an active migration is acceptable when:
+
 - the old and new paths are labeled;
-- compatibility behavior is defined;
-- removal/retirement path exists;
-- validation covers both paths.
+- the commitment level is clear;
+- removal/retirement path exists if the old path must disappear;
+- validation covers both paths when both paths still serve users/data.
 
 ### Public API guard
 
-Public surface is not bad by itself. It becomes risk when it lacks owner, compatibility policy, consumer scan, versioning, or proof.
+Public surface is not bad by itself. It becomes risk when it lacks owner, consumer awareness, versioning if needed, or proof. Internal exports inside a prototype may not need compatibility policy.
 
 ### Documentation guard
 
-Missing docs are not automatically CTX risk. Stale or conflicting docs are more dangerous than sparse docs. Prefer docs close to the source of truth and backed by tests/contracts.
+Missing docs are not automatically CONTEXT risk. Stale or conflicting docs are more dangerous than sparse docs. Prefer docs close to the source of truth and backed by tests/contracts.
 
 ## Bad finding patterns
 
@@ -160,6 +174,12 @@ Could be true, but needs impact, ownership, and evidence.
 Name the unprotected invariant or omit it.
 
 ```markdown
+[S1] Add API versioning before changing this internal prototype route.
+```
+
+Compatibility burden without a commitment.
+
+```markdown
 [S1] Rewrite the module using DDD.
 ```
 
@@ -170,5 +190,5 @@ Pattern worship. Specify the ownership/invariant failure and the smallest useful
 A good finding should pass this sentence:
 
 ```text
-Because of [observed evidence], the next likely change [change class] will require [unsafe/expensive/unverifiable coordination], and an AI coding agent is likely to [specific failure mode]. The smallest useful fix is [bounded action], proven by [validation].
+Because of [observed evidence], the next likely change [change class] will require [unsafe/expensive/unverifiable coordination], and an AI coding agent is likely to [specific failure mode]. The smallest useful fix is [bounded action], proven by [validation]. The severity is justified because [actual risk or commitment].
 ```

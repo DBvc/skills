@@ -1,6 +1,6 @@
 {
   "skill_name": "dbx-architecture-health",
-  "version": "1.0",
+  "version": "1.1",
   "cases": [
     {
       "id": "positive-repo-architecture-health",
@@ -24,11 +24,11 @@
       "rationale": "Focused module architecture health review."
     },
     {
-      "id": "positive-state-ownership-drift",
+      "id": "positive-truth-ownership-drift",
       "kind": "positive",
       "prompt": "看一下这个 codebase 有没有状态 owner 混乱、source of truth 重复、领域模型被 API DTO 污染的问题。",
       "expected_trigger": true,
-      "rationale": "State ownership and source-of-truth drift are primary architecture health controls."
+      "rationale": "Source-of-truth and ownership drift are primary architecture health questions."
     },
     {
       "id": "positive-ai-operability",
@@ -40,7 +40,7 @@
     {
       "id": "positive-recheck-baseline",
       "kind": "positive",
-      "prompt": "根据上次的 architecture health report，复查 OWN/PROOF 两个问题是否已经改善。",
+      "prompt": "根据上次的 architecture health report，复查 TRUTH/PROOF 两个问题是否已经改善。",
       "expected_trigger": true,
       "rationale": "Baseline/recheck mode for prior architecture health findings."
     },
@@ -52,11 +52,18 @@
       "rationale": "A bounded architecture health audit can proceed from supplied tree/docs if uncertainty is disclosed."
     },
     {
+      "id": "positive-compatibility-calibration",
+      "kind": "positive",
+      "prompt": "快速审计这个内部 prototype，不要默认要求 API 兼容和复杂 rollback，只看它现在是否容易被 AI 改错。",
+      "expected_trigger": true,
+      "rationale": "Architecture health audit with explicit risk-profile calibration."
+    },
+    {
       "id": "failure-missing-artifact",
       "kind": "failure_mode",
       "prompt": "帮我看看架构有没有问题，但我没有提供仓库、目录、文件树或代码。",
       "expected_trigger": true,
-      "rationale": "Should trigger but ask for the smallest missing architecture artifact/scope instead of inventing findings."
+      "rationale": "Should trigger but ask for smallest missing architecture artifact/scope instead of inventing findings."
     },
     {
       "id": "near-miss-concrete-pr-review",
