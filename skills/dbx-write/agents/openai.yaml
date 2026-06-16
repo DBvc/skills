@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-write"
+  short_description: "Chinese-first viewpoint writing"
+  default_prompt: "Use $dbx-write to turn this idea or draft into a viewpoint-driven Markdown article."

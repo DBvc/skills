@@ -18,6 +18,7 @@ Read it when:
 | --- | --- | --- |
 | Write open-source commit/PR artifact | `dbx-open-source-commit-pr` | `dbx-linus-review`, unless review is requested. |
 | Write work/internal commit/PR artifact | `dbx-work-commit-pr` | `dbx-open-source-commit-pr`. |
+| Write viewpoint-driven prose, technical blog, personal essay, Markdown article, article edit, or English transcreation | `dbx-write` | Commit/PR skills, product/design judgment, conversation alignment, direct implementation, or plain summarization. |
 | Review concrete PR/diff/staged/commit/file changes | `dbx-diff-review` | `dbx-linus-review`, unless strict pragmatic critique is explicit. |
 | Run explicit bounded review-repair-revalidation on concrete code changes | `dbx-code-ratchet` | Read-only review skills or open-ended implementation workflows. |
 | Audit repository/module architecture health, long-term decay, AI-coding operability, or anti-decay roadmap | `dbx-architecture-health` | `dbx-diff-review` for concrete changes; `dbx-technical-plan` for implementation planning; `dbx-linus-review` for strict proposal critique. |
@@ -70,6 +71,7 @@ Current graph:
 | `dbx-agent-handoff` produces restart packets | Use for AI agent/session continuation, especially context compaction or "next session continues"; do not use for human-facing handoff documents. |
 | `dbx-conversation-align` competes with `dbx-decision-framing` | Communication wording vs real-world trade-off. |
 | `dbx-open-source-commit-pr` competes with `dbx-work-commit-pr` | Public OSS artifact vs internal work artifact. |
+| `dbx-write` competes with artifact-specific writing and judgment skills | Use it only when the dominant artifact is viewpoint-driven prose; route commit/PR text, product/design correctness, interpersonal message strategy, technical planning, code review, and plain summarization away. |
 | `dbx-software-plan-first-plan-issue` handoff to `dbx-software-plan-first-ground-plan` | Use only after explicit invocation and only when repository facts are needed before finalizing a plan. |
 | `dbx-software-plan-first-ground-plan` handoff to `dbx-software-plan-first-finalize-plan` | Grounding output supplies verified facts, source-of-truth boundaries, and validation candidates for plan finalization. |
 | `dbx-software-plan-first-finalize-plan` precedes `dbx-software-plan-first-implement-feature` | A sealed `plan.md` / `tasks.md` workflow is required before review-gated implementation. |
