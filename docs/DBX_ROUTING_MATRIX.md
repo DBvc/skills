@@ -26,6 +26,7 @@ Read it when:
 | Judge or shape UI, flow, screenshot, prototype, PRD-to-design brief, component, design system, or code-backed interface design | `dbx-design-judgment` | Implementation/frontend coding skills when the user asks to edit files; `dbx-product-judgment` when product viability or business correctness dominates. |
 | Make a high-impact real decision | `dbx-decision-framing` | `dbx-linus-review`, unless code/design evidence dominates. |
 | Route noisy mixed inbox, saved content, tasks, ideas, signals, courses, tools, notes, or external-system metadata | `dbx-attention-routing` | Product-specific tagging/write workflows, unless adapter dry-run is requested. |
+| Learn a concept, research a topic for durable understanding, turn material into practice reps, review knowledge, or create optional learning records | `dbx-learn` | Ordinary summarization, direct code implementation/debugging/review, skill creation, mixed inbox routing, product/design/decision judgment. |
 | Rewrite risky conversation or boundary message | `dbx-conversation-align` | `dbx-decision-framing`, unless real action trade-off dominates. |
 | Create/review/improve/evaluate a skill | `dbx-skill-architect` | other runtime skills. |
 | Audit installed or repository skill portfolios and recommend global/repo/explicit-only/disable/uninstall placement | Ask whether to manually run `dbx-skill-portfolio-auditor`; use it only when explicitly named or launched. | `dbx-skill-architect` for one skill's design or critique. |
@@ -61,6 +62,10 @@ Current graph:
 | `dbx-skill-architect` precedes new skill creation | Triage repeatability, stable task distribution, evaluability, safety, and placement. |
 | `dbx-skill-portfolio-auditor` supports collection placement decisions | Use only after explicit/manual invocation for installed-skill portfolio audits; hand off single-skill creation, critique, or improvement to `dbx-skill-architect`. |
 | `dbx-attention-routing` precedes product-specific tagging/write workflows | Route mixed inputs through the stable kernel before mapping to tags, task fields, note metadata, queues, or other external systems. |
+| `dbx-learn` competes with ordinary summarization | If the user only asks for a concise summary or factual answer, do not force learning mode. |
+| `dbx-learn` follows `dbx-attention-routing` for mixed content queues | First route courses/articles/tools/tasks as attention items; only selected learning candidates become a learning plan or practice reps. |
+| `dbx-learn` competes with `dbx-skill-architect` for learn-skill creation | Creating or improving a learning skill belongs to `dbx-skill-architect`; using a learning skill belongs to `dbx-learn`. |
+| `dbx-learn` hands off to implementation/review skills | When the primary user intent becomes implementing, debugging, reviewing, or planning code changes, switch to the corresponding technical skill. |
 | `dbx-subagent-context` supports Codex planning | Use only when Codex subagents or `fork_context` are explicit. |
 | `dbx-agent-handoff` produces restart packets | Use for AI agent/session continuation, especially context compaction or "next session continues"; do not use for human-facing handoff documents. |
 | `dbx-conversation-align` competes with `dbx-decision-framing` | Communication wording vs real-world trade-off. |
@@ -104,6 +109,10 @@ If the user asks to turn a one-off prompt into a skill, use skill-architect tria
 
 `dbx-skill-portfolio-auditor` is explicit/manual-only. For generic cleanup or portfolio questions, ask whether the user wants to run it. Use it directly only when the user names the skill or launches it from the skill UI.
 
+### Learning intent
+
+Use `dbx-learn` when the user wants durable understanding, active recall, practice reps, source-grounded learning research, or optional learning records. Do not use it for ordinary concise explanations, article summaries, generic recommendations, direct coding/debugging/review, or skill creation. If the input is a noisy queue of courses, articles, tools, tasks, and ideas, route it through `dbx-attention-routing` first.
+
 ### Agent handoff
 
 Use `dbx-agent-handoff` for AI-to-AI or session-to-session continuation packets. Ambiguous "handoff" or "交接文档" requests should get one clarification question because human workplace handoffs are out of scope.
@@ -145,6 +154,8 @@ The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do no
 | “这个需求先 plan-first 一下，别急着写代码。” | Direct planning or Plan mode behavior, not `dbx-software-plan-first-*` unless explicitly named. |
 | “使用 $dbx-software-plan-first-ground-plan，只读确认仓库事实。” | `dbx-software-plan-first-ground-plan`. |
 | “按 tasks.md 做下一个任务。” | Direct implementation unless `$dbx-software-plan-first-implement-feature` is explicitly named. |
+| “我想真正理解 React Server Components，帮我建立 mental model 和练习。” | `dbx-learn`. |
+| “闭包是什么？用两句话解释。” | Direct answer, not `dbx-learn`. |
 | “我要开一个持续极简回答模式。” | Interaction-mode/stateful pattern; no current DBX runtime skill. Need activation/deactivation/lifetime. |
 | “帮我做一个项目术语表，以后 agent 都按这个理解。” | Stateful project-memory pattern; direct artifact or future skill, not normal decision framing. |
 

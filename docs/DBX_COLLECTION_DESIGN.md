@@ -62,6 +62,7 @@ Current DBX graph:
 | `dbx-skill-architect` precedes new skill creation | If request is one-off, triage before full skill creation. |
 | `dbx-skill-portfolio-auditor` supports collection placement decisions | Explicit/manual-only portfolio audit for installed or repository skills; routes single-skill design, critique, or improvement to `dbx-skill-architect`. |
 | `dbx-attention-routing` precedes product-specific tagging/write workflows | Route mixed inputs through the stable attention kernel before mapping to external task, note, or metadata systems. |
+| `dbx-learn` handles durable learning | Use for capability-building study, source-grounded learning research, practice reps, review, and optional learning records; do not use for ordinary summaries, direct implementation, or mixed inbox routing. |
 | `dbx-subagent-context` supports `dbx-goal-writer` | Goal contracts may include subagent context strategy when Codex subagents are involved. |
 | `dbx-agent-handoff` produces restart packets | Use for AI agent/session continuation and context-compaction handoffs; do not use for human workplace handoff documents. |
 | `dbx-conversation-align` competes with `dbx-decision-framing` | Use conversation-align for wording/boundaries; decision-framing for real action trade-offs. |
@@ -90,6 +91,8 @@ Examples:
 | “Audit this screenshot/prototype design and give a handoff, but do not implement.” | `dbx-design-judgment`. |
 | “Should I split this monorepo?” | `dbx-decision-framing`, not `dbx-linus-review` unless code/design evidence dominates. |
 | “Make this message less harsh.” | `dbx-conversation-align` compact rewrite, not full decision analysis. |
+| “I want to really understand React Server Components; build a mental model and one practice rep.” | `dbx-learn`. |
+| “Explain closures in two sentences.” | Direct answer, not `dbx-learn`. |
 | “Turn this reusable workflow into a skill.” | `dbx-skill-architect` triage, then create/improve if gates pass. |
 | “Use $dbx-skill-portfolio-auditor to audit my installed skills.” | `dbx-skill-portfolio-auditor`. |
 | “Write a Codex goal for this already-approved task.” | `dbx-goal-writer`. |

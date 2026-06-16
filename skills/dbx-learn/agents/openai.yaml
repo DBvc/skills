@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-learn"
+  short_description: "Durable learning controller"
+  default_prompt: "Use $dbx-learn to build durable understanding, source-grounded study, practice reps, review, or optional learning records."
