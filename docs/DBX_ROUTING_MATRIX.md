@@ -19,6 +19,7 @@ Read it when:
 | Write open-source commit/PR artifact | `dbx-open-source-commit-pr` | `dbx-linus-review`, unless review is requested. |
 | Write work/internal commit/PR artifact | `dbx-work-commit-pr` | `dbx-open-source-commit-pr`. |
 | Write viewpoint-driven prose, technical blog, personal essay, Markdown article, article edit, or English transcreation | `dbx-write` | Commit/PR skills, product/design judgment, conversation alignment, direct implementation, or plain summarization. |
+| Read, summarize, extract, deep-read, compare, or capture explicit source material such as URL/PDF/paper/doc/GitHub/local file/pasted text | `dbx-read` | `dbx-learn` for durable learning, `dbx-attention-routing` for noisy queues, `dbx-write` for public prose, judgment/review/planning skills for decisions or implementation. |
 | Review concrete PR/diff/staged/commit/file changes | `dbx-diff-review` | `dbx-linus-review`, unless strict pragmatic critique is explicit. |
 | Run explicit bounded review-repair-revalidation on concrete code changes | `dbx-code-ratchet` | Read-only review skills or open-ended implementation workflows. |
 | Audit repository/module architecture health, long-term decay, AI-coding operability, or anti-decay roadmap | `dbx-architecture-health` | `dbx-diff-review` for concrete changes; `dbx-technical-plan` for implementation planning; `dbx-linus-review` for strict proposal critique. |
@@ -63,6 +64,7 @@ Current graph:
 | `dbx-skill-architect` precedes new skill creation | Triage repeatability, stable task distribution, evaluability, safety, and placement. |
 | `dbx-skill-portfolio-auditor` supports collection placement decisions | Use only after explicit/manual invocation for installed-skill portfolio audits; hand off single-skill creation, critique, or improvement to `dbx-skill-architect`. |
 | `dbx-attention-routing` precedes product-specific tagging/write workflows | Route mixed inputs through the stable kernel before mapping to tags, task fields, note metadata, queues, or other external systems. |
+| `dbx-read` handles explicit source-bound reading | Use for source ingestion, summary, extraction, deep-read, comparison, and optional capture; hand off durable learning to `dbx-learn`, public prose to `dbx-write`, and decisions or implementation to the matching DBX skill. |
 | `dbx-learn` competes with ordinary summarization | If the user only asks for a concise summary or factual answer, do not force learning mode. |
 | `dbx-learn` follows `dbx-attention-routing` for mixed content queues | First route courses/articles/tools/tasks as attention items; only selected learning candidates become a learning plan or practice reps. |
 | `dbx-learn` competes with `dbx-skill-architect` for learn-skill creation | Creating or improving a learning skill belongs to `dbx-skill-architect`; using a learning skill belongs to `dbx-learn`. |
@@ -115,6 +117,10 @@ If the user asks to turn a one-off prompt into a skill, use skill-architect tria
 
 Use `dbx-learn` when the user wants durable understanding, active recall, practice reps, source-grounded learning research, or optional learning records. Do not use it for ordinary concise explanations, article summaries, generic recommendations, direct coding/debugging/review, or skill creation. If the input is a noisy queue of courses, articles, tools, tasks, and ideas, route it through `dbx-attention-routing` first.
 
+### Source reading
+
+Use `dbx-read` when the user provides or points to one or a few concrete sources and asks to read, summarize, skim, extract Markdown, deep-read, compare, translate for understanding, or create a local reading note. Do not use it for ordinary factual Q&A without a source, noisy inbox routing, durable learning plans, public article writing, product/design/code review, or implementation planning. It may produce a source digest or handoff for those downstream skills.
+
 ### Agent handoff
 
 Use `dbx-agent-handoff` for AI-to-AI or session-to-session continuation packets. Ambiguous "handoff" or "交接文档" requests should get one clarification question because human workplace handoffs are out of scope.
@@ -153,6 +159,9 @@ The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do no
 | “下个 session 继续，帮我做个交接包。” | `dbx-agent-handoff`. |
 | “帮我写一份给同事的项目交接文档。” | Direct workplace handoff doc, not `dbx-agent-handoff`. |
 | “帮我写一句不那么冲的回复。” | `dbx-conversation-align` compact rewrite, not full diagnosis. |
+| “看下这个链接，告诉我核心观点和值不值得继续读。” | `dbx-read`. |
+| “把这个网页转成干净 Markdown，不要总结。” | `dbx-read`. |
+| “读这个 PRD，判断这个功能从产品上到底对不对。” | `dbx-product-judgment`, with `dbx-read` only as an evidence digest if needed. |
 | “这个需求先 plan-first 一下，别急着写代码。” | Direct planning or Plan mode behavior, not `dbx-software-plan-first-*` unless explicitly named. |
 | “使用 $dbx-software-plan-first-ground-plan，只读确认仓库事实。” | `dbx-software-plan-first-ground-plan`. |
 | “按 tasks.md 做下一个任务。” | Direct implementation unless `$dbx-software-plan-first-implement-feature` is explicitly named. |

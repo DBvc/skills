@@ -13,6 +13,7 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-open-source-commit-pr`](skills/dbx-open-source-commit-pr/) | 面向开源仓库的英文 commit/PR 写作。Generate English commit messages and PR descriptions for open-source repositories. |
 | [`dbx-work-commit-pr`](skills/dbx-work-commit-pr/) | 工作场景的中文合同式 commit/PR 写作。Contract-style commit messages and PR descriptions for work contexts. |
 | [`dbx-write`](skills/dbx-write/) | 中文为主的观点写作、技术博客、个人随笔、Markdown 草稿、改稿和英文转写。Chinese-first viewpoint writing for technical blogs, personal essays, Markdown drafts, editing, and occasional English versions. |
+| [`dbx-read`](skills/dbx-read/) | 来源约束阅读：对 URL、PDF、论文、文档、GitHub、本地文件或粘贴文本做抓取证据化、摘要、精读、比较、Markdown 提取和可选笔记沉淀。Source-grounded reading for explicit source material. |
 | [`dbx-diff-review`](skills/dbx-diff-review/) | 精确选择 PR/diff/staged/commit/file review 范围，并输出高信号风险发现。Scoped code-change review for concrete diffs. |
 | [`dbx-linus-review`](skills/dbx-linus-review/) | 严格、实用主义、证据驱动的技术方案、模型和合并风险判断。Strict pragmatic technical judgment. |
 | [`dbx-technical-plan`](skills/dbx-technical-plan/) | 代码变更前的证据边界技术实施计划，明确 source of truth、不变量、实施切片、验证模型和 handoff。Evidence-bound technical implementation planning before coding. |

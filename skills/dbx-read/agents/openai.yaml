@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-read"
+  short_description: "Source-grounded reading controller"
+  default_prompt: "Use $dbx-read to read, summarize, extract, compare, or capture explicit source material."
