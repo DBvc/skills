@@ -20,6 +20,7 @@ Read it when:
 | Write work/internal commit/PR artifact | `dbx-work-commit-pr` | `dbx-open-source-commit-pr`. |
 | Write viewpoint-driven prose, technical blog, personal essay, Markdown article, article edit, or English transcreation | `dbx-write` | Commit/PR skills, product/design judgment, conversation alignment, direct implementation, or plain summarization. |
 | Read, summarize, extract, deep-read, compare, or capture explicit source material such as URL/PDF/paper/doc/GitHub/local file/pasted text | `dbx-read` | `dbx-learn` for durable learning, `dbx-attention-routing` for noisy queues, `dbx-write` for public prose, judgment/review/planning skills for decisions or implementation. |
+| Clarify a fuzzy product/software idea, feature request, issue draft, stakeholder ask, or pre-development discussion into precise requirements, scope, non-goals, acceptance criteria, and handoff | `dbx-crystallize` | `dbx-product-judgment` for product-worth verdicts, `dbx-design-judgment` for design correctness, `dbx-technical-plan` for implementation planning, and `dbx-software-plan-first-*` unless explicitly named. |
 | Review concrete PR/diff/staged/commit/file changes | `dbx-diff-review` | `dbx-linus-review`, unless strict pragmatic critique is explicit. |
 | Run explicit bounded review-repair-revalidation on concrete code changes | `dbx-code-ratchet` | Read-only review skills or open-ended implementation workflows. |
 | Audit repository/module architecture health, long-term decay, AI-coding operability, or anti-decay roadmap | `dbx-architecture-health` | `dbx-diff-review` for concrete changes; `dbx-technical-plan` for implementation planning; `dbx-linus-review` for strict proposal critique. |
@@ -58,6 +59,7 @@ Current graph:
 | `dbx-code-ratchet` composes `dbx-diff-review` and conditionally `dbx-linus-review` | Use only when the user explicitly asks for code ratchet or automatic review-repair-revalidation; it may modify code and must stop on direction failure or diverging risk. |
 | `dbx-architecture-health` hands off to plan/review/repair skills | Use for read-only architecture decay diagnosis and anti-decay roadmap; do not silently switch to implementation planning, concrete diff review, or code changes. |
 | `dbx-linus-review` handles explicit strict critique | Use it when the user asks for Linus-style, harsh, over-engineering, model, or merge/readiness judgment. |
+| `dbx-crystallize` precedes judgment/planning/implementation when requirements are fuzzy | Use it to produce a requirement contract before `dbx-product-judgment`, `dbx-design-judgment`, `dbx-technical-plan`, or implementation. Do not use it when the user already asks for a product verdict, design critique, concrete code review, or direct implementation. |
 | `dbx-product-judgment` handles product correctness judgment | Use it when a product artifact, target user/job, evidence boundary, or product decision dominates; route ordinary code diffs to `dbx-diff-review` and non-product trade-offs to `dbx-decision-framing`. |
 | `dbx-design-judgment` handles design correctness and design shaping | Use it when a design surface, task path, IA, visual hierarchy, interaction states, visual system, accessibility, responsive behavior, or design handoff dominates; it may read code as design evidence but must not edit files. |
 | `dbx-decision-framing` precedes `dbx-goal-writer` | Decide whether/what to do before writing a Codex execution contract. |
@@ -121,6 +123,10 @@ Use `dbx-learn` when the user wants durable understanding, active recall, practi
 
 Use `dbx-read` when the user provides or points to one or a few concrete sources and asks to read, summarize, skim, extract Markdown, deep-read, compare, translate for understanding, or create a local reading note. Do not use it for ordinary factual Q&A without a source, noisy inbox routing, durable learning plans, public article writing, product/design/code review, or implementation planning. It may produce a source digest or handoff for those downstream skills.
 
+### Requirement crystallization
+
+Use `dbx-crystallize` when the user is still defining what should be built: fuzzy idea, issue draft, stakeholder ask, pre-development discussion, scope/non-goals, or acceptance criteria. It may hand off to `dbx-product-judgment` when product value/user/job is unresolved, to `dbx-design-judgment` when flow/IA/UI state is unresolved, and to `dbx-technical-plan` when requirements are clear but implementation strategy is not. Do not use it as a generic PRD writer or as a shortcut into code.
+
 ### Agent handoff
 
 Use `dbx-agent-handoff` for AI-to-AI or session-to-session continuation packets. Ambiguous "handoff" or "交接文档" requests should get one clarification question because human workplace handoffs are out of scope.
@@ -167,6 +173,11 @@ The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do no
 | “按 tasks.md 做下一个任务。” | Direct implementation unless `$dbx-software-plan-first-implement-feature` is explicitly named. |
 | “我想真正理解 React Server Components，帮我建立 mental model 和练习。” | `dbx-learn`. |
 | “闭包是什么？用两句话解释。” | Direct answer, not `dbx-learn`. |
+| “先别写代码，帮我把这个功能想清楚，写成可验收需求。” | `dbx-crystallize`. |
+| “把老板这句话需求整理成 issue，重点写 scope、non-goals 和 AC。” | `dbx-crystallize`. |
+| “这个功能到底值不值得做？” | `dbx-product-judgment`, not `dbx-crystallize` unless the user first asks to clarify the requirement. |
+| “这个页面交互怎么设计？” | `dbx-design-judgment`, not `dbx-crystallize` unless the user asks for requirement contract first. |
+| “需求已经定了，给我技术实施计划。” | `dbx-technical-plan`, not `dbx-crystallize`. |
 | “我要开一个持续极简回答模式。” | Interaction-mode/stateful pattern; no current DBX runtime skill. Need activation/deactivation/lifetime. |
 | “帮我做一个项目术语表，以后 agent 都按这个理解。” | Stateful project-memory pattern; direct artifact or future skill, not normal decision framing. |
 

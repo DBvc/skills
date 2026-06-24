@@ -56,6 +56,7 @@ Current DBX graph:
 | `dbx-code-ratchet` composes review skills for bounded repair | Only for explicit code ratchet / review-repair-revalidation requests; may modify code, but must stop on direction failure, unsafe scope, or diverging risk. |
 | `dbx-architecture-health` diagnoses architecture decay read-only | Use for repository/module architecture health, anti-decay roadmaps, and AI-coding operability; hand off implementation planning, concrete diffs, strict proposal critique, or bounded repair to the matching skill. |
 | `dbx-linus-review` handles explicit strict critique | Use for Linus-style, harsh, over-engineering, model, plan, or merge/readiness judgment. |
+| `dbx-crystallize` precedes judgment/planning/implementation when requirements are fuzzy | Use for pre-development requirement contracts; hand off product-worth verdicts, design correctness, technical implementation planning, or direct implementation to the matching downstream skill. |
 | `dbx-product-judgment` handles product correctness judgment | Use when product artifacts, target users/jobs, evidence boundaries, or product decisions dominate; route ordinary concrete diff review to `dbx-diff-review`. |
 | `dbx-design-judgment` handles design correctness and design shaping | Use when UI surfaces, screenshots, prototypes, PRDs-to-design, design systems, or code-backed interface consistency dominate; it may read evidence but must not edit files. |
 | `dbx-decision-framing` precedes `dbx-goal-writer` | If user has not decided whether to do the work, decide before writing a Codex goal. |
@@ -88,6 +89,7 @@ Examples:
 | “Run L2 code ratchet on staged changes and auto-fix clear findings, but do not commit.” | `dbx-code-ratchet`. |
 | “Audit this repo's architecture health and AI-coding decay risks, but do not change code.” | `dbx-architecture-health`. |
 | “Use Linus-style review on this staged diff before the PR description.” | `dbx-diff-review` to lock target, then `dbx-linus-review`, then appropriate commit/PR skill. |
+| “Turn this fuzzy feature idea into scope, non-goals, and acceptance criteria before anyone codes.” | `dbx-crystallize`. |
 | “Is this feature product-correct for the target user?” | `dbx-product-judgment`. |
 | “Audit this screenshot/prototype design and give a handoff, but do not implement.” | `dbx-design-judgment`. |
 | “Should I split this monorepo?” | `dbx-decision-framing`, not `dbx-linus-review` unless code/design evidence dominates. |

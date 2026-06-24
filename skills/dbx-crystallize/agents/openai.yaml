@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-crystallize"
+  short_description: "Requirement crystallization before planning"
+  default_prompt: "Use $dbx-crystallize to turn this fuzzy product or software idea into a bounded, testable requirement contract."
