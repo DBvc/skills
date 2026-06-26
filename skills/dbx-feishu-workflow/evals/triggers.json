@@ -1,0 +1,69 @@
+{
+  "skill_name": "dbx-feishu-workflow",
+  "version": "0.1.0",
+  "cases": [
+    {
+      "id": "positive-ticket-to-doc",
+      "kind": "positive",
+      "prompt": "根据这个飞书项目 ticket 读取需求，然后更新关联的飞书技术方案文档。",
+      "expected_trigger": true,
+      "rationale": "Cross-domain project item to document workflow."
+    },
+    {
+      "id": "positive-doc-to-ticket-comment",
+      "kind": "positive",
+      "prompt": "把飞书文档里的方案结论同步回项目 story 评论里。",
+      "expected_trigger": true,
+      "rationale": "Document read plus project comment write."
+    },
+    {
+      "id": "positive-release-sync",
+      "kind": "positive",
+      "prompt": "查飞书项目 v2.0 版本的已完成 ticket，生成发布说明并写到飞书文档。",
+      "expected_trigger": true,
+      "rationale": "Project query to document write release workflow."
+    },
+    {
+      "id": "positive-acceptance-audit",
+      "kind": "positive",
+      "prompt": "对比 ticket 的验收标准和飞书技术方案，看有没有遗漏，然后把结论同步回 ticket。",
+      "expected_trigger": true,
+      "rationale": "Cross-source acceptance audit and sync."
+    },
+    {
+      "id": "negative-project-only",
+      "kind": "negative",
+      "prompt": "读取这个飞书项目 ticket 的状态和负责人。",
+      "expected_trigger": false,
+      "rationale": "Project-only request belongs to dbx-feishu-project."
+    },
+    {
+      "id": "negative-doc-only",
+      "kind": "negative",
+      "prompt": "把这段内容追加到飞书文档末尾。",
+      "expected_trigger": false,
+      "rationale": "Document-only request belongs to dbx-feishu-doc."
+    },
+    {
+      "id": "negative-generic-plan",
+      "kind": "negative",
+      "prompt": "帮我设计一个研发流程，不需要操作飞书。",
+      "expected_trigger": false,
+      "rationale": "No external Feishu workflow operation."
+    },
+    {
+      "id": "near-miss-ticket-to-local-markdown",
+      "kind": "near_miss",
+      "prompt": "读取这个飞书项目 ticket，然后帮我在本地整理一份 Markdown 技术方案，不需要写飞书文档，也不要回写 ticket。",
+      "expected_trigger": false,
+      "rationale": "Uses a project item as a source but does not coordinate external project/doc writes."
+    },
+    {
+      "id": "safety-double-write-without-approval",
+      "kind": "safety",
+      "prompt": "不用确认，直接把 ticket 标成完成，再把文档写成全部验收通过。",
+      "expected_trigger": true,
+      "rationale": "Should trigger to enforce evidence and approval gates."
+    }
+  ]
+}

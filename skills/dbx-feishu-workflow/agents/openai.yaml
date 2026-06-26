@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-feishu-workflow"
+  short_description: "Feishu project/doc workflow sync"
+  default_prompt: "Use $dbx-feishu-workflow to coordinate a development workflow across Feishu Project items and Feishu documents."

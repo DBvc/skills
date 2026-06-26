@@ -14,6 +14,9 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-work-commit-pr`](skills/dbx-work-commit-pr/) | 工作场景的中文合同式 commit/PR 写作。Contract-style commit messages and PR descriptions for work contexts. |
 | [`dbx-write`](skills/dbx-write/) | 中文为主的观点写作、技术博客、个人随笔、Markdown 草稿、改稿和英文转写。Chinese-first viewpoint writing for technical blogs, personal essays, Markdown drafts, editing, and occasional English versions. |
 | [`dbx-read`](skills/dbx-read/) | 来源约束阅读：对 URL、PDF、论文、文档、GitHub、本地文件或粘贴文本做抓取证据化、摘要、精读、比较、Markdown 提取和可选笔记沉淀。Source-grounded reading for explicit source material. |
+| [`dbx-feishu-project`](skills/dbx-feishu-project/) | 飞书项目 / Lark Project / Meegle 工作项读写、查询、评论、流转和字段更新控制器。Feishu Project / Meegle work item controller. |
+| [`dbx-feishu-doc`](skills/dbx-feishu-doc/) | 飞书 Docx / Wiki 文档读取、创建、追加和安全局部更新控制器。Feishu Docx / Wiki document controller. |
+| [`dbx-feishu-workflow`](skills/dbx-feishu-workflow/) | 飞书项目项与文档之间的研发流程联动编排。Workflow coordination across Feishu Project items and Feishu documents. |
 | [`dbx-crystallize`](skills/dbx-crystallize/) | 模糊产品/软件想法、需求草稿、issue 或前置讨论的需求结晶：澄清用户/场景/状态变化、scope、non-goals、验收标准、边界状态、开放决策和 handoff。Requirement crystallization before product judgment, design, technical planning, or implementation. |
 | [`dbx-diff-review`](skills/dbx-diff-review/) | 精确选择 PR/diff/staged/commit/file review 范围，并输出高信号风险发现。Scoped code-change review for concrete diffs. |
 | [`dbx-linus-review`](skills/dbx-linus-review/) | 严格、实用主义、证据驱动的技术方案、模型和合并风险判断。Strict pragmatic technical judgment. |

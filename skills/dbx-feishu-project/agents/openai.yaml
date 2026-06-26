@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-feishu-project"
+  short_description: "Feishu Project work item controller"
+  default_prompt: "Use $dbx-feishu-project to read, query, or safely update a Feishu Project or Meegle work item."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-feishu-doc"
+  short_description: "Feishu Docx and Wiki controller"
+  default_prompt: "Use $dbx-feishu-doc to read, create, append to, or safely update a Feishu Docx or Wiki document."
