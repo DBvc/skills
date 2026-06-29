@@ -23,6 +23,7 @@ Read it when:
 | Read, query, create, update, comment on, attach to, or transition Feishu Project / Lark Project / Meegle work items | `dbx-feishu-project` | `dbx-feishu-doc` for documents, generic project advice, or code implementation without an external project operation. |
 | Read, summarize, create, append to, or safely update Feishu Docx / Wiki documents | `dbx-feishu-doc` | `dbx-feishu-project` for work items, generic writing without a Feishu document target, or Sheets/Base/Drive resources treated as plain text. |
 | Coordinate a development workflow across Feishu Project items and Feishu documents | `dbx-feishu-workflow` | Single-domain Feishu operations, generic planning, or code implementation itself. |
+| Query, generate, optimize, execute, summarize, or diagnose Alibaba Cloud SLS / Log Service / Logstore logs through Aliyun CLI, GetLogsV2, SDK, or Observability MCP | `dbx-aliyun-sls` | `dbx-technical-plan` after logs reveal a code change; `dbx-read` or direct answer for non-SLS log files; explicit cloud-admin workflow for SLS mutations; refuse credential exfiltration or unauthorized access. |
 | Clarify a fuzzy product/software idea, feature request, issue draft, stakeholder ask, or pre-development discussion into precise requirements, scope, non-goals, acceptance criteria, and handoff | `dbx-crystallize` | `dbx-product-judgment` for product-worth verdicts, `dbx-design-judgment` for design correctness, `dbx-technical-plan` for implementation planning, and `dbx-software-plan-first-*` unless explicitly named. |
 | Review concrete PR/diff/staged/commit/file changes | `dbx-diff-review` | `dbx-linus-review`, unless strict pragmatic critique is explicit. |
 | Run explicit bounded review-repair-revalidation on concrete code changes | `dbx-code-ratchet` | Read-only review skills or open-ended implementation workflows. |
@@ -71,6 +72,7 @@ Current graph:
 | `dbx-attention-routing` precedes product-specific tagging/write workflows | Route mixed inputs through the stable kernel before mapping to tags, task fields, note metadata, queues, or other external systems. |
 | `dbx-read` handles explicit source-bound reading | Use for source ingestion, summary, extraction, deep-read, comparison, and optional capture; hand off durable learning to `dbx-learn`, public prose to `dbx-write`, and decisions or implementation to the matching DBX skill. |
 | `dbx-feishu-workflow` delegates to Feishu domain skills | Use workflow only for cross-system project/doc tasks; project item reads/writes follow `dbx-feishu-project`, document reads/writes follow `dbx-feishu-doc`, and any external write needs preview plus approval. |
+| `dbx-aliyun-sls` handles Alibaba Cloud SLS log querying | Use for SLS/Logstore target, time, query, cost, privacy, read-only execution, and result-summary gates; hand off code or architecture fixes to `dbx-technical-plan` after log evidence is bounded. |
 | `dbx-learn` competes with ordinary summarization | If the user only asks for a concise summary or factual answer, do not force learning mode. |
 | `dbx-learn` follows `dbx-attention-routing` for mixed content queues | First route courses/articles/tools/tasks as attention items; only selected learning candidates become a learning plan or practice reps. |
 | `dbx-learn` competes with `dbx-skill-architect` for learn-skill creation | Creating or improving a learning skill belongs to `dbx-skill-architect`; using a learning skill belongs to `dbx-learn`. |
@@ -126,6 +128,10 @@ Use `dbx-learn` when the user wants durable understanding, active recall, practi
 ### Source reading
 
 Use `dbx-read` when the user provides or points to one or a few concrete sources and asks to read, summarize, skim, extract Markdown, deep-read, compare, translate for understanding, or create a local reading note. Do not use it for ordinary factual Q&A without a source, noisy inbox routing, durable learning plans, public article writing, product/design/code review, or implementation planning. It may produce a source digest or handoff for those downstream skills.
+
+### Alibaba Cloud SLS log querying
+
+Use `dbx-aliyun-sls` when the task depends on Alibaba Cloud SLS/Logstore data. It owns target/time/query/cost/privacy gates and read-only execution. It may hand off to `dbx-technical-plan` when logs identify a code or architecture change, or to implementation only after the user explicitly asks for code changes. Do not use it for generic local logs, direct cloud resource mutation, credential capture, or broad production exports.
 
 ### Requirement crystallization
 

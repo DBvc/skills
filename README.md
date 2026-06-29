@@ -17,6 +17,7 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-feishu-project`](skills/dbx-feishu-project/) | 飞书项目 / Lark Project / Meegle 工作项读写、查询、评论、流转和字段更新控制器。Feishu Project / Meegle work item controller. |
 | [`dbx-feishu-doc`](skills/dbx-feishu-doc/) | 飞书 Docx / Wiki 文档读取、创建、追加和安全局部更新控制器。Feishu Docx / Wiki document controller. |
 | [`dbx-feishu-workflow`](skills/dbx-feishu-workflow/) | 飞书项目项与文档之间的研发流程联动编排。Workflow coordination across Feishu Project items and Feishu documents. |
+| [`dbx-aliyun-sls`](skills/dbx-aliyun-sls/) | 阿里云 Simple Log Service / SLS 只读日志查询控制器：通过 Aliyun CLI、GetLogsV2、SDK 或可观测 MCP 安全生成、执行、总结日志查询，内置凭证、时间范围、成本、隐私和 handoff 护栏。Read-only Alibaba Cloud SLS log query controller with CLI/API/MCP execution boundaries. |
 | [`dbx-crystallize`](skills/dbx-crystallize/) | 模糊产品/软件想法、需求草稿、issue 或前置讨论的需求结晶：澄清用户/场景/状态变化、scope、non-goals、验收标准、边界状态、开放决策和 handoff。Requirement crystallization before product judgment, design, technical planning, or implementation. |
 | [`dbx-diff-review`](skills/dbx-diff-review/) | 精确选择 PR/diff/staged/commit/file review 范围，并输出高信号风险发现。Scoped code-change review for concrete diffs. |
 | [`dbx-linus-review`](skills/dbx-linus-review/) | 严格、实用主义、证据驱动的技术方案、模型和合并风险判断。Strict pragmatic technical judgment. |
@@ -74,6 +75,12 @@ python3 scripts/skill_inventory.py --root . --format json
 
 # Validate evals/triggers.json files.
 python3 scripts/run_trigger_evals.py --root . --validate-only
+```
+
+For `dbx-aliyun-sls`, runtime checks require a local Aliyun CLI installation and SLS plugin when executing queries:
+
+```bash
+python3 skills/dbx-aliyun-sls/scripts/check_runtime.py
 ```
 
 Strict mode is useful before release, but do not enable it in CI until warnings are intentionally cleaned up:

@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-aliyun-sls"
+  short_description: "Read-only Alibaba Cloud SLS log query controller"
+  default_prompt: "Use $dbx-aliyun-sls to plan, execute, and summarize safe read-only Alibaba Cloud SLS log queries."
