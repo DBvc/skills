@@ -1,6 +1,6 @@
 ---
 name: dbx-feishu-workflow
-description: Use when the user asks to coordinate a development workflow across Feishu Project/Meegle work items and Feishu documents, such as reading a ticket, updating a technical plan, syncing implementation progress, writing release notes, or commenting back with validation evidence. This is an orchestration skill; delegate project operations to dbx-feishu-project and document operations to dbx-feishu-doc. Do not use for single-domain Feishu operations or generic planning without external Feishu read/write.
+description: Use when the user asks to coordinate a development workflow across Feishu Project/Meegle work items, Feishu documents, and optional Feishu/Lark IM evidence, such as reading a ticket, updating a technical plan, syncing implementation progress, writing release notes, or commenting back with validation evidence. This is an orchestration skill; delegate project operations to dbx-feishu-project, document operations to dbx-feishu-doc, and chat evidence to dbx-feishu-im. Do not use for single-domain Feishu operations or generic planning without external Feishu read/write.
 ---
 # DBX Feishu Workflow / 飞书研发流程编排
 
@@ -17,6 +17,7 @@ project item + document target + development evidence -> synchronized workflow p
 Use this skill when the request spans both domains:
 
 - Read a Feishu Project ticket/story/bug and update a linked Feishu technical document.
+- Use Feishu/Lark group messages as bounded evidence for a project/document workflow.
 - Read a Feishu document and sync conclusions, validation, blockers, or next steps back to a project item comment.
 - Create a technical plan from a project item, then link or comment it back to the item.
 - Produce release notes from version/ticket data and write them to a Feishu document.
@@ -27,6 +28,7 @@ Do not use this skill for:
 
 - Only reading or writing a Feishu Project item. Use `dbx-feishu-project`.
 - Only reading or writing a Feishu document. Use `dbx-feishu-doc`.
+- Only reading, searching, summarizing, or writing Feishu IM messages. Use `dbx-feishu-im`.
 - Generic workflow advice with no Feishu external operation.
 - Code implementation itself. This skill may consume implementation evidence, but it does not replace coding/review skills.
 
@@ -54,7 +56,7 @@ feishu_workflow_contract:
 
 1. **Source-of-truth gate**: project facts, document facts, repo facts, and user claims must be labeled separately.
 2. **No silent double-write**: never update both a project item and a document without a combined preview.
-3. **Delegation gate**: project operations follow `dbx-feishu-project`; document operations follow `dbx-feishu-doc`.
+3. **Delegation gate**: project operations follow `dbx-feishu-project`; document operations follow `dbx-feishu-doc`; chat operations follow `dbx-feishu-im`.
 4. **Conflict gate**: when the ticket and document disagree, stop and present the conflict unless the user gave a resolution rule.
 5. **Evidence gate**: do not write “verified”, “done”, or “accepted” unless evidence supports it.
 6. **Approval gate**: any external write needs exact target and user approval unless the current request explicitly asked for that exact write.
@@ -83,6 +85,7 @@ Keep separate buckets:
 workflow_evidence:
   project_observed_facts: []
   document_observed_facts: []
+  chat_observed_facts: []
   repo_or_test_observed_facts: []
   user_claims: []
   assumptions: []

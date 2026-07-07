@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-feishu-im"
+  short_description: "Feishu/Lark IM evidence and safe write controller"
+  default_prompt: "Use $dbx-feishu-im to read, search, summarize, analyze, or safely write bounded Feishu/Lark IM messages, threads, and realtime events."
