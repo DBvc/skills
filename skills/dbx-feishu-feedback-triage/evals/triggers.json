@@ -38,6 +38,13 @@
       "rationale": "Domain pack bootstrap mode."
     },
     {
+      "id": "positive-domain-name-needs-registry-discovery",
+      "kind": "positive",
+      "prompt": "用天工领域生成昨天反馈日报，只读；我只给了领域名。",
+      "expected_trigger": true,
+      "rationale": "Domain-backed feedback digest where the skill should resolve the domain through the nearest local registry config."
+    },
+    {
       "id": "positive-memory-candidates",
       "kind": "positive",
       "prompt": "把这次飞书反馈日报里的 FAQ 候选整理成知识库更新候选，不要写入正式 FAQ。",

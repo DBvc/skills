@@ -29,9 +29,45 @@ The Domain Profile is the only authority for where domain knowledge lives:
 - Runtime caches are not source of truth and must not store sensitive raw chat logs by default.
 - Collected business knowledge must not be written back into the skill package itself or global agent memory unless the user explicitly approves a separate state contract.
 
+## Domain Registry
+
+Use a small nearest-config registry when people naturally invoke domains by name, such as "天工".
+
+The registry maps stable names to entry documents. It is discovery metadata, not the knowledge pack itself:
+
+```text
+.config/dbx/dbx-feishu-feedback-triage/registry.yaml
+```
+
+```yaml
+registry_name: "solo-local"
+domains:
+  - domain_id: "trade-system"
+    domain_name: "交易系统"
+    aliases:
+      - "交易"
+      - "订单"
+    entry_doc_url: "feishu_doc_url"
+    storage_scope: "shared_team"
+    source_map_url: "feishu_doc_url"
+    status: "active"
+```
+
+Config lookup contract:
+
+1. Walk upward from the current directory and use the nearest `.config/dbx/dbx-feishu-feedback-triage/registry.yaml`.
+2. Match `domain_id`, `domain_name`, or `aliases`.
+3. Read the matched `entry_doc_url`, then follow the Domain Profile.
+4. If multiple entries match, ask the user to choose one of those configured entries.
+5. If no registry or no entry matches, stop and ask the user to add or fix the registry config.
+
+Do not store real per-domain URLs in the skill package. The package may include `assets/domain-registry.template.yaml` as a blank template only. A directory can use its own registry by placing the config closer to that directory than any parent config. Do not fall back to global document search, global memory, or ad hoc URLs for normal triage runs.
+
 ## Recommended Feishu Wiki structure
 
 ```text
+<project>/.config/dbx/dbx-feishu-feedback-triage/registry.yaml
+
 业务反馈分诊知识库 / <domain name>
   00. Domain Profile
   01. Source Map

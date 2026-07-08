@@ -51,15 +51,16 @@ python3 skills/dbx-feishu-feedback-triage/scripts/validate_feedback_cases.py \
 ## First real test
 
 1. Create a Feishu Wiki page from `assets/domain-profile.template.yaml` and `assets/source-map.template.yaml`.
-2. Fill only one real domain and one real feedback group.
-3. Run a narrow window first:
+2. Optionally copy `assets/domain-registry.template.yaml` to `.config/dbx/dbx-feishu-feedback-triage/registry.yaml` in the project that should own these domain aliases.
+3. Fill only one real domain and one real feedback group.
+4. Run a narrow window first:
 
 ```text
 用「<domain_id>」领域，总结今天 10:00 到 12:00「<反馈群名>」里的反馈，只读，重点看未闭环和新需求。
 ```
 
-4. Compare output manually against the group history.
-5. Patch `references/feedback-taxonomy.md`, domain knowledge, or eval fixtures based on real misses.
+5. Compare output manually against the group history.
+6. Patch `references/feedback-taxonomy.md`, domain knowledge, or eval fixtures based on real misses.
 
 ## Common invocations
 
@@ -69,6 +70,10 @@ python3 skills/dbx-feishu-feedback-triage/scripts/validate_feedback_cases.py \
 
 ```text
 用「交易系统」领域，生成昨天的反馈日报，只读，不写飞书项目。
+```
+
+```text
+用「天工」领域，生成昨天的反馈日报，只读；按最近的 .config/dbx/dbx-feishu-feedback-triage/registry.yaml 解析领域。
 ```
 
 ```text

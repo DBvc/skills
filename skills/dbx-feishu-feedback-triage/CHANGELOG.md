@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add nearest local Domain Registry discovery guidance so domain names resolve through explicit config without storing business URLs in the skill package.
+
 ## 0.1.0
 
 - Add read-only Feishu feedback triage controller.

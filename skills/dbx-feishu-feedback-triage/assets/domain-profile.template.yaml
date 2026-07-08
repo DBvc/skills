@@ -3,6 +3,9 @@
 
 domain_id: "<short-stable-id>"
 domain_name: "<业务领域名称>"
+aliases:
+  - "<common short name>"
+  - "<中文简称>"
 timezone: "Asia/Shanghai"
 owner:
   business: "<optional>"

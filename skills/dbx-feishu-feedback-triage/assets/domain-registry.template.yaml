@@ -1,0 +1,26 @@
+# Domain Registry for dbx-feishu-feedback-triage
+# Copy this to the nearest project-local:
+# .config/dbx/dbx-feishu-feedback-triage/registry.yaml
+# The skill package keeps this template only; real business URLs belong in local registry files.
+
+registry_name: "<project or team registry name>"
+registry_version: 1
+owner:
+  business: "<optional>"
+  product: "<optional>"
+  engineering: "<optional>"
+last_reviewed_at: "<YYYY-MM-DD>"
+
+domains:
+  - domain_id: "trade-system"
+    domain_name: "交易系统"
+    aliases:
+      - "交易"
+      - "订单"
+    entry_doc_url: "<Feishu Domain Profile URL or reviewed local path>"
+    storage_scope: "shared_team"  # shared_team | repo_local | personal_local
+    source_map_url: "<optional Feishu Source Map URL>"
+    default_report_target: "<optional Feishu report folder/doc URL>"
+    status: "active"  # active | deprecated | draft
+    owner: "<domain owner>"
+    notes: "Keep stable routing metadata here; keep detailed business rules in the Domain Profile."
