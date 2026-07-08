@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FeedbackCase",
+  "type": "object",
+  "required": [
+    "case_id",
+    "title",
+    "category",
+    "status",
+    "severity",
+    "confidence",
+    "source",
+    "extracted_facts",
+    "classification_reason",
+    "state_reason"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "usage_question",
+        "misuse_or_config",
+        "suspected_bug",
+        "confirmed_bug",
+        "feature_request",
+        "product_gap",
+        "known_issue",
+        "incident",
+        "data_or_permission_issue",
+        "documentation_gap",
+        "duplicate",
+        "noise_or_non_feedback",
+        "unknown"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "resolved",
+        "probably_resolved",
+        "pending_user",
+        "pending_dev",
+        "pending_pm",
+        "escalated",
+        "not_actionable",
+        "unresolved",
+        "unknown"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "p0",
+        "p1",
+        "p2",
+        "p3",
+        "unknown"
+      ]
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "module": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "chat_id",
+        "message_ids",
+        "time_range"
+      ],
+      "properties": {
+        "chat_id": {
+          "type": "string"
+        },
+        "thread_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "message_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "time_range": {
+          "type": "string"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "extracted_facts": {
+      "type": "object"
+    },
+    "classification_reason": {
+      "type": "string"
+    },
+    "state_reason": {
+      "type": "string"
+    },
+    "resolution_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "confirmation_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "evidence_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "next_action": {
+      "type": "string"
+    },
+    "memory_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}

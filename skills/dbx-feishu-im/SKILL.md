@@ -1,6 +1,6 @@
 ---
 name: dbx-feishu-im
-description: Use when the user needs to read, search, summarize, analyze, or safely write Feishu/Lark IM messages, group chats, direct messages, threads, reactions, message resources, or bounded realtime IM events in a development workflow. Default to read-only evidence collection; require explicit confirmation for sending messages, replying, pinning, urgent notifications, member/chat changes, or cross-system writes. Do not use for Feishu Project/Meegle work-item operations or Feishu document editing unless this skill is only gathering chat evidence for dbx-feishu-workflow.
+description: Use when the user needs to read, search, summarize, analyze, or safely write Feishu/Lark IM messages, group chats, direct messages, threads, reactions, message resources, or bounded realtime IM events in a development workflow. Default to read-only evidence collection; require explicit confirmation for sending messages, replying, pinning, urgent notifications, member/chat changes, or cross-system writes. Do not use for Feishu Project/Meegle work-item operations, domain-backed business feedback triage, or Feishu document editing unless this skill is only gathering chat evidence for another Feishu workflow.
 ---
 # DBX Feishu IM / 飞书群消息与即时通讯控制器
 
@@ -27,6 +27,7 @@ Do not use this skill for:
 
 - Feishu Project / Lark Project / Meegle story, ticket, version, iteration, field, comment, status, or workflow changes. Use `dbx-feishu-project`.
 - Feishu Docx/Wiki document creation or editing. Use `dbx-feishu-doc`.
+- Domain-backed business feedback classification, unresolved scans, requirement/product-gap intake, or memory candidates from feedback groups. Use `dbx-feishu-feedback-triage`.
 - Generic communication advice, announcement drafting, or meeting-note writing when no Feishu IM read/write target is involved.
 - Whole-company or all-chat scanning, privacy-invasive monitoring, hidden surveillance, permission bypass, or scraping chats where the user/bot is not authorized.
 - Long-running unattended automation without an external supervised service, allowlist, audit log, and explicit user/team approval.

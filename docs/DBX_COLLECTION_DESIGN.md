@@ -65,6 +65,7 @@ Current DBX graph:
 | `dbx-attention-routing` precedes product-specific tagging/write workflows | Route mixed inputs through the stable attention kernel before mapping to external task, note, or metadata systems. |
 | `dbx-read` handles explicit source-bound reading | Use for source ingestion, summary, extraction, deep-read, comparison, and optional local capture; hand off durable learning, public writing, judgment, review, or planning to the matching DBX skill. |
 | `dbx-feishu-workflow` delegates to Feishu domain skills | Use only for cross-system project/doc workflows, optionally with chat evidence. Project item operations follow `dbx-feishu-project`; document operations follow `dbx-feishu-doc`; IM evidence/writes/events follow `dbx-feishu-im`; writes require previews, exact targets, and approval. |
+| `dbx-feishu-feedback-triage` composes IM evidence and domain docs | Use for bounded business-feedback classification, unresolved scans, requirement/product-gap intake, and memory candidates. Generic chat summaries stay in `dbx-feishu-im`; project mutations stay out of v0.1. |
 | `dbx-learn` handles durable learning | Use for capability-building study, source-grounded learning research, practice reps, review, and optional learning records; do not use for ordinary summaries, direct implementation, or mixed inbox routing. |
 | `dbx-subagent-context` supports `dbx-goal-writer` | Goal contracts may include subagent context strategy when Codex subagents are involved. |
 | `dbx-agent-handoff` produces restart packets | Use for AI agent/session continuation and context-compaction handoffs; do not use for human workplace handoff documents. |
@@ -100,6 +101,7 @@ Examples:
 | “Read this Feishu Project ticket and tell me its owner, status, and acceptance criteria.” | `dbx-feishu-project`. |
 | “Append these release notes to this Feishu document.” | `dbx-feishu-doc`. |
 | “Summarize today's Feishu group discussion about rollout blockers with message evidence.” | `dbx-feishu-im`. |
+| “Use the trading domain pack to turn yesterday's feedback group messages into unresolved cases and FAQ candidates.” | `dbx-feishu-feedback-triage`. |
 | “Create a technical-plan document from this Feishu ticket and comment the link back.” | `dbx-feishu-workflow`. |
 | “I want to really understand React Server Components; build a mental model and one practice rep.” | `dbx-learn`. |
 | “Explain closures in two sentences.” | Direct answer, not `dbx-learn`. |

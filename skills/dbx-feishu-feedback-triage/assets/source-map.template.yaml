@@ -1,0 +1,83 @@
+# Source Map for dbx-feishu-feedback-triage
+# Use this to tell the skill where business truth lives and how much each source should be trusted.
+
+sources:
+  - id: "official-product-doc"
+    name: "<产品说明文档>"
+    type: "feishu_doc"
+    location: "<url>"
+    authority: "high"
+    use_for:
+      - "判断功能是否支持"
+      - "判断正确使用方式"
+      - "判断业务规则和功能边界"
+    owner: "<product owner>"
+    freshness: "owner_review_required"
+
+  - id: "faq"
+    name: "<FAQ>"
+    type: "feishu_doc"
+    location: "<url>"
+    authority: "medium_high"
+    use_for:
+      - "判断常见使用问题"
+      - "生成回群解释候选"
+    owner: "<support/product owner>"
+    freshness: "monthly_review"
+
+  - id: "known-issues"
+    name: "<已知问题和 workaround>"
+    type: "feishu_doc"
+    location: "<url>"
+    authority: "high_when_active"
+    use_for:
+      - "识别已知问题"
+      - "判断 workaround"
+      - "判断是否需要升级"
+    owner: "<engineering owner>"
+    freshness: "version_release_review"
+
+  - id: "code-repo"
+    name: "<代码仓库>"
+    type: "code_repo"
+    location: "<repo url or local path>"
+    authority: "high_for_actual_behavior"
+    read_policy: "only_when_docs_or_memory_cannot_answer"
+    use_for:
+      - "验证真实实现行为"
+      - "定位错误码和模块"
+      - "发现权限/配置/状态机边界"
+    owner: "<engineering owner>"
+    freshness: "current_branch_sensitive"
+
+  - id: "feedback-chat"
+    name: "<业务反馈群>"
+    type: "feishu_chat"
+    location: "oc_xxx"
+    authority: "high_for_symptoms_low_for_durable_facts"
+    use_for:
+      - "收集反馈现象"
+      - "判断用户是否确认恢复"
+      - "提取重复反馈"
+    owner: "<group owner>"
+    freshness: "runtime_window_only"
+
+source_of_truth_order:
+  - "official-product-doc"
+  - "known-issues"
+  - "code-repo"
+  - "faq"
+  - "feedback-chat"
+  - "model_inference"
+
+rules:
+  chat_can_prove:
+    - "某人反馈了什么"
+    - "某人是否确认恢复"
+    - "某人是否说要处理"
+  chat_cannot_alone_prove:
+    - "长期业务规则"
+    - "功能一定按某种方式设计"
+    - "bug 已经正式修复"
+  code_read_policy: "read only when needed, bounded by module/search terms"
+  project_policy: "disabled in v0.1"

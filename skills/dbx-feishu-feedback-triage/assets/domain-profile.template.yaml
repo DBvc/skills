@@ -1,0 +1,65 @@
+# Domain Profile for dbx-feishu-feedback-triage
+# Copy this into a Feishu Wiki/Doc page or keep a local reviewed profile.
+
+domain_id: "<short-stable-id>"
+domain_name: "<业务领域名称>"
+timezone: "Asia/Shanghai"
+owner:
+  business: "<optional>"
+  product: "<optional>"
+  engineering: "<optional>"
+
+scope:
+  includes:
+    - "<this skill may judge feedback about this area>"
+  excludes:
+    - "<route elsewhere or mark out_of_domain>"
+
+# Default chats are optional but improve day-to-day UX.
+default_chats:
+  - name: "<反馈群名称>"
+    chat_id: "oc_xxx"
+    purpose: "daily business feedback"
+    identity_preference: "user"
+
+knowledge_sources:
+  source_map: "<Feishu Doc/Wiki URL or local path>"
+  module_map: "<Feishu Doc/Wiki URL or local path>"
+  glossary: "<Feishu Doc/Wiki URL or local path>"
+  business_rules: "<Feishu Doc/Wiki URL or local path>"
+  faq: "<Feishu Doc/Wiki URL or local path>"
+  known_issues: "<Feishu Doc/Wiki URL or local path>"
+  classification_examples: "<Feishu Doc/Wiki URL or local path>"
+
+read_policy:
+  default_include_threads: "recent"
+  default_include_resources: false
+  code_read_policy: "only_when_needed"
+  project_read_policy: "disabled_in_v0_1"
+
+memory_policy:
+  accepted_memory: "<Feishu Doc/Wiki URL or local path>"
+  candidate_memory: "<Feishu Doc/Wiki URL or local path>"
+  write_mode: "candidate_only"
+  stale_policy: "owner_review_required"
+
+report_profile:
+  default_window: "yesterday 00:00-23:59"
+  audience: "研发 / 产品 / 支持"
+  output_language: "zh-CN"
+  default_sections:
+    - "scope"
+    - "overview"
+    - "needs_action"
+    - "unresolved"
+    - "resolved_or_probably_resolved"
+    - "feature_requests_and_product_gaps"
+    - "duplicates"
+    - "memory_candidates"
+    - "limitations"
+
+classification_hints:
+  default_severity: "unknown"
+  status_policy: "conservative"
+  require_explicit_evidence_for_resolved: true
+  require_confirmation_for_confirmed_bug: true

@@ -1,0 +1,165 @@
+{
+  "digest_id": "FD-20260708-sample",
+  "domain": {
+    "domain_id": "trade-system",
+    "domain_name": "交易系统"
+  },
+  "scope": {
+    "chat_id": "oc_sample",
+    "time_range": "2026-07-08 10:00 -> 12:00"
+  },
+  "counts": {
+    "cases": 2,
+    "unresolved": 1,
+    "resolved": 1
+  },
+  "cases": [
+    {
+      "case_id": "FB-20260708-001",
+      "title": "用户看不到订单导出按钮",
+      "category": "misuse_or_config",
+      "status": "resolved",
+      "severity": "p3",
+      "confidence": "high",
+      "module": "订单导出 / 权限",
+      "owner": "unknown",
+      "source": {
+        "chat_id": "oc_sample",
+        "thread_ids": [
+          "omt_sample_1"
+        ],
+        "message_ids": [
+          "om_sample_1",
+          "om_sample_2",
+          "om_sample_3"
+        ],
+        "time_range": "2026-07-08 10:01 -> 10:30",
+        "evidence_refs": [
+          {
+            "message_id": "om_sample_1",
+            "sender_label": "reporter",
+            "create_time": "2026-07-08 10:01",
+            "paraphrase": "用户反馈看不到导出按钮"
+          },
+          {
+            "message_id": "om_sample_3",
+            "sender_label": "reporter",
+            "create_time": "2026-07-08 10:30",
+            "paraphrase": "用户确认开通权限后恢复"
+          }
+        ]
+      },
+      "extracted_facts": {
+        "reporter": "user_a",
+        "affected_user_or_role": "业务操作员",
+        "symptom": "看不到订单导出按钮",
+        "expected": "能看到导出按钮",
+        "actual": "按钮不展示",
+        "environment": "unknown",
+        "repro_steps": [],
+        "error_codes": [],
+        "requested_change": ""
+      },
+      "classification_reason": "领域权限规则说明导出按钮依赖 order.export 权限，用户开通后恢复。",
+      "state_reason": "用户确认开通权限后恢复。",
+      "resolution_evidence": [
+        {
+          "message_id": "om_sample_3",
+          "sender_label": "reporter",
+          "create_time": "2026-07-08 10:30",
+          "paraphrase": "用户确认好了"
+        }
+      ],
+      "evidence_gaps": [],
+      "next_action": "沉淀 FAQ 候选。",
+      "memory_candidates": [
+        "MUC-20260708-001"
+      ]
+    },
+    {
+      "case_id": "FB-20260708-002",
+      "title": "订单导出接口返回 500",
+      "category": "suspected_bug",
+      "status": "pending_dev",
+      "severity": "p2",
+      "confidence": "medium",
+      "module": "订单导出",
+      "owner": "unknown",
+      "source": {
+        "chat_id": "oc_sample",
+        "thread_ids": [
+          "omt_sample_2"
+        ],
+        "message_ids": [
+          "om_sample_4",
+          "om_sample_5"
+        ],
+        "time_range": "2026-07-08 11:10 -> 11:20",
+        "evidence_refs": [
+          {
+            "message_id": "om_sample_4",
+            "sender_label": "reporter",
+            "create_time": "2026-07-08 11:10",
+            "paraphrase": "用户反馈导出接口 500"
+          },
+          {
+            "message_id": "om_sample_5",
+            "sender_label": "developer",
+            "create_time": "2026-07-08 11:20",
+            "paraphrase": "开发回复我看下"
+          }
+        ]
+      },
+      "extracted_facts": {
+        "reporter": "user_b",
+        "affected_user_or_role": "业务操作员",
+        "symptom": "订单导出接口返回 500",
+        "expected": "导出成功",
+        "actual": "接口返回 500",
+        "environment": "unknown",
+        "repro_steps": [],
+        "error_codes": [
+          "500"
+        ],
+        "requested_change": ""
+      },
+      "classification_reason": "有错误现象和开发介入，但还没有复现或 owner 确认。",
+      "state_reason": "开发只回复我看下，缺少修复或用户确认，不能视为已解决。",
+      "evidence_gaps": [
+        "缺少 request_id",
+        "缺少复现结果"
+      ],
+      "next_action": "需要开发确认 root cause 或让用户补充 request_id。",
+      "memory_candidates": []
+    }
+  ],
+  "memory_candidates": [
+    {
+      "id": "MUC-20260708-001",
+      "type": "faq",
+      "proposed_target": "FAQ / 订单导出",
+      "claim": "看不到订单导出按钮时，先检查 order.export 权限。",
+      "conditions": [
+        "用户在订单页面看不到导出按钮"
+      ],
+      "source_evidence": [
+        {
+          "message_id": "om_sample_3",
+          "paraphrase": "用户确认开通权限后恢复"
+        }
+      ],
+      "confidence": "medium",
+      "owner": "unknown",
+      "stale_policy": "权限模型变更后复查",
+      "requires_approval": true,
+      "risks": [
+        "不同租户权限名可能不同"
+      ]
+    }
+  ],
+  "limitations": [
+    "sample fixture only",
+    "附件未读取"
+  ],
+  "write_status": "not_written"
+}

@@ -17,6 +17,7 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-feishu-project`](skills/dbx-feishu-project/) | 飞书项目 / Lark Project / Meegle 工作项读写、查询、评论、流转和字段更新控制器。Feishu Project / Meegle work item controller. |
 | [`dbx-feishu-doc`](skills/dbx-feishu-doc/) | 飞书 Docx / Wiki 文档读取、创建、追加和安全局部更新控制器。Feishu Docx / Wiki document controller. |
 | [`dbx-feishu-im`](skills/dbx-feishu-im/) | 飞书/Lark IM 群消息、聊天记录、thread、搜索、受控写回和有界事件监听控制器。Feishu/Lark IM message evidence and safe write controller. |
+| [`dbx-feishu-feedback-triage`](skills/dbx-feishu-feedback-triage/) | 飞书/Lark 业务反馈群分诊：基于有界群消息和领域知识包，把反馈整理为可追溯 case、未闭环项、新需求/产品缺口、知识库更新候选。Read-only Feishu feedback triage with domain packs. |
 | [`dbx-feishu-workflow`](skills/dbx-feishu-workflow/) | 飞书项目项、文档与可选 IM 证据之间的研发流程联动编排。Workflow coordination across Feishu Project items, documents, and optional IM evidence. |
 | [`dbx-aliyun-sls`](skills/dbx-aliyun-sls/) | 阿里云 Simple Log Service / SLS 只读日志查询控制器：通过 Aliyun CLI、GetLogsV2、SDK 或可观测 MCP 安全生成、执行、总结日志查询，内置凭证、时间范围、成本、隐私和 handoff 护栏。Read-only Alibaba Cloud SLS log query controller with CLI/API/MCP execution boundaries. |
 | [`dbx-crystallize`](skills/dbx-crystallize/) | 模糊产品/软件想法、需求草稿、issue 或前置讨论的需求结晶：澄清用户/场景/状态变化、scope、non-goals、验收标准、边界状态、开放决策和 handoff。Requirement crystallization before product judgment, design, technical planning, or implementation. |

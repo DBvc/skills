@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "FeedbackDigest",
+  "type": "object",
+  "required": [
+    "digest_id",
+    "domain",
+    "scope",
+    "counts",
+    "cases",
+    "limitations",
+    "write_status"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "digest_id": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "object",
+      "required": [
+        "domain_id",
+        "domain_name"
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "chat_id",
+        "time_range"
+      ]
+    },
+    "counts": {
+      "type": "object"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "feedback-case.schema.json"
+      }
+    },
+    "memory_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "write_status": {
+      "type": "string",
+      "enum": [
+        "not_written",
+        "preview_only",
+        "approved_written",
+        "partial",
+        "failed"
+      ]
+    }
+  }
+}

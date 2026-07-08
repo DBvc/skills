@@ -1,0 +1,74 @@
+{
+  "messages": [
+    {
+      "message_id": "om_sample_1",
+      "sender": {
+        "sender_id": {
+          "user_id": "user_a"
+        },
+        "sender_type": "user"
+      },
+      "create_time": "2026-07-08 10:01",
+      "chat_id": "oc_sample",
+      "thread_id": "omt_sample_1",
+      "message_type": "text",
+      "content": "看不到订单导出按钮，怎么回事？"
+    },
+    {
+      "message_id": "om_sample_2",
+      "sender": {
+        "sender_id": {
+          "user_id": "pm_a"
+        },
+        "sender_type": "user"
+      },
+      "create_time": "2026-07-08 10:10",
+      "chat_id": "oc_sample",
+      "thread_id": "omt_sample_1",
+      "message_type": "text",
+      "content": "需要开 order.export 权限。"
+    },
+    {
+      "message_id": "om_sample_3",
+      "sender": {
+        "sender_id": {
+          "user_id": "user_a"
+        },
+        "sender_type": "user"
+      },
+      "create_time": "2026-07-08 10:30",
+      "chat_id": "oc_sample",
+      "thread_id": "omt_sample_1",
+      "message_type": "text",
+      "content": "开了权限好了。"
+    },
+    {
+      "message_id": "om_sample_4",
+      "sender": {
+        "sender_id": {
+          "user_id": "user_b"
+        },
+        "sender_type": "user"
+      },
+      "create_time": "2026-07-08 11:10",
+      "chat_id": "oc_sample",
+      "thread_id": "omt_sample_2",
+      "message_type": "text",
+      "content": "订单导出失败，接口 500。"
+    },
+    {
+      "message_id": "om_sample_5",
+      "sender": {
+        "sender_id": {
+          "user_id": "dev_a"
+        },
+        "sender_type": "user"
+      },
+      "create_time": "2026-07-08 11:20",
+      "chat_id": "oc_sample",
+      "thread_id": "omt_sample_2",
+      "message_type": "text",
+      "content": "我看下。"
+    }
+  ]
+}

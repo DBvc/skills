@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MemoryUpdateCandidate",
+  "type": "object",
+  "required": [
+    "id",
+    "type",
+    "proposed_target",
+    "claim",
+    "source_evidence",
+    "confidence",
+    "requires_approval"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "faq",
+        "known_issue",
+        "business_rule",
+        "glossary",
+        "module_owner",
+        "classification_example",
+        "stale_memory_fix"
+      ]
+    },
+    "proposed_target": {
+      "type": "string"
+    },
+    "claim": {
+      "type": "string"
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "owner": {
+      "type": "string"
+    },
+    "stale_policy": {
+      "type": "string"
+    },
+    "requires_approval": {
+      "type": "boolean",
+      "const": true
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}
