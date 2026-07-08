@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-feishu-feedback-triage"
+  short_description: "Feishu feedback triage with domain packs"
+  default_prompt: "Use $dbx-feishu-feedback-triage to classify, deduplicate, and triage bounded Feishu/Lark business feedback groups with a domain knowledge pack."
