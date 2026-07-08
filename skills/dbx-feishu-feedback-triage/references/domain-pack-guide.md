@@ -17,6 +17,18 @@ Only include knowledge that helps answer:
 - What evidence is missing?
 - What should be suggested as next action?
 
+## Storage and sharing policy
+
+Skill install location is not knowledge storage. Installing this skill in two repositories or two `.agents/skills` trees creates two controller entrypoints, not two automatic memory stores.
+
+The Domain Profile is the only authority for where domain knowledge lives:
+
+- Shared team knowledge should point to Feishu Wiki/Doc/Base URLs.
+- Project-specific knowledge may point to local repo paths.
+- Repo-local knowledge enters git only when a human intentionally stores it in that repo and stages it.
+- Runtime caches are not source of truth and must not store sensitive raw chat logs by default.
+- Collected business knowledge must not be written back into the skill package itself or global agent memory unless the user explicitly approves a separate state contract.
+
 ## Recommended Feishu Wiki structure
 
 ```text
@@ -43,6 +55,10 @@ Required fields:
 domain_id: "trade-system"
 domain_name: "交易系统"
 timezone: "Asia/Shanghai"
+storage_policy:
+  scope: "shared_team | repo_local | personal_local"
+  git_policy: "not_applicable | may_commit_reviewed_project_knowledge | never_commit"
+  notes: "Skill install location does not decide storage."
 scope:
   includes: []
   excludes: []

@@ -9,6 +9,12 @@ owner:
   product: "<optional>"
   engineering: "<optional>"
 
+# This profile decides where domain knowledge lives. The skill install path does not.
+storage_policy:
+  scope: "shared_team"  # shared_team | repo_local | personal_local
+  git_policy: "not_applicable"  # not_applicable | may_commit_reviewed_project_knowledge | never_commit
+  notes: "Use Feishu URLs for shared knowledge; use local paths only for intentional project-local packs."
+
 scope:
   includes:
     - "<this skill may judge feedback about this area>"
