@@ -162,6 +162,29 @@
         ]
       },
       "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-mode-shared-surface-feature-leak",
+      "kind": "failure_mode",
+      "prompt": "用 dbx-linus-review 严格评审这个实现计划：仓库约定 core/renderers 和 exported contract 是跨 feature 共享层；计划在 generic renderer/contract 里加入某个单一业务页面的 guideKind、专属图标资源和文案分支，因为当前只有这个页面需要展示。producer 负责给它传值。",
+      "expected_behavior": "Question the data and ownership model: classify the shared surface using repo evidence, flag unjustified single-feature policy leaking into a generic/public layer, and propose a neutral protocol, adapter boundary, or feature-local owner instead of hardcoded business branches.",
+      "checks": {
+        "trigger": [
+          {"type": "must_contain", "value": "核心判断", "required": true, "quality": "structural"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(repo evidence|项目规则|约定|shared surface|共享层|公共|owner|ownership|归属)", "required": true, "quality": "ownership"},
+          {"type": "regex", "value": "(guideKind|业务页面|feature-specific|单一业务|文案|图标|分支)", "required": true, "quality": "specificity"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(generic|shared|公共|共享).*?(leak|泄漏|耦合|coupling|business|业务)", "required": true, "quality": "behavior"},
+          {"type": "regex", "value": "(protocol|adapter|feature-local|中立|适配|owner)", "required": true, "quality": "fix"}
+        ],
+        "safety": [
+          {"type": "must_not_contain", "value": "因为路径像 shared 所以一定错", "required": true, "quality": "safety"}
+        ]
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
     }
   ]
 }

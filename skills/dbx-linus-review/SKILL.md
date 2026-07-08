@@ -130,6 +130,9 @@ Use only the lenses that matter for the current artifact.
 - Are branches, flags, transforms, or caches hiding a bad model?
 - For new files, ask whether the artifact is feature-local, shared domain logic, protocol adaptation, infrastructure, test fixture, or documentation. Wrong placement matters when it creates a false source of truth, unnecessary public/shared surface, or future coupling.
 - Treat proposed or handoff file paths as claims to review, not approvals of ownership.
+- If an artifact looks shared, public, generic, contract, renderer, adapter, schema, type, config, or platform-level by current repo evidence, classify its owner before judging the design.
+- Feature-specific names, enum values, assets, copy, or branches inside a shared surface need a generic protocol, adapter boundary, compatibility reason, or documented project rule. Otherwise the shared layer is learning one business case directly, which is an ownership/model smell.
+- Keep project-specific surface names in repo rules or memory, not in this skill.
 
 ### 3. Special cases
 
@@ -193,6 +196,7 @@ Default output in Chinese. Fill the structure with concrete evidence; omit secti
 
 ## 关键洞察
 - 数据结构/状态模型：...
+- 共享/公共 surface：owner、依据、是否有业务泄漏
 - 用户/兼容性风险：...
 - 复杂度判断：...
 
@@ -262,6 +266,7 @@ You may say the review is complete when:
 
 - the artifact and scope were inspected;
 - the real problem, model/ownership, compatibility, complexity, and practicality were considered where relevant;
+- any touched shared/public surface was classified with owner evidence or marked not relevant;
 - each finding has evidence, impact, fix direction, and confidence;
 - limitations or missing validation are stated.
 

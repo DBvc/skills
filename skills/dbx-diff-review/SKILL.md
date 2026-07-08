@@ -148,6 +148,7 @@ change_model:
   path_fit_evidence: []
   important_invariants: []
   public_contracts_changed: []
+  shared_public_surfaces_touched: []
   persisted_data_or_schema_changed: []
   async_or_concurrency_surfaces: []
   validation_surface: []
@@ -181,19 +182,25 @@ Run these passes in order. The files in `agents/` are optional specialist pass p
    - Treat paths supplied by the prompt, plan, or handoff as target evidence, not as approval.
    - Flag placement only when it creates a wrong source of truth, unnecessary shared/public surface, hidden coupling, or real future change-cost risk.
 
-5. **Contract and compatibility pass**
+5. **Shared/public surface ownership pass**
+   - If changed files look like shared, public, generic, contract, renderer, adapter, schema, type, config, or platform surfaces by current repo evidence, classify the owner before judging the hunk.
+   - Use project rules, architecture docs, exported APIs, neighboring modules, imports/callers, and existing naming patterns as evidence. Keep project-specific surface names in repo rules or memory, not in this skill.
+   - Feature-specific names, enum values, assets, copy, or branches inside a shared surface are not automatically wrong, but they need a generic protocol, adapter boundary, compatibility reason, or documented project rule.
+   - If a shared/public layer learns one business case directly instead of exposing a neutral boundary, flag the ownership or maintainability risk with the future change-cost path.
+
+6. **Contract and compatibility pass**
    - Check public APIs, exported types, props, configs, CLI behavior, persisted data, database migrations, route contracts, analytics events, feature flags, and backwards compatibility.
    - Never dismiss user breakage because the new design is cleaner.
 
-6. **Maintainability pass**
+7. **Maintainability pass**
    - Look for unnecessary concepts, leaky abstractions, hidden coupling, mixed responsibilities, duplicated sources of truth, and changes that make future fixes harder.
    - Flag only maintainability issues with a concrete future bug path or change-cost impact.
 
-7. **Validation pass**
+8. **Validation pass**
    - Check tests, type safety, lint/build coverage, regression tests, and manual verification gaps.
    - A missing test is a finding only when it leaves an important changed invariant unprotected.
 
-8. **Verifier pass**
+9. **Verifier pass**
    - Try to disprove each candidate finding before reporting it.
    - Keep a finding only if it is introduced or materially worsened by the selected change set, has concrete evidence, has user or maintainability impact, and has a specific fix direction.
 
@@ -242,6 +249,7 @@ Use this shape by default. Omit sections that do not apply, but keep evidence in
 - 目标：...
 - 实际改动：...
 - 关键数据/状态模型：...
+- 共享/公共 surface：是否触及；owner 和依据
 - 用户影响面：...
 
 ## 主要发现
@@ -294,6 +302,7 @@ You may say the review is complete when:
 - The selected target was inspected.
 - Any out-of-scope dirty files or excluded commits/files were disclosed when relevant.
 - The change model was formed enough to judge user impact and data/model risks.
+- Touched shared/public surfaces were either classified with owner evidence or explicitly marked not relevant.
 - Candidate findings were filtered through the verifier pass.
 - Output includes evidence, impact, fix direction, confidence, and validation status for every finding.
 

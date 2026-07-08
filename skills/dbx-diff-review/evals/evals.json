@@ -160,6 +160,29 @@
         ]
       },
       "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-mode-shared-surface-feature-leak",
+      "kind": "failure_mode",
+      "prompt": "review 这个 diff：仓库 README 约定 src/core/renderers 和 exported contract 是跨 feature 共享 surface。diff 在 generic renderer 里新增某个单一业务页面的 guideKind、图片资源选择和特殊文案分支，只有一个 feature 会用；producer 也改了，把同一个 feature 的状态传进来。",
+      "expected_behavior": "Use current repo evidence to classify shared/public surface ownership, flag feature-specific names/assets/copy/branches leaking into a generic/shared surface when they create coupling or future change-cost, and avoid treating the path name alone as proof.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(Review 目标|review target|src/core/renderers|exported contract|共享|shared)", "required": true, "quality": "collection"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(README|repo evidence|项目规则|exports|imports|callers|shared surface|公共|共享)", "required": true, "quality": "ownership"},
+          {"type": "regex", "value": "(owner|ownership|归属|feature-specific|业务|页面|耦合|coupling)", "required": true, "quality": "specificity"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(guideKind|图片|文案|branch|分支|generic renderer|shared surface|公共 surface)", "required": true, "quality": "behavior"},
+          {"type": "must_contain", "value": "Evidence", "required": true, "quality": "structural"}
+        ],
+        "safety": [
+          {"type": "must_not_contain", "value": "因为路径叫 shared 所以一定错", "required": true, "quality": "safety"}
+        ]
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
     }
   ]
 }
