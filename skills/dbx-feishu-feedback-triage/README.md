@@ -1,6 +1,6 @@
 # dbx-feishu-feedback-triage
 
-飞书业务反馈分诊 skill。给定领域知识包、飞书群和时间范围，把群聊里的业务反馈整理成可追溯的 feedback cases，判断类型、状态、优先级、未闭环项和知识沉淀候选。
+飞书业务反馈分诊 skill。给定领域、时间范围和可选的显式反馈群，通过项目本地 registry 找到 Domain Profile；若未显式指定群，则读取配置好的默认反馈群。它把群聊里的业务反馈整理成可追溯的 feedback cases，判断类型、状态、优先级、未闭环项和知识沉淀候选。
 
 ## v0.1 boundary
 
@@ -51,21 +51,22 @@ python3 skills/dbx-feishu-feedback-triage/scripts/validate_feedback_cases.py \
 ## First real test
 
 1. Create a Feishu Wiki page from `assets/domain-profile.template.yaml` and `assets/source-map.template.yaml`.
-2. Optionally copy `assets/domain-registry.template.yaml` to `.config/dbx/dbx-feishu-feedback-triage/registry.yaml` in the project that should own these domain aliases.
-3. Fill only one real domain and one real feedback group.
-4. Run a narrow window first:
+2. Copy `assets/domain-registry.template.yaml` to `.config/dbx/dbx-feishu-feedback-triage/registry.yaml` in the project that should own these domain aliases.
+3. In the registry, map one real `domain_id` / alias to the Domain Profile `entry_doc_url`.
+4. In the Domain Profile, fill one real default feedback group under `default_chats`.
+5. Run a narrow window first:
 
 ```text
-用「<domain_id>」领域，总结今天 10:00 到 12:00「<反馈群名>」里的反馈，只读，重点看未闭环和新需求。
+用「<domain_id>」领域，总结今天 10:00 到 12:00 的反馈，只读，重点看未闭环和新需求。
 ```
 
-5. Compare output manually against the group history.
-6. Patch `references/feedback-taxonomy.md`, domain knowledge, or eval fixtures based on real misses.
+6. Compare output manually against the configured group history.
+7. Patch `references/feedback-taxonomy.md`, domain knowledge, or eval fixtures based on real misses.
 
 ## Common invocations
 
 ```text
-初始化「交易系统」反馈分诊领域，领域入口文档是 <飞书文档链接>，先只读检查。
+初始化「交易系统」反馈分诊领域：检查最近的 registry 能否解析领域入口，并只读校验 Domain Profile 里的默认反馈群。
 ```
 
 ```text
@@ -77,7 +78,7 @@ python3 skills/dbx-feishu-feedback-triage/scripts/validate_feedback_cases.py \
 ```
 
 ```text
-用「交易系统」领域，总结 7 月 8 日 10:00 到 18:00 反馈群里的问题，重点看未解决和新需求。
+用「交易系统」领域，总结 7 月 8 日 10:00 到 18:00 的反馈，重点看未解决和新需求。
 ```
 
 ```text
