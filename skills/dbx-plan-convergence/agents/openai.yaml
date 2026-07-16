@@ -1,6 +1,6 @@
 interface:
   display_name: "dbx-plan-convergence"
-  short_description: "Provider-agnostic plan convergence controller"
-  default_prompt: "Use $dbx-plan-convergence to control a bounded review-revision loop for this existing technical plan. Keep providers decoupled and stop on evidence, decision, direction, oscillation, bloat, or budget gates."
+  short_description: "Explicit, provider-agnostic plan convergence controller"
+  default_prompt: "Use $dbx-plan-convergence to control a bounded review-revision loop for this existing technical plan. Bind every review to the current artifact version, keep providers decoupled, choose one next_action, separate final_state, and stop or hand off on evidence, decision, alternative, pivot, oscillation, bloat, stale state, or budget gates."
 policy:
   allow_implicit_invocation: false

@@ -1,0 +1,39 @@
+{
+  "review_pass": {
+    "id": "R1",
+    "artifact_version": "v1",
+    "artifact_fingerprint": "",
+    "provider": {
+      "id": "",
+      "type": "human",
+      "independence": "unknown"
+    },
+    "dimensions": [],
+    "scope": {
+      "kind": "full",
+      "accepted_finding_ids": [],
+      "check_direct_regressions": false,
+      "check_anchor_drift": false,
+      "check_evidence_boundary": false,
+      "check_scope_and_bloat": false
+    },
+    "parse_confidence": "high",
+    "findings": [
+      {
+        "id": "F-001",
+        "source_review_id": "R1",
+        "severity": "high",
+        "category": "model",
+        "evidence": "",
+        "impact": "",
+        "confidence": "medium",
+        "local_revision_signal": "unknown",
+        "evidence_gap_signal": "unknown",
+        "decision_gap_signal": "unknown",
+        "direction_failure_signal": "unknown",
+        "scope_expansion_signal": "unknown",
+        "verification_hint": ""
+      }
+    ]
+  }
+}

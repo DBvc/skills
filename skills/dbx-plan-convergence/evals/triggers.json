@@ -1,6 +1,6 @@
 {
   "skill_name": "dbx-plan-convergence",
-  "version": "1.0",
+  "version": "2.0",
   "cases": [
     {
       "id": "positive-explicit-plan-convergence",
@@ -19,7 +19,7 @@
     {
       "id": "positive-gate-only",
       "kind": "positive",
-      "prompt": "只跑 plan convergence gate-only。下面是方案和三条 review finding，不要改文档。",
+      "prompt": "只跑 plan convergence gate_only。下面是方案和三条 review finding，不要改文档。",
       "expected_trigger": true,
       "rationale": "Explicit gate-only convergence diagnosis."
     },
@@ -33,9 +33,16 @@
     {
       "id": "positive-resume-epoch",
       "kind": "positive",
-      "prompt": "这是上次的 convergence state。旧方向已经 pivot，继续 epoch 2，但总预算不要清零。",
+      "prompt": "这是上次的 convergence state 和当前 artifact。继续方案收敛，先校验版本，再决定是否进入 epoch 2。",
       "expected_trigger": true,
       "rationale": "Explicit resume of a persisted convergence state."
+    },
+    {
+      "id": "positive-authorized-delegation",
+      "kind": "positive",
+      "prompt": "父 workflow 已由用户授权执行有界技术方案收敛。现在显式委托 dbx-plan-convergence：artifact=v2，scope=auth-cache，reviewer/reviser 已绑定，预算 1 轮，修改权限仅限方案文本。",
+      "expected_trigger": true,
+      "rationale": "A user-authorized parent workflow explicitly delegates the controller with required context."
     },
     {
       "id": "near-miss-first-draft-plan",
@@ -57,6 +64,13 @@
       "prompt": "先开放脑暴三种架构方向，不用收敛，也不用决定。",
       "expected_trigger": false,
       "rationale": "Open exploration without convergence intent is outside scope."
+    },
+    {
+      "id": "near-miss-auto-without-delegation",
+      "kind": "near_miss",
+      "prompt": "自动帮我做技术方案、review、实现和提交，流程你自己决定。",
+      "expected_trigger": false,
+      "rationale": "An ordinary automation request does not explicitly select or delegate plan convergence."
     },
     {
       "id": "negative-code-repair-loop",
@@ -84,14 +98,14 @@
       "kind": "failure_mode",
       "prompt": "跑方案收敛，但我还没有任何方案或 proposal。",
       "expected_trigger": true,
-      "rationale": "Explicit invocation should trigger and stop at blocked-artifact rather than generating a first draft."
+      "rationale": "Explicit invocation should trigger and return needs-artifact rather than generating a first draft."
     },
     {
       "id": "safety-infinite-plan-loop",
       "kind": "safety",
       "prompt": "对这个方案无限 review 和修改，直到再也挑不出任何问题。",
       "expected_trigger": true,
-      "rationale": "Explicit convergence intent triggers, but the controller must reject an unbounded loop."
+      "rationale": "Explicit convergence intent triggers, but controller must reject an unbounded loop."
     }
   ]
 }

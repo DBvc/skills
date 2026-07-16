@@ -1,12 +1,135 @@
-version: 1
+version: 2
+
+activation:
+  allow_direct_explicit: true
+  allow_delegated_explicit: true
+  allow_implicit_invocation: false
+  delegated_required_fields:
+    - originating_intent
+    - artifact
+    - scope
+    - provider_bindings
+    - budget
+    - modification_authority
+
+mode_requirements:
+  gate_only:
+    required:
+      - artifact
+      - applicable_review_material
+    may_invoke_provider: false
+    may_modify_artifact: false
+
+  bounded_loop:
+    required:
+      - artifact
+      - existing_review_or_available_reviewer_binding
+    may_invoke_provider: true
+    may_modify_artifact_only_if:
+      - modification_authority_plan_text_only
+      - revision_provider_available
+
+  resume:
+    required:
+      - convergence_state
+      - current_artifact
+    identity_must_match:
+      - artifact_version
+      - artifact_fingerprint_when_available
+
+  diagnose_stall:
+    required:
+      - current_artifact
+      - comparable_history
+    minimum_history:
+      flat_or_bloat: one_before_after_transition
+      oscillation: two_anchor_flips_or_three_snapshots
+
+artifact_identity:
+  explicit_version_required_for:
+    - persisted_state
+    - resume
+    - multiple_artifact_versions
+    - multiple_review_passes
+  fingerprint_optional: true
+  allow_session_local_version_when_unambiguous: true
+  stale_review_transition:
+    next_action: obtain-review
+    final_state: needs-review
+
+transition_model:
+  one_primary_action_only: true
+  optional_follow_up_if: true
+  actions:
+    - obtain-artifact
+    - obtain-review
+    - revise-local
+    - gather-evidence
+    - request-decision
+    - explore-alternatives
+    - initiate-pivot
+    - finalize
+    - stop
+  final_states:
+    - needs-artifact
+    - needs-review
+    - needs-evidence
+    - needs-decision
+    - needs-alternatives
+    - pivot-required
+    - ready-for-handoff
+    - blocked-state-mismatch
+    - blocked-insufficient-history
+    - stopped-flat
+    - stopped-oscillating
+    - stopped-bloat
+    - stopped-budget
+  continue_condition:
+    next_action: revise-local
+    final_state: null
+
+execution_policy:
+  controller_may_coordinate:
+    - obtain_initial_review
+    - normalize_findings
+    - issue_revision_contract
+    - bounded_local_revision
+    - scoped_re_review
+    - progress_gate
+  controller_must_pause_or_handoff:
+    - gather-evidence
+    - request-decision
+    - explore-alternatives
+    - initiate-pivot
+  gate_only_invokes_providers: false
+  gate_only_modifies_artifact: false
+  may_modify_code: false
+  may_commit: false
+  may_push: false
+  may_execute_migration: false
+  may_change_external_systems: false
+
+anchor_policy:
+  statuses:
+    - unknown
+    - stable
+    - conflicted
+    - not_applicable
+  require_all_applicable_anchors_stable_before_ready: true
+  optional_by_task:
+    - public_contract
+    - migration_rollout_rollback
+  do_not_generate_placeholder_prose_for_not_applicable: true
 
 round_definition:
   initial_review_counts_as_revision_round: false
   revision_round_requires:
     - accepted_revision_contract
     - bounded_artifact_revision
-    - scoped_re_evaluation
-  pivot_opens_new_epoch: true
+    - scoped_re_review_bound_to_revised_artifact
+    - progress_gate
+  direction_failure_closes_epoch: true
+  new_direction_must_be_supplied_externally: true
   pivot_resets_total_budget: false
 
 profiles:
@@ -17,7 +140,7 @@ profiles:
     hard_total_revision_rounds: 5
     max_flat_rounds: 1
     max_same_finding_failed_revisions: 1
-    independent_review_dimensions_min: 1
+    review_dimensions_min: 1
     human_checkpoint_on_pivot: false
     human_approval_before_finalize: false
 
@@ -28,7 +151,7 @@ profiles:
     hard_total_revision_rounds: 6
     max_flat_rounds: 1
     max_same_finding_failed_revisions: 1
-    independent_review_dimensions_min: 2
+    review_dimensions_min: 2
     human_checkpoint_on_pivot: true
     human_approval_before_finalize: false
 
@@ -39,7 +162,7 @@ profiles:
     hard_total_revision_rounds: 6
     max_flat_rounds: 1
     max_same_finding_failed_revisions: 1
-    independent_review_dimensions_min: 2
+    review_dimensions_min: 2
     human_checkpoint_on_pivot: true
     human_approval_before_finalize: true
     rollback_or_containment_required: true
@@ -60,7 +183,8 @@ continuation_gate:
     - wording_only_revision
     - direction_flip_without_new_evidence
     - provider_echo_only
-    - validation_rollout_or_rollback_weakened
+    - validation_or_applicable_containment_weakened
+    - re_review_not_bound_to_revised_artifact
 
 soft_budget_policy:
   action_at_soft_budget: run_progress_and_phase_gate
@@ -68,7 +192,7 @@ soft_budget_policy:
   require_explicit_reason: true
 
 hard_budget_policy:
-  stop_state: stopped-budget
+  final_state: stopped-budget
   override_requires:
     - explicit_user_request
     - new_bounded_budget
@@ -84,11 +208,37 @@ re_review:
     - evidence_boundary_drift
     - scope_and_bloat
   full_review_after_each_revision: false
+  must_bind_to_revised_artifact: true
 
-side_effects:
-  may_modify_plan_text_in_bounded_loop: true
-  may_modify_code: false
-  may_commit: false
-  may_push: false
-  may_execute_migration: false
-  may_change_external_systems: false
+output_policy:
+  default_mode:
+    gate_only: diagnostic
+    bounded_loop: compact
+    resume: compact
+    diagnose_stall: diagnostic
+  compact_show_only_non_empty_triage: true
+  compact_must_include:
+    - transition
+    - core_judgment
+    - non_empty_blockers_or_gaps
+    - next_step_contract
+    - evidence_boundary
+    - residual_risks
+  diagnostic_adds:
+    - review_provenance
+    - full_triage
+    - epoch_and_budget
+    - progress_gate
+    - anchor_status
+    - history_evidence
+  abnormal_stop_reason_must_never_be_hidden: true
+
+completion:
+  plan_flipping_evidence_gaps_open: 0
+  material_decision_gaps_open: 0
+  direction_failures_open: 0
+  applicable_core_anchors_stable: true
+  critical_risks_mapped_to_validation: true
+  rollout_rollback_or_containment_required_only_when_applicable: true
+  current_artifact_reviewed: true
+  residual_risks_explicit: true

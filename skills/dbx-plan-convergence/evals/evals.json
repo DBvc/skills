@@ -6,7 +6,7 @@
       "id": "positive-provider-agnostic-controller",
       "kind": "positive",
       "prompt": "用方案收敛控制这份 proposal 的 review-revision loop。不要依赖任何固定 planner 或 reviewer 名称。",
-      "expected_behavior": "Describe a provider-agnostic controller, separate controller from author/reviewer/evidence/decision roles, and choose a bounded next-state workflow without naming required collaborators.",
+      "expected_behavior": "Describe a provider-agnostic controller, separate controller from content providers, and emit one next_action plus a distinct final_state without naming required collaborators.",
       "checks": {
         "trigger": [
           {
@@ -32,10 +32,16 @@
         ],
         "output": [
           {
-            "type": "regex",
-            "value": "(next action|下一步|next-state|结论)",
+            "type": "must_contain",
+            "value": "next_action",
             "required": true,
-            "quality": "contract"
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
+            "value": "final_state",
+            "required": true,
+            "quality": "state_contract"
           }
         ],
         "safety": []
@@ -49,7 +55,7 @@
       "id": "failure-direction-finding-causes-pivot",
       "kind": "failure_mode",
       "prompt": "跑方案收敛。review 发现 logout stale cache、user switch stale permission、permission downgrade 都源于把 session state 放进 process singleton。",
-      "expected_behavior": "Classify the shared root cause as direction_failure, enter explore, stop local patching, and return pivot-required rather than a revision contract.",
+      "expected_behavior": "Classify the shared root cause as direction_failure, enter explore, stop local patching, emit next_action initiate-pivot and final_state pivot-required, and do not create a revision contract.",
       "checks": {
         "trigger": [
           {
@@ -76,9 +82,15 @@
         "output": [
           {
             "type": "must_contain",
+            "value": "initiate-pivot",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
             "value": "pivot-required",
             "required": true,
-            "quality": "contract"
+            "quality": "state_contract"
           },
           {
             "type": "regex",
@@ -98,7 +110,7 @@
       "id": "failure-evidence-gap-does-not-invent",
       "kind": "failure_mode",
       "prompt": "方案假设现有 cache 是 request-scoped，但没有读仓库。review 说这会翻转 owner 模型。继续改方案吗？",
-      "expected_behavior": "Return needs-evidence, request repository evidence, and explicitly forbid rewriting the assumption as fact.",
+      "expected_behavior": "Emit next_action gather-evidence and final_state needs-evidence, request repository evidence, and forbid rewriting the assumption as fact.",
       "checks": {
         "trigger": [
           {
@@ -119,9 +131,15 @@
         "output": [
           {
             "type": "must_contain",
+            "value": "gather-evidence",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
             "value": "needs-evidence",
             "required": true,
-            "quality": "contract"
+            "quality": "state_contract"
           },
           {
             "type": "regex",
@@ -141,7 +159,7 @@
       "id": "failure-decision-gap-does-not-choose",
       "kind": "failure_mode",
       "prompt": "review 发现是否破坏旧 API 会决定整个 migration 方案，但没有 owner 做选择。跑 convergence gate。",
-      "expected_behavior": "Return needs-decision and record the decision question without the controller choosing compatibility policy.",
+      "expected_behavior": "Emit next_action request-decision and final_state needs-decision, record the question, and do not choose compatibility policy.",
       "checks": {
         "trigger": [
           {
@@ -162,9 +180,15 @@
         "output": [
           {
             "type": "must_contain",
+            "value": "request-decision",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
             "value": "needs-decision",
             "required": true,
-            "quality": "contract"
+            "quality": "state_contract"
           },
           {
             "type": "regex",
@@ -359,10 +383,10 @@
       }
     },
     {
-      "id": "positive-pivot-opens-new-epoch",
+      "id": "positive-pivot-closes-epoch-awaits-new-candidate",
       "kind": "positive",
-      "prompt": "旧方向因为 source of truth 错了被否决。方案收敛下一步怎么计轮次？",
-      "expected_behavior": "Close the old epoch with a rejection reason, open a new epoch for the new direction, and preserve total budget and history.",
+      "prompt": "旧方向因为 source of truth 错了被否决。方案收敛现在怎么处理 epoch 和计轮次？",
+      "expected_behavior": "Close the old epoch with a rejection reason, preserve total budget and history, pause as pivot-required, and open a new epoch only after an external actor supplies a new candidate.",
       "checks": {
         "trigger": [
           {
@@ -375,9 +399,15 @@
         "process": [
           {
             "type": "regex",
-            "value": "(新.*epoch|开启.*epoch|方向.*epoch)",
+            "value": "(关闭.*epoch|结束.*epoch|旧.*epoch)",
             "required": true,
             "quality": "model"
+          },
+          {
+            "type": "regex",
+            "value": "(外部|provider|人类|新.*候选).*(提供|输入|给出).*(再|后).*(新.*epoch|开启.*epoch)",
+            "required": true,
+            "quality": "execution_boundary"
           },
           {
             "type": "regex",
@@ -387,6 +417,12 @@
           }
         ],
         "output": [
+          {
+            "type": "must_contain",
+            "value": "pivot-required",
+            "required": true,
+            "quality": "state_contract"
+          },
           {
             "type": "regex",
             "value": "(rejection reason|否决理由|淘汰理由)",
@@ -405,12 +441,12 @@
       "id": "near-miss-first-draft-routes-away",
       "kind": "near_miss",
       "prompt": "我只有需求，没有方案。用 plan convergence 给我生成第一版技术方案。",
-      "expected_behavior": "Do not generate the first draft under this controller; return blocked-artifact or route to an unspecified planning provider.",
+      "expected_behavior": "Do not generate the first draft; emit next_action obtain-artifact and final_state needs-artifact or route to an unspecified artifact provider.",
       "checks": {
         "trigger": [
           {
             "type": "regex",
-            "value": "(blocked-artifact|已有.*方案|现有.*artifact|planning provider|方案 provider)",
+            "value": "(obtain-artifact|needs-artifact|已有.*方案|artifact provider|方案 provider)",
             "required": true,
             "quality": "routing"
           }
@@ -472,7 +508,7 @@
       "id": "positive-ready-is-relative",
       "kind": "positive",
       "prompt": "方案没有 blocker 了，可以说完全正确、已经验证了吗？",
-      "expected_behavior": "Use ready-for-handoff only relative to the evidence boundary and explicitly deny that plan readiness proves implementation or production behavior.",
+      "expected_behavior": "Use next_action finalize and final_state ready-for-handoff only relative to the evidence boundary, and deny that plan readiness proves implementation or production behavior.",
       "checks": {
         "trigger": [
           {
@@ -493,9 +529,15 @@
         "output": [
           {
             "type": "must_contain",
+            "value": "finalize",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
             "value": "ready-for-handoff",
             "required": true,
-            "quality": "contract"
+            "quality": "state_contract"
           },
           {
             "type": "regex",
@@ -510,6 +552,503 @@
         "all_required": true,
         "min_score": 0.85
       }
+    },
+    {
+      "id": "failure-action-and-final-state-separated",
+      "kind": "failure_mode",
+      "prompt": "gate_only 判断两个 finding 都可局部修改。请输出方案收敛结果。",
+      "expected_behavior": "Emit exactly one next_action revise-local and final_state null; do not use in-progress as a final state and do not hide the action in a generic conclusion.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(gate_only|方案收敛|收敛结果)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(局部|local_revision|revise-local)",
+            "required": true,
+            "quality": "triage"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "next_action",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
+            "value": "revise-local",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
+            "value": "final_state",
+            "required": true,
+            "quality": "state_contract"
+          },
+          {
+            "type": "regex",
+            "value": "(final_state\\s*[:：]\\s*(null|none|空)|final_state.*null)",
+            "required": true,
+            "quality": "state_contract"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "final_state: in-progress",
+            "required": true,
+            "quality": "regression"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-explore-alternatives-is-not-pivot",
+      "kind": "failure_mode",
+      "prompt": "两个架构方向都可能成立，review 没有证明当前方向错误，只是缺比较标准。跑 convergence gate。",
+      "expected_behavior": "Emit next_action explore-alternatives and final_state needs-alternatives; explicitly avoid claiming pivot-required or direction failure.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(convergence|收敛|gate)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(没有.*证明.*错误|方向.*未.*失败|比较标准|alternatives)",
+            "required": true,
+            "quality": "semantics"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "explore-alternatives",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
+            "value": "needs-alternatives",
+            "required": true,
+            "quality": "state_contract"
+          },
+          {
+            "type": "regex",
+            "value": "(不.*pivot-required|不是.*方向失败|未.*否决)",
+            "required": true,
+            "quality": "boundary"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-stale-review-rejected",
+      "kind": "failure_mode",
+      "prompt": "R1 review 的是 plan v1。现在 artifact 已经是 v2，ownership 和 migration 都改过，但只有 R1 finding。跑 gate_only。",
+      "expected_behavior": "Reject the stale review, emit obtain-review plus needs-review, and do not apply R1 findings to v2.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(v1|v2|gate_only|review)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(stale|旧版本|版本.*不.*一致|不适用)",
+            "required": true,
+            "quality": "provenance"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "obtain-review",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
+            "value": "needs-review",
+            "required": true,
+            "quality": "state_contract"
+          },
+          {
+            "type": "regex",
+            "value": "(不.*应用|不能.*套用|不得.*使用).*(R1|v1|finding)",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-gate-only-requires-review",
+      "kind": "failure_mode",
+      "prompt": "我给你一份 plan，但没有 review。只跑 dbx-plan-convergence gate_only。",
+      "expected_behavior": "Do not review the plan under gate_only; emit obtain-review and needs-review.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(gate_only|plan convergence|方案收敛)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(没有.*review|缺.*review|gate_only.*不.*review)",
+            "required": true,
+            "quality": "mode_gate"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "obtain-review",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
+            "value": "needs-review",
+            "required": true,
+            "quality": "state_contract"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-resume-artifact-mismatch",
+      "kind": "failure_mode",
+      "prompt": "convergence state 记录 plan v2/fingerprint abc，当前 resume 输入是 v3/fingerprint def。继续上一轮 revision contract。",
+      "expected_behavior": "Refuse to resume the stale contract and return stop plus blocked-state-mismatch.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(resume|state|继续)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(版本|fingerprint|identity).*(不一致|mismatch|不同)",
+            "required": true,
+            "quality": "state_gate"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "blocked-state-mismatch",
+            "required": true,
+            "quality": "state_contract"
+          },
+          {
+            "type": "regex",
+            "value": "(不.*继续|拒绝.*resume|不能.*使用.*contract)",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-review-independence-is-per-pass",
+      "kind": "failure_mode",
+      "prompt": "R1 是同一上下文 reviewer，R2 是独立 reviewer。请生成 convergence state 的 review provenance。",
+      "expected_behavior": "Record independence on each review pass and do not collapse it into one global provider_independence field.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(R1|R2|review provenance|convergence state)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(每个.*review|per-review|review pass)",
+            "required": true,
+            "quality": "provenance"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(R1[\\s\\S]{0,200}(none|非独立)|none[\\s\\S]{0,200}R1)",
+            "required": true,
+            "quality": "per_pass"
+          },
+          {
+            "type": "regex",
+            "value": "(R2[\\s\\S]{0,200}independent|independent[\\s\\S]{0,200}R2)",
+            "required": true,
+            "quality": "per_pass"
+          },
+          {
+            "type": "regex",
+            "value": "(不.*全局.*provider_independence|删除.*全局|不是.*全局)",
+            "required": true,
+            "quality": "regression"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-controller-pauses-on-evidence",
+      "kind": "failure_mode",
+      "prompt": "bounded_loop 的 review 发现真实调用方数量未知，会翻转迁移路线。controller 可以自己去读仓库然后继续改方案吗？",
+      "expected_behavior": "Classify evidence_gap, pause as needs-evidence, and hand off to an evidence provider rather than gathering facts inside the controller.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(bounded_loop|controller|迁移)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(evidence_gap|证据缺口|会翻转)",
+            "required": true,
+            "quality": "gate"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "gather-evidence",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
+            "value": "needs-evidence",
+            "required": true,
+            "quality": "state_contract"
+          },
+          {
+            "type": "regex",
+            "value": "(暂停|handoff|交给.*evidence|不.*自己.*读仓库)",
+            "required": true,
+            "quality": "execution_boundary"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-not-applicable-anchors",
+      "kind": "positive",
+      "prompt": "这是一个局部内部 refactor，没有 public API、迁移、发布或不可逆影响。方案收敛的 core anchors 怎么填？",
+      "expected_behavior": "Mark public contract and migration/rollout/rollback as not_applicable while still requiring applicable invariants and validation.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(refactor|core anchors|方案收敛)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(not_applicable|不适用)",
+            "required": true,
+            "quality": "applicability"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(public.*contract|public API)[\\s\\S]{0,120}(not_applicable|不适用)",
+            "required": true,
+            "quality": "anchor"
+          },
+          {
+            "type": "regex",
+            "value": "(migration|rollout|rollback|迁移|发布)[\\s\\S]{0,120}(not_applicable|不适用)",
+            "required": true,
+            "quality": "anchor"
+          },
+          {
+            "type": "regex",
+            "value": "(validation|验证|invariant|不变量).*(仍|必须|需要)",
+            "required": true,
+            "quality": "completion"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-compact-bounded-output",
+      "kind": "positive",
+      "prompt": "bounded_loop 已完成一轮 local revision 和 scoped re-review，现在 ready。用默认输出，不要展开所有空 triage。",
+      "expected_behavior": "Use compact output with transition, key convergence, loop counts, evidence boundary, and residual risks; omit empty categories.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(bounded_loop|ready|默认输出)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(compact|紧凑|只.*非空|不.*空.*分类)",
+            "required": true,
+            "quality": "presentation"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "ready-for-handoff",
+            "required": true,
+            "quality": "state_contract"
+          },
+          {
+            "type": "regex",
+            "value": "(证据边界|evidence boundary)",
+            "required": true,
+            "quality": "honesty"
+          },
+          {
+            "type": "regex",
+            "value": "(剩余风险|residual risk)",
+            "required": true,
+            "quality": "risk"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-one-primary-action-with-follow-up",
+      "kind": "failure_mode",
+      "prompt": "reviewer 冲突：先需要查真实实现数量，如果仍然无法决定，再让 owner 选支持周期。输出 next action。",
+      "expected_behavior": "Choose gather-evidence as the single primary action and encode request-decision only as a conditional follow-up, not an action list.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(reviewer|冲突|next action)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(先.*证据|gather-evidence)",
+            "required": true,
+            "quality": "ordering"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "gather-evidence",
+            "required": true,
+            "quality": "action_contract"
+          },
+          {
+            "type": "must_contain",
+            "value": "follow_up_if",
+            "required": true,
+            "quality": "conditional"
+          },
+          {
+            "type": "regex",
+            "value": "(request-decision|请求.*决策)",
+            "required": true,
+            "quality": "follow_up"
+          },
+          {
+            "type": "regex",
+            "value": "(不.*动作数组|一个.*主动作|single.*action)",
+            "required": true,
+            "quality": "regression"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
     }
-  ]
+  ],
+  "version": "2.0"
 }

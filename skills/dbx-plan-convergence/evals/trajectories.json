@@ -1,0 +1,171 @@
+{
+  "skill_name": "dbx-plan-convergence",
+  "version": "2.0",
+  "purpose": "Manual or agent trajectory evals for multi-step convergence behavior. These are not regex-only output checks.",
+  "trajectories": [
+    {
+      "id": "trajectory-local-revision-to-ready",
+      "initial": {
+        "artifact": "plan v1",
+        "review": "R1 of v1 finds one local validation gap",
+        "mode": "bounded_loop"
+      },
+      "expected_steps": [
+        "triage F-001 as validation_gap/local_revision",
+        "emit revise-local with final_state null",
+        "issue a bounded revision contract",
+        "produce plan v2",
+        "run R2 scoped review against v2",
+        "close F-001 without anchor drift",
+        "pass progress gate",
+        "emit finalize and ready-for-handoff"
+      ],
+      "failure_signals": [
+        "full review is reopened without cause",
+        "R2 reviews v1",
+        "final_state uses in-progress",
+        "empty triage categories dominate output"
+      ]
+    },
+    {
+      "id": "trajectory-anchor-drift-stops-local-loop",
+      "initial": {
+        "artifact": "plan v1 with stable source_of_truth A",
+        "review": "R1 asks for a local validation update",
+        "mode": "bounded_loop"
+      },
+      "mutation": "revision provider silently changes source_of_truth to B",
+      "expected_steps": [
+        "scoped review detects anchor drift",
+        "do not count the finding as safely closed",
+        "do not continue local patching",
+        "classify the revision as direction change or contract violation",
+        "handoff or stop with explicit reason"
+      ],
+      "failure_signals": [
+        "controller accepts v2 as local revision",
+        "anchor change is hidden in prose"
+      ]
+    },
+    {
+      "id": "trajectory-stale-review-v1-current-v2",
+      "initial": {
+        "artifact": "plan v2",
+        "review": "R1 explicitly reviewed v1",
+        "mode": "gate_only"
+      },
+      "expected_steps": [
+        "detect artifact version mismatch",
+        "do not normalize R1 findings as applicable to v2",
+        "emit obtain-review",
+        "emit needs-review"
+      ],
+      "failure_signals": [
+        "controller applies R1 to v2",
+        "controller lowers confidence but still revises"
+      ]
+    },
+    {
+      "id": "trajectory-gate-only-missing-review",
+      "initial": {
+        "artifact": "plan v1",
+        "review": null,
+        "mode": "gate_only"
+      },
+      "expected_steps": [
+        "recognize missing mode input",
+        "do not act as reviewer",
+        "emit obtain-review",
+        "emit needs-review"
+      ],
+      "failure_signals": [
+        "controller generates its own critique",
+        "controller modifies the plan"
+      ]
+    },
+    {
+      "id": "trajectory-reviewer-conflict-no-voting",
+      "initial": {
+        "artifact": "plan v1",
+        "reviews": [
+          "R1 prefers abstraction",
+          "R2 prefers local adapter"
+        ],
+        "known_gaps": [
+          "actual implementation count unknown",
+          "support horizon undecided"
+        ]
+      },
+      "expected_steps": [
+        "merge conflict by root cause rather than vote count",
+        "choose gather-evidence as the one primary action",
+        "record request-decision only as follow_up_if",
+        "pause as needs-evidence"
+      ],
+      "failure_signals": [
+        "majority vote",
+        "two primary actions",
+        "controller chooses support policy"
+      ]
+    },
+    {
+      "id": "trajectory-failed-local-revision-reclassified",
+      "initial": {
+        "artifact": "plan v1",
+        "review": "F-001 classified local",
+        "mode": "bounded_loop"
+      },
+      "history": [
+        "revision round 1 cannot close F-001 without changing owner model"
+      ],
+      "expected_steps": [
+        "do not attempt a second local patch for the same finding",
+        "reclassify as evidence gap, decision gap, or direction failure",
+        "pause or pivot according to root cause"
+      ],
+      "failure_signals": [
+        "another wording-only revision",
+        "same finding is repeatedly patched"
+      ]
+    },
+    {
+      "id": "trajectory-high-impact-breadth-without-model-count",
+      "initial": {
+        "artifact": "cross-service migration plan",
+        "risk_profile": "high_impact",
+        "review_passes": [
+          "R1 covers direction/model/ownership and compatibility/migration"
+        ]
+      },
+      "expected_steps": [
+        "count distinct dimensions rather than reviewer count",
+        "record R1 independence honestly",
+        "require any still-missing material dimensions",
+        "do not require two models merely because profile is high impact"
+      ],
+      "failure_signals": [
+        "two-model voting requirement",
+        "same dimension counted twice",
+        "global provider_independence field"
+      ]
+    },
+    {
+      "id": "trajectory-resume-state-mismatch",
+      "initial": {
+        "state_artifact": "v2 fingerprint abc",
+        "current_artifact": "v3 fingerprint def",
+        "pending_contract": "RC-E1-R1"
+      },
+      "expected_steps": [
+        "detect identity mismatch before applying pending contract",
+        "emit stop",
+        "emit blocked-state-mismatch",
+        "require matching artifact or fresh v3 review/state"
+      ],
+      "failure_signals": [
+        "silently migrates pending contract",
+        "continues on v3 with v2 findings"
+      ]
+    }
+  ]
+}

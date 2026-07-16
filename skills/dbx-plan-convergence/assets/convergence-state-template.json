@@ -1,22 +1,40 @@
 {
-  "convergence_state_version": 1,
+  "convergence_state_version": 2,
   "run_id": "",
   "mode": "gate_only",
   "risk_profile": "standard",
+  "output_mode": "diagnostic",
+  "activation": {
+    "kind": "direct_explicit",
+    "originating_intent": "",
+    "parent_workflow_id": null,
+    "modification_authority": "none"
+  },
   "artifact": {
     "type": "technical_plan",
     "version": "",
+    "fingerprint": "",
+    "content_location": "",
     "scope": [],
     "goal": "",
     "non_goals": [],
     "success_criteria": []
   },
-  "provider_independence": "unknown",
+  "provider_bindings": {
+    "artifact_provider": null,
+    "reviewers": [],
+    "revision_provider": null,
+    "evidence_provider": null,
+    "decision_owner": null,
+    "parent_workflow": null
+  },
   "epoch": {
     "id": "E1",
     "index": 1,
     "phase": "explore",
     "direction_summary": "",
+    "status": "active",
+    "rejection_reason": null,
     "revision_rounds": 0,
     "soft_revision_rounds_per_epoch": 2,
     "hard_revision_rounds_per_epoch": 3
@@ -59,6 +77,13 @@
       "status": "unknown"
     }
   },
+  "reviews": [],
+  "review_coverage": {
+    "required_dimensions": [],
+    "covered_dimensions": [],
+    "gaps": []
+  },
+  "revisions": [],
   "findings": [],
   "triage": {
     "local_revision": [],
@@ -81,8 +106,19 @@
     "scope_pressure": "unknown",
     "actionability_delta": "unknown"
   },
-  "next_action": "",
-  "final_state": "in-progress",
+  "transition": {
+    "next_action": "",
+    "final_state": null,
+    "reason": "",
+    "owner_role": "",
+    "follow_up_if": null
+  },
+  "history": {
+    "artifact_versions": [],
+    "anchor_snapshots": [],
+    "rejected_directions": [],
+    "transition_summaries": []
+  },
   "residual_risks": [],
   "evidence_boundary": []
 }
