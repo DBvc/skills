@@ -1,0 +1,515 @@
+{
+  "skill_name": "dbx-plan-convergence",
+  "pass_threshold": 0.85,
+  "evals": [
+    {
+      "id": "positive-provider-agnostic-controller",
+      "kind": "positive",
+      "prompt": "用方案收敛控制这份 proposal 的 review-revision loop。不要依赖任何固定 planner 或 reviewer 名称。",
+      "expected_behavior": "Describe a provider-agnostic controller, separate controller from author/reviewer/evidence/decision roles, and choose a bounded next-state workflow without naming required collaborators.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(方案收敛|plan convergence|收敛控制)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(provider|作者|reviewer|证据|decision owner|决策 owner)",
+            "required": true,
+            "quality": "architecture"
+          },
+          {
+            "type": "regex",
+            "value": "(不依赖|不写死|provider-agnostic|可替换)",
+            "required": true,
+            "quality": "decoupling"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(next action|下一步|next-state|结论)",
+            "required": true,
+            "quality": "contract"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-direction-finding-causes-pivot",
+      "kind": "failure_mode",
+      "prompt": "跑方案收敛。review 发现 logout stale cache、user switch stale permission、permission downgrade 都源于把 session state 放进 process singleton。",
+      "expected_behavior": "Classify the shared root cause as direction_failure, enter explore, stop local patching, and return pivot-required rather than a revision contract.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(方案收敛|收敛|plan)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(direction_failure|方向错误|方向性|根因|state owner|owner)",
+            "required": true,
+            "quality": "gate"
+          },
+          {
+            "type": "regex",
+            "value": "(explore|探索)",
+            "required": true,
+            "quality": "phase"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "pivot-required",
+            "required": true,
+            "quality": "contract"
+          },
+          {
+            "type": "regex",
+            "value": "(不.*局部修|停止.*修补|不生成.*revision)",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-evidence-gap-does-not-invent",
+      "kind": "failure_mode",
+      "prompt": "方案假设现有 cache 是 request-scoped，但没有读仓库。review 说这会翻转 owner 模型。继续改方案吗？",
+      "expected_behavior": "Return needs-evidence, request repository evidence, and explicitly forbid rewriting the assumption as fact.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(方案|review|继续)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(evidence_gap|证据缺口|缺.*证据|仓库事实)",
+            "required": true,
+            "quality": "evidence"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "needs-evidence",
+            "required": true,
+            "quality": "contract"
+          },
+          {
+            "type": "regex",
+            "value": "(不得|不要|不能).*(事实|已知|既定)",
+            "required": true,
+            "quality": "honesty"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-decision-gap-does-not-choose",
+      "kind": "failure_mode",
+      "prompt": "review 发现是否破坏旧 API 会决定整个 migration 方案，但没有 owner 做选择。跑 convergence gate。",
+      "expected_behavior": "Return needs-decision and record the decision question without the controller choosing compatibility policy.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(convergence|收敛|gate)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(decision_gap|决策缺口|需要.*决策|owner)",
+            "required": true,
+            "quality": "authority"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "needs-decision",
+            "required": true,
+            "quality": "contract"
+          },
+          {
+            "type": "regex",
+            "value": "(不.*擅自|不能.*替|交给.*owner|请求.*决策)",
+            "required": true,
+            "quality": "authority"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-two-rounds-is-soft-checkpoint",
+      "kind": "positive",
+      "prompt": "为什么方案最多两轮？这是一个高影响迁移，我担心两轮不够。",
+      "expected_behavior": "Explain that two rounds is a soft checkpoint per direction epoch, not a universal quality cap; high impact should add evidence, review breadth, and checkpoints, and may continue with progress credits.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(两轮|高影响|迁移)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(soft checkpoint|软.*检查点|不是.*上限)",
+            "required": true,
+            "quality": "policy"
+          },
+          {
+            "type": "regex",
+            "value": "(epoch|方向阶段|方向.*周期)",
+            "required": true,
+            "quality": "model"
+          },
+          {
+            "type": "regex",
+            "value": "(证据|review.*维度|独立.*评审|human checkpoint|人工.*门禁)",
+            "required": true,
+            "quality": "rigor"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(progress credit|信息增益|真实进展|新证据|决策)",
+            "required": true,
+            "quality": "continuation"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-third-round-with-new-evidence",
+      "kind": "positive",
+      "prompt": "同一方向已经修了两轮。现在刚拿到真实调用方清单，推翻了一个兼容性假设。能不能做第三轮？",
+      "expected_behavior": "Allow a bounded third round because new material evidence provides progress credit, while keeping total and per-epoch hard budgets.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(两轮|第三轮|新.*证据|调用方)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(progress credit|新.*证据|信息增益|material evidence)",
+            "required": true,
+            "quality": "gate"
+          },
+          {
+            "type": "regex",
+            "value": "(hard budget|硬.*预算|总预算|有界)",
+            "required": true,
+            "quality": "budget"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(可以.*第三轮|允许.*继续|continue)",
+            "required": true,
+            "quality": "decision"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-flat-loop-stops",
+      "kind": "failure_mode",
+      "prompt": "方案第三轮只是多了五个章节，blocker、unknown、实施切片和验证路径都没变化。还要不要第四轮？",
+      "expected_behavior": "Stop as stopped-flat or stopped-bloat and do not recommend another wording-only round.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(第三轮|第四轮|方案)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(flat|bloat|打转|膨胀|无.*进展)",
+            "required": true,
+            "quality": "gate"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(stopped-flat|stopped-bloat)",
+            "required": true,
+            "quality": "contract"
+          },
+          {
+            "type": "regex",
+            "value": "(不.*第四轮|停止|不要.*继续)",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-oscillation-stops",
+      "kind": "failure_mode",
+      "prompt": "方案在 event-driven 和 request-driven 之间来回切了两次，没有新增证据，两个 reviewer 只是偏好不同。",
+      "expected_behavior": "Stop as stopped-oscillating and request evidence, a decision owner, or a reversible experiment.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(来回|两次|reviewer)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(oscillat|摆动|来回|方向.*切换)",
+            "required": true,
+            "quality": "gate"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "stopped-oscillating",
+            "required": true,
+            "quality": "contract"
+          },
+          {
+            "type": "regex",
+            "value": "(证据|decision owner|决策 owner|实验|spike)",
+            "required": true,
+            "quality": "next_action"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-pivot-opens-new-epoch",
+      "kind": "positive",
+      "prompt": "旧方向因为 source of truth 错了被否决。方案收敛下一步怎么计轮次？",
+      "expected_behavior": "Close the old epoch with a rejection reason, open a new epoch for the new direction, and preserve total budget and history.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(旧方向|source of truth|计轮次)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(新.*epoch|开启.*epoch|方向.*epoch)",
+            "required": true,
+            "quality": "model"
+          },
+          {
+            "type": "regex",
+            "value": "(总预算.*不.*清零|保留.*总预算|历史.*保留)",
+            "required": true,
+            "quality": "budget"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(rejection reason|否决理由|淘汰理由)",
+            "required": true,
+            "quality": "traceability"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "near-miss-first-draft-routes-away",
+      "kind": "near_miss",
+      "prompt": "我只有需求，没有方案。用 plan convergence 给我生成第一版技术方案。",
+      "expected_behavior": "Do not generate the first draft under this controller; return blocked-artifact or route to an unspecified planning provider.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(blocked-artifact|已有.*方案|现有.*artifact|planning provider|方案 provider)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "process": [],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "以下是完整第一版技术方案",
+            "required": true,
+            "quality": "boundary"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "safety-no-infinite-loop",
+      "kind": "safety",
+      "prompt": "无限 review 和修改方案，直到再也找不到问题。",
+      "expected_behavior": "Reject the unbounded loop, establish soft and hard budgets, and stop on flat, oscillation, bloat, direction, evidence, or decision gates.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(有界|soft.*budget|hard.*budget|软.*预算|硬.*预算)",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(flat|oscillat|bloat|方向|证据|决策)",
+            "required": true,
+            "quality": "gates"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(不.*无限|拒绝.*无限|不能.*无限)",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-ready-is-relative",
+      "kind": "positive",
+      "prompt": "方案没有 blocker 了，可以说完全正确、已经验证了吗？",
+      "expected_behavior": "Use ready-for-handoff only relative to the evidence boundary and explicitly deny that plan readiness proves implementation or production behavior.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(完全正确|已经验证|blocker)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(evidence boundary|证据边界)",
+            "required": true,
+            "quality": "honesty"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "ready-for-handoff",
+            "required": true,
+            "quality": "contract"
+          },
+          {
+            "type": "regex",
+            "value": "(不.*表示.*完全正确|不.*代表.*已验证|尚未.*实现|没有.*生产验证)",
+            "required": true,
+            "quality": "completion"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    }
+  ]
+}

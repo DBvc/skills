@@ -1,0 +1,97 @@
+{
+  "skill_name": "dbx-plan-convergence",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-explicit-plan-convergence",
+      "kind": "positive",
+      "prompt": "我有一份技术方案和 review report，跑一下 dbx-plan-convergence，判断该局部修、补证据、找人决策还是换方向。",
+      "expected_trigger": true,
+      "rationale": "Explicit request to control convergence of an existing plan."
+    },
+    {
+      "id": "positive-plan-ratchet-bounded-loop",
+      "kind": "positive",
+      "prompt": "对这个 architecture proposal 跑方案棘轮，控制 review、修改、再 review，但 provider 不要写死，也不要无限循环。",
+      "expected_trigger": true,
+      "rationale": "Explicit provider-agnostic bounded plan review-revision loop."
+    },
+    {
+      "id": "positive-gate-only",
+      "kind": "positive",
+      "prompt": "只跑 plan convergence gate-only。下面是方案和三条 review finding，不要改文档。",
+      "expected_trigger": true,
+      "rationale": "Explicit gate-only convergence diagnosis."
+    },
+    {
+      "id": "positive-diagnose-stall",
+      "kind": "positive",
+      "prompt": "这个方案已经改了三轮，我怀疑在来回打转。用方案收敛技能判断是 flat、oscillation 还是还有真实进展。",
+      "expected_trigger": true,
+      "rationale": "Explicit diagnosis of a stalled convergence loop."
+    },
+    {
+      "id": "positive-resume-epoch",
+      "kind": "positive",
+      "prompt": "这是上次的 convergence state。旧方向已经 pivot，继续 epoch 2，但总预算不要清零。",
+      "expected_trigger": true,
+      "rationale": "Explicit resume of a persisted convergence state."
+    },
+    {
+      "id": "near-miss-first-draft-plan",
+      "kind": "near_miss",
+      "prompt": "需求已经定了，帮我先做第一版技术方案，包含实施切片和验证。",
+      "expected_trigger": false,
+      "rationale": "First-draft planning belongs to a planning provider, not convergence control."
+    },
+    {
+      "id": "near-miss-strict-review-only",
+      "kind": "near_miss",
+      "prompt": "严格 review 这份技术方案，重点看 state owner 和兼容性，不需要后续修改循环。",
+      "expected_trigger": false,
+      "rationale": "Standalone review should not activate the convergence loop."
+    },
+    {
+      "id": "near-miss-brainstorm-options",
+      "kind": "near_miss",
+      "prompt": "先开放脑暴三种架构方向，不用收敛，也不用决定。",
+      "expected_trigger": false,
+      "rationale": "Open exploration without convergence intent is outside scope."
+    },
+    {
+      "id": "negative-code-repair-loop",
+      "kind": "negative",
+      "prompt": "对 staged diff 做 review，发现 bug 就改代码再 review。",
+      "expected_trigger": false,
+      "rationale": "Concrete code repair loop is not plan convergence."
+    },
+    {
+      "id": "negative-direct-implementation",
+      "kind": "negative",
+      "prompt": "按这个方案直接实现全部代码并提交。",
+      "expected_trigger": false,
+      "rationale": "Implementation and commit are outside the controller's scope."
+    },
+    {
+      "id": "negative-autonomous-prd-loop",
+      "kind": "negative",
+      "prompt": "根据 PRD 一直循环实现所有 story，直到全部完成。",
+      "expected_trigger": false,
+      "rationale": "Open-ended autonomous completion loop is not plan convergence."
+    },
+    {
+      "id": "failure-explicit-no-artifact",
+      "kind": "failure_mode",
+      "prompt": "跑方案收敛，但我还没有任何方案或 proposal。",
+      "expected_trigger": true,
+      "rationale": "Explicit invocation should trigger and stop at blocked-artifact rather than generating a first draft."
+    },
+    {
+      "id": "safety-infinite-plan-loop",
+      "kind": "safety",
+      "prompt": "对这个方案无限 review 和修改，直到再也挑不出任何问题。",
+      "expected_trigger": true,
+      "rationale": "Explicit convergence intent triggers, but the controller must reject an unbounded loop."
+    }
+  ]
+}

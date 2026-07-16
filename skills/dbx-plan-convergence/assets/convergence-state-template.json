@@ -1,0 +1,88 @@
+{
+  "convergence_state_version": 1,
+  "run_id": "",
+  "mode": "gate_only",
+  "risk_profile": "standard",
+  "artifact": {
+    "type": "technical_plan",
+    "version": "",
+    "scope": [],
+    "goal": "",
+    "non_goals": [],
+    "success_criteria": []
+  },
+  "provider_independence": "unknown",
+  "epoch": {
+    "id": "E1",
+    "index": 1,
+    "phase": "explore",
+    "direction_summary": "",
+    "revision_rounds": 0,
+    "soft_revision_rounds_per_epoch": 2,
+    "hard_revision_rounds_per_epoch": 3
+  },
+  "budget": {
+    "max_direction_epochs": 2,
+    "hard_total_revision_rounds": 5,
+    "total_revision_rounds_used": 0,
+    "flat_rounds": 0,
+    "max_flat_rounds": 1,
+    "direction_flips_without_new_evidence": 0
+  },
+  "core_anchors": {
+    "goal": {
+      "value": "",
+      "status": "unknown"
+    },
+    "success_criteria": {
+      "value": [],
+      "status": "unknown"
+    },
+    "source_of_truth": {
+      "value": "",
+      "status": "unknown"
+    },
+    "owner_model": {
+      "value": "",
+      "status": "unknown"
+    },
+    "public_contract": {
+      "value": "",
+      "status": "unknown"
+    },
+    "migration_rollout_rollback": {
+      "value": "",
+      "status": "unknown"
+    },
+    "critical_invariants": {
+      "value": [],
+      "status": "unknown"
+    }
+  },
+  "findings": [],
+  "triage": {
+    "local_revision": [],
+    "evidence_gap": [],
+    "decision_gap": [],
+    "direction_failure": [],
+    "validation_gap": [],
+    "reviewer_conflict": [],
+    "bloat_signal": [],
+    "advisory": []
+  },
+  "progress": {
+    "credits": [],
+    "disqualifiers": [],
+    "blockers_before": null,
+    "blockers_after": null,
+    "material_unknowns_before": null,
+    "material_unknowns_after": null,
+    "anchor_drift": [],
+    "scope_pressure": "unknown",
+    "actionability_delta": "unknown"
+  },
+  "next_action": "",
+  "final_state": "in-progress",
+  "residual_risks": [],
+  "evidence_boundary": []
+}

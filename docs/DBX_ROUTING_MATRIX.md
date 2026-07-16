@@ -31,6 +31,7 @@ Read it when:
 | Run explicit bounded review-repair-revalidation on concrete code changes | `dbx-code-ratchet` | Read-only review skills or open-ended implementation workflows. |
 | Audit repository/module architecture health, long-term decay, AI-coding operability, or anti-decay roadmap | `dbx-architecture-health` | `dbx-diff-review` for concrete changes; `dbx-technical-plan` for implementation planning; `dbx-linus-review` for strict proposal critique. |
 | Judge architecture plans, data models, over-engineering, or explicit strict technical risk | `dbx-linus-review` | `dbx-diff-review`, unless a concrete diff target must be selected first. |
+| Control a bounded review-revision loop for an existing technical plan, architecture proposal, migration plan, ADR draft, or implementation proposal | `dbx-plan-convergence`, only when explicitly requested | `dbx-technical-plan` for first drafts, `dbx-linus-review` for standalone critique, `dbx-code-ratchet` for code repair, or `dbx-software-plan-first-*` for named phase execution. |
 | Judge product, feature, PRD, UX, IA, content, implementation alignment, roadmap, or competitor correctness | `dbx-product-judgment` | `dbx-diff-review`, unless ordinary code-change review is primary; `dbx-decision-framing`, unless non-product trade-off dominates. |
 | Judge or shape UI, flow, screenshot, prototype, PRD-to-design brief, component, design system, or code-backed interface design | `dbx-design-judgment` | Implementation/frontend coding skills when the user asks to edit files; `dbx-product-judgment` when product viability or business correctness dominates. |
 | Make a high-impact real decision | `dbx-decision-framing` | `dbx-linus-review`, unless code/design evidence dominates. |
@@ -65,6 +66,7 @@ Current graph:
 | `dbx-code-ratchet` composes `dbx-diff-review` and conditionally `dbx-linus-review` | Use only when the user explicitly asks for code ratchet or automatic review-repair-revalidation; it may modify code and must stop on direction failure or diverging risk. |
 | `dbx-architecture-health` hands off to plan/review/repair skills | Use for read-only architecture decay diagnosis and anti-decay roadmap; do not silently switch to implementation planning, concrete diff review, or code changes. |
 | `dbx-linus-review` handles explicit strict critique | Use it when the user asks for Linus-style, harsh, over-engineering, model, or merge/readiness judgment. |
+| `dbx-plan-convergence` controls existing-plan convergence through replaceable providers | Use only after explicit invocation and with an existing proposal plus review/evidence state. It chooses whether to revise locally, gather evidence, request a decision, explore, pivot, finalize, or stop; it does not replace planners, reviewers, evidence providers, revisers, or decision owners. |
 | `dbx-crystallize` precedes judgment/planning/implementation when requirements are fuzzy | Use it to produce a requirement contract before `dbx-product-judgment`, `dbx-design-judgment`, `dbx-technical-plan`, or implementation. Do not use it when the user already asks for a product verdict, design critique, concrete code review, or direct implementation. |
 | `dbx-product-judgment` handles product correctness judgment | Use it when a product artifact, target user/job, evidence boundary, or product decision dominates; route ordinary code diffs to `dbx-diff-review` and non-product trade-offs to `dbx-decision-framing`. |
 | `dbx-design-judgment` handles design correctness and design shaping | Use it when a design surface, task path, IA, visual hierarchy, interaction states, visual system, accessibility, responsive behavior, or design handoff dominates; it may read code as design evidence but must not edit files. |
@@ -99,6 +101,10 @@ If the user asks to review concrete code changes and write PR text, run `dbx-dif
 ### Code ratchet
 
 Use `dbx-code-ratchet` only when the user explicitly asks for code ratchet, 棘轮自修, or automatic review-repair-revalidation on a concrete diff target. It is a bounded modifying workflow: it delegates review to `dbx-diff-review`, invokes `dbx-linus-review` for direction/complexity gates when needed, repairs only accepted local findings, and stops rather than continuing if direction or progress gates fail.
+
+### Plan convergence
+
+Use `dbx-plan-convergence` only when the user explicitly asks to control convergence of an existing technical plan or proposal. It consumes plan, review, evidence, decision, and optional prior-state inputs through provider-agnostic contracts, then selects one bounded next action. Route first-draft plan creation to `dbx-technical-plan`, standalone strict critique to `dbx-linus-review`, concrete code review-repair to `dbx-code-ratchet`, and named Plan-First workflow phases to `dbx-software-plan-first-*`.
 
 ### Architecture health
 
@@ -169,6 +175,8 @@ The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do no
 | “对 staged changes 跑 L2 代码棘轮，明确问题可以自动修，不要 commit。” | `dbx-code-ratchet`. |
 | “帮我对这个仓库做一次架构健康体检，重点看长期腐化和 AI agent 风险。” | `dbx-architecture-health`. |
 | “给 auth/cache 架构问题写具体 implementation plan。” | `dbx-technical-plan`, unless an architecture health audit is explicitly requested first. |
+| “对这份现有方案和 review report 跑方案收敛 gate-only，只判断该局部修、补证据、找人决策还是换方向。” | `dbx-plan-convergence`. |
+| “只有需求，帮我生成第一版技术实施方案。” | `dbx-technical-plan`, not `dbx-plan-convergence`. |
 | “用 Linus 风格严厉判断这个 staged diff 能不能合。” | `dbx-diff-review` to establish target, then `dbx-linus-review`. |
 | “帮我审一下这个架构方案有没有明显问题。” | `dbx-linus-review` if evidence/code/design risk dominates; `dbx-decision-framing` if trade-off dominates. |
 | “这个功能从产品上到底对不对？” | `dbx-product-judgment`. |

@@ -1,0 +1,94 @@
+version: 1
+
+round_definition:
+  initial_review_counts_as_revision_round: false
+  revision_round_requires:
+    - accepted_revision_contract
+    - bounded_artifact_revision
+    - scoped_re_evaluation
+  pivot_opens_new_epoch: true
+  pivot_resets_total_budget: false
+
+profiles:
+  standard:
+    soft_revision_rounds_per_epoch: 2
+    hard_revision_rounds_per_epoch: 3
+    max_direction_epochs: 2
+    hard_total_revision_rounds: 5
+    max_flat_rounds: 1
+    max_same_finding_failed_revisions: 1
+    independent_review_dimensions_min: 1
+    human_checkpoint_on_pivot: false
+    human_approval_before_finalize: false
+
+  high_impact:
+    soft_revision_rounds_per_epoch: 3
+    hard_revision_rounds_per_epoch: 4
+    max_direction_epochs: 2
+    hard_total_revision_rounds: 6
+    max_flat_rounds: 1
+    max_same_finding_failed_revisions: 1
+    independent_review_dimensions_min: 2
+    human_checkpoint_on_pivot: true
+    human_approval_before_finalize: false
+
+  irreversible:
+    soft_revision_rounds_per_epoch: 3
+    hard_revision_rounds_per_epoch: 4
+    max_direction_epochs: 2
+    hard_total_revision_rounds: 6
+    max_flat_rounds: 1
+    max_same_finding_failed_revisions: 1
+    independent_review_dimensions_min: 2
+    human_checkpoint_on_pivot: true
+    human_approval_before_finalize: true
+    rollback_or_containment_required: true
+
+continuation_gate:
+  require_any_progress_credit:
+    - new_material_evidence
+    - material_decision_resolved
+    - blocker_count_or_severity_reduced
+    - implementation_actionability_increased
+    - risk_to_validation_coverage_increased
+    - old_direction_rejected_with_traceable_reason
+  reject_if_any:
+    - new_equal_or_higher_blocker
+    - unapproved_anchor_change_without_new_evidence
+    - same_root_finding_reopened
+    - scope_or_complexity_growth_without_risk_gain
+    - wording_only_revision
+    - direction_flip_without_new_evidence
+    - provider_echo_only
+    - validation_rollout_or_rollback_weakened
+
+soft_budget_policy:
+  action_at_soft_budget: run_progress_and_phase_gate
+  continue_only_if_progress_gate_passes: true
+  require_explicit_reason: true
+
+hard_budget_policy:
+  stop_state: stopped-budget
+  override_requires:
+    - explicit_user_request
+    - new_bounded_budget
+    - previous_round_progress_gate_passed
+    - no_oscillation_or_bloat
+  unlimited_override_allowed: false
+
+re_review:
+  default_scope:
+    - accepted_findings
+    - direct_regressions
+    - core_anchor_drift
+    - evidence_boundary_drift
+    - scope_and_bloat
+  full_review_after_each_revision: false
+
+side_effects:
+  may_modify_plan_text_in_bounded_loop: true
+  may_modify_code: false
+  may_commit: false
+  may_push: false
+  may_execute_migration: false
+  may_change_external_systems: false
