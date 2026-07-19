@@ -44,6 +44,7 @@ review_pass:
     - direction_model_ownership
   scope:
     kind: full | scoped
+    contract_id: null | string
     accepted_finding_ids: []
     check_direct_regressions: false
     check_anchor_drift: false
@@ -170,7 +171,7 @@ A single reviewer may cover multiple dimensions. Multiple reviewers repeating th
 
 ## 8. Scoped re-review
 
-A scoped review must bind to the revised artifact and reference the revision contract:
+A scoped review must bind to the revised artifact and reference the revision contract. `scope.contract_id` is required when `kind: scoped`. For a full review it may be omitted or `null`; the blank template serializes it as `null`:
 
 ```yaml
 review_pass:

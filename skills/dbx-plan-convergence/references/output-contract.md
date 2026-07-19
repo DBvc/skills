@@ -1,5 +1,7 @@
 # Output Contract Examples
 
+Compact output always includes transition, core judgment, next-step contract, evidence boundary, and residual risks. Include a blocker/gap section only when it is non-empty.
+
 ## 1. Compact local revision
 
 ```markdown
@@ -49,7 +51,7 @@ Transition:
 - 方案假设现有 token cache 由 request scope 管理，但当前没有仓库证据。
 - 该事实会决定是局部修复还是重做 owner 模型。
 
-非空 blocker / gap：
+Blocker / gap：
 - evidence_gap: 查明 cache 创建位置、生命周期、logout/user-switch 行为和相关测试。
 
 下一步合同：

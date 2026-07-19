@@ -1,4 +1,4 @@
-version: 2
+version: 3
 
 activation:
   allow_direct_explicit: true
@@ -209,6 +209,7 @@ re_review:
     - scope_and_bloat
   full_review_after_each_revision: false
   must_bind_to_revised_artifact: true
+  scoped_contract_id_required: true
 
 output_policy:
   default_mode:
@@ -220,10 +221,13 @@ output_policy:
   compact_must_include:
     - transition
     - core_judgment
-    - non_empty_blockers_or_gaps
     - next_step_contract
     - evidence_boundary
     - residual_risks
+  compact_include_when_present:
+    - blockers_or_gaps
+    - abnormal_stop_reason
+    - unresolved_decision
   diagnostic_adds:
     - review_provenance
     - full_triage

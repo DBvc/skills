@@ -115,7 +115,7 @@ delegation:
 - full 或 scoped review 范围；
 - findings。
 
-Finding 必须记录 `source_review_id`。详见 `references/provider-protocol.md`。
+Finding 必须记录 `source_review_id`。Scoped re-review 还必须绑定产生该修订的 revision contract id；full review 不需要 contract id，序列化模板使用 `null`。详见 `references/provider-protocol.md`。
 
 如果 review 明确针对旧版本，且无法证明相关内容未变，不得把 finding 自动应用到新版本。应返回 `needs-review`。
 
@@ -411,9 +411,6 @@ Transition:
 核心判断：
 - ...
 
-非空 blocker / gap：
-- ...
-
 下一步合同：
 - owner/provider role: ...
 - allowed: ...
@@ -421,6 +418,13 @@ Transition:
 - stop_if: ...
 
 证据边界与剩余风险：
+- ...
+```
+
+存在 blocker 或 gap 时增加：
+
+```markdown
+Blocker / gap：
 - ...
 ```
 

@@ -1,6 +1,6 @@
 {
   "skill_name": "dbx-plan-convergence",
-  "version": "2.0",
+  "version": "3.0",
   "purpose": "Manual or agent trajectory evals for multi-step convergence behavior. These are not regex-only output checks.",
   "trajectories": [
     {
@@ -15,7 +15,7 @@
         "emit revise-local with final_state null",
         "issue a bounded revision contract",
         "produce plan v2",
-        "run R2 scoped review against v2",
+        "run R2 scoped review against v2 and bind it to the revision contract with scope.contract_id",
         "close F-001 without anchor drift",
         "pass progress gate",
         "emit finalize and ready-for-handoff"
@@ -24,7 +24,8 @@
         "full review is reopened without cause",
         "R2 reviews v1",
         "final_state uses in-progress",
-        "empty triage categories dominate output"
+        "empty triage categories dominate output",
+        "R2 omits the revision contract id"
       ]
     },
     {

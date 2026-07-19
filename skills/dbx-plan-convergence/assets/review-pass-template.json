@@ -5,12 +5,13 @@
     "artifact_fingerprint": "",
     "provider": {
       "id": "",
-      "type": "human",
+      "type": "unknown",
       "independence": "unknown"
     },
     "dimensions": [],
     "scope": {
       "kind": "full",
+      "contract_id": null,
       "accepted_finding_ids": [],
       "check_direct_regressions": false,
       "check_anchor_drift": false,

@@ -949,7 +949,7 @@
       "id": "positive-compact-bounded-output",
       "kind": "positive",
       "prompt": "bounded_loop 已完成一轮 local revision 和 scoped re-review，现在 ready。用默认输出，不要展开所有空 triage。",
-      "expected_behavior": "Use compact output with transition, key convergence, loop counts, evidence boundary, and residual risks; omit empty categories.",
+      "expected_behavior": "Use compact output with transition, key convergence, loop counts, evidence boundary, and residual risks; omit empty categories and do not render a blocker/gap section when none exists.",
       "checks": {
         "trigger": [
           {
@@ -985,6 +985,18 @@
             "value": "(剩余风险|residual risk)",
             "required": true,
             "quality": "risk"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "非空 blocker / gap：",
+            "required": true,
+            "quality": "conditional_section"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "Blocker / gap：",
+            "required": true,
+            "quality": "conditional_section"
           }
         ],
         "safety": []
@@ -1048,7 +1060,99 @@
         "all_required": true,
         "min_score": 0.85
       }
+    },
+    {
+      "id": "positive-scoped-review-binds-revision-contract",
+      "kind": "positive",
+      "prompt": "为 plan v2 生成一次 scoped re-review envelope。它只验证 RC-E1-R1 接受的 F-001、直接回归和 anchor drift。",
+      "expected_behavior": "Bind the scoped review to artifact v2 and include scope.contract_id RC-E1-R1 rather than relying only on accepted finding ids.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(scoped re-review|RC-E1-R1|plan v2)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(revision contract|contract_id|修订合同)",
+            "required": true,
+            "quality": "provenance"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "contract_id",
+            "required": true,
+            "quality": "contract_binding"
+          },
+          {
+            "type": "must_contain",
+            "value": "RC-E1-R1",
+            "required": true,
+            "quality": "contract_binding"
+          },
+          {
+            "type": "regex",
+            "value": "(artifact_version|artifact version)[\\s\\S]{0,80}v2",
+            "required": true,
+            "quality": "artifact_identity"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-unbound-review-provider-is-unknown",
+      "kind": "failure_mode",
+      "prompt": "生成一个尚未绑定 reviewer 的空白 review-pass skeleton。不要猜 reviewer 是人类、agent 还是 skill。",
+      "expected_behavior": "Use provider.type unknown for an unbound provider and do not default the blank template to human.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(review-pass|reviewer|空白)",
+            "required": true,
+            "quality": "intent"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(unknown|未知|不.*猜)",
+            "required": true,
+            "quality": "epistemic_boundary"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(type[\\\"\\s:]+unknown|type:\\s*unknown)",
+            "required": true,
+            "quality": "neutral_default"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "\"type\": \"human\"",
+            "required": true,
+            "quality": "no_false_provenance"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
     }
   ],
-  "version": "2.0"
+  "version": "3.0"
 }

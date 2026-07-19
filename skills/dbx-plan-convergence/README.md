@@ -11,7 +11,16 @@ Explicit-only、provider-agnostic 的技术方案收敛控制器。
 - 何时可以 handoff，何时只是文档变胖；
 - 高影响方案如何提高严谨度，而不是盲目增加相同轮数。
 
-## v2 highlights
+## v3 status
+
+v3 冻结 v2 的 controller kernel，不增加新状态或新执行能力，只修复接口一致性：
+
+- compact 输出只在 blocker / gap 实际存在时展示该部分；
+- scoped re-review envelope 显式携带 revision `contract_id`；
+- 未绑定 reviewer 的空白模板使用 `provider.type: unknown`，不再默认声称来自人类；
+- `convergence_state_version` 仍为 `2`，现有 v2 state 无需迁移。
+
+## v2 foundation
 
 - 分离 `next_action` 与 `final_state`，移除把 `in-progress` 当终态的歧义。
 - 所有 review pass 绑定 artifact version/fingerprint，并记录 per-review independence。
