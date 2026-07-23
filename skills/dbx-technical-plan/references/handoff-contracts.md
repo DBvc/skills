@@ -47,6 +47,73 @@ linus_review_handoff:
 
 Ask the reviewer to judge whether the plan is real simplification or abstraction fog.
 
+## Handoff to `dbx-plan-convergence`
+
+Use when a generated technical plan is intended to guide implementation and should receive bounded convergence before coding.
+
+```yaml
+plan_convergence_handoff:
+  status: needs_plan_convergence
+  originating_intent: ""
+  artifact:
+    type: technical_plan | architecture_proposal | migration_plan | implementation_proposal
+    version: session-v1
+    fingerprint: null
+    content_ref: inline | path | current_response
+  scope: []
+  goal: ""
+  non_goals: []
+  success_criteria: []
+  evidence_boundary:
+    repo_facts_read: []
+    user_supplied_facts: []
+    external_docs_or_versions: []
+    assumptions: []
+    unknowns: []
+    not_read_or_not_run: []
+  core_anchors:
+    problem_goal: stable | unknown | conflicted | not_applicable
+    source_of_truth: stable | unknown | conflicted | not_applicable
+    state_or_data_owner: stable | unknown | conflicted | not_applicable
+    public_contract: stable | unknown | conflicted | not_applicable
+    migration_rollout_boundary: stable | unknown | conflicted | not_applicable
+    critical_invariants: stable | unknown | conflicted | not_applicable
+  risk_profile: standard | high_impact | irreversible
+  reviewer_requirements:
+    initial_scope: full
+    dimensions: []
+    independence_required: none | preferred | required
+  provider_requirements:
+    reviewer_role: strict_pragmatic_plan_reviewer
+    reviser_role: original_plan_author
+  budget:
+    full_review_passes: 1
+    local_revision_rounds: 1
+    scoped_re_review_passes: 1
+  modification_authority: plan_text_only
+  may_modify_code: false
+  stop_on:
+    - needs-artifact
+    - needs-review
+    - needs-evidence
+    - needs-decision
+    - needs-alternatives
+    - pivot-required
+    - blocked-state-mismatch
+    - blocked-insufficient-history
+    - stopped-flat
+    - stopped-oscillating
+    - stopped-bloat
+    - stopped-budget
+```
+
+Rules:
+
+- `session-v1` is acceptable for same-session inline composition. Resume, persistence, multiple artifact versions, or multiple reviewers require an explicit version and preferably a fingerprint.
+- The handoff specifies reviewer capabilities and dimensions. The DBX collection profile binds `dbx-linus-review`; the generic controller remains provider-agnostic.
+- This handoff does not authorize code modification.
+- Do not populate anchors that are not applicable merely to satisfy the template.
+
 ## Handoff to `dbx-diff-review`
 
 Use when a concrete implementation exists.

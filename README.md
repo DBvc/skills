@@ -38,7 +38,7 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-subagent-context`](skills/dbx-subagent-context/) | Codex subagent 上下文继承策略。Set Codex subagent context inheritance strategy. |
 | [`dbx-goal-writer`](skills/dbx-goal-writer/) | Codex goal 合同生成、启动与审计。Create, start, and audit Codex goal contracts. |
 | [`dbx-agent-handoff`](skills/dbx-agent-handoff/) | AI agent/session 续跑交接包生成。Create restart handoffs for future AI sessions. |
-| [`dbx-software-plan-first-plan-issue`](skills/dbx-software-plan-first-plan-issue/) | 手动触发的软件 Plan-First 对话收敛阶段：不读仓库、不写计划文件、不实现代码。Manual-only plan convergence phase. |
+| [`dbx-software-plan-first-plan-issue`](skills/dbx-software-plan-first-plan-issue/) | 手动触发的软件 Plan-First proposal shaping 阶段：不读仓库、不写计划文件、不实现代码。Manual-only proposal-shaping phase. |
 | [`dbx-software-plan-first-ground-plan`](skills/dbx-software-plan-first-ground-plan/) | 手动触发的软件 Plan-First 只读 grounding 阶段：确认仓库事实、规则、source of truth 和验证模型。Manual-only read-only grounding phase. |
 | [`dbx-software-plan-first-finalize-plan`](skills/dbx-software-plan-first-finalize-plan/) | 手动触发的软件 Plan-First 定稿阶段：写入中文 `plan.md` / `tasks.md` 并建立 workflow seal。Manual-only plan finalization phase. |
 | [`dbx-software-plan-first-implement-feature`](skills/dbx-software-plan-first-implement-feature/) | 手动触发的软件 Plan-First 单任务实现阶段：只做第一个未完成 task，验证后等待 review。Manual-only review-gated implementation phase. |
@@ -58,6 +58,7 @@ Start here when creating or changing a skill:
 - [`docs/DBX_PLACEMENT_GUIDE.md`](docs/DBX_PLACEMENT_GUIDE.md): how to decide whether a control belongs in a skill, script, reference, command, hook, repo memory, or collection routing.
 - [`docs/DBX_COLLECTION_DESIGN.md`](docs/DBX_COLLECTION_DESIGN.md): collection-level routing, skill graph, conflicts, installation scope, safety, and deprecation.
 - [`docs/DBX_ROUTING_MATRIX.md`](docs/DBX_ROUTING_MATRIX.md): conflict resolution and chaining rules across DBX skills.
+- [`docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md`](docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md): implementation-bound technical planning 的默认 provider binding、plan convergence、Plan-First pre-seal gate 和未来 Auto 边界。
 - [`docs/DBX_EVAL_GUIDE.md`](docs/DBX_EVAL_GUIDE.md): trigger, process, output, safety, regression, and collection-level evals.
 - [`docs/DBX_STATEFUL_SKILLS.md`](docs/DBX_STATEFUL_SKILLS.md): state contracts for project memory, bootstrap, workflow state, and interaction modes.
 - [`docs/DBX_HOST_ARTIFACTS.md`](docs/DBX_HOST_ARTIFACTS.md): commands, hooks, `AGENTS.md`, `CLAUDE.md`, `llms.txt`, status lines, planning files, and portability rules.

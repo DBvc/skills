@@ -39,7 +39,8 @@ Use this skill before implementation when the user wants a technical execution p
 - Use `dbx-decision-framing` first when the real task is go/no-go, option selection, prioritization, or whether to invest in a direction.
 - Use `dbx-product-judgment` when the central question is product correctness, value, IA, roadmap, or feature fit.
 - Use `dbx-design-judgment` when the central question is UI, flow, visual hierarchy, interaction design, or design-system fit.
-- Use `dbx-linus-review` when the user already has a plan/proposal and wants strict pragmatic critique of whether it is over-engineered, badly modeled, or merge-risky.
+- Use `dbx-plan-convergence` when an implementation-bound technical plan should undergo a bounded review-revision-scoped-re-review loop before implementation.
+- Use `dbx-linus-review` directly when the user already has a plan/proposal and wants standalone one-pass strict pragmatic critique. In the DBX implementation-bound planning profile, it is normally bound as a reviewer provider through `dbx-plan-convergence`, not used as the convergence controller.
 - Use `dbx-diff-review` when there is a concrete PR, diff, commit, staged change, working tree change, or selected file change to review.
 - Use `dbx-code-ratchet` only when the user explicitly asks for bounded review-repair-revalidation and code modification is allowed.
 - Use `dbx-software-plan-first-*` when the user explicitly wants the stateful plan-first phase chain with `plan.md`, `tasks.md`, and a workflow seal.
@@ -142,7 +143,7 @@ Run this workflow in order.
 7. **Run adversarial plan check**: try to break the plan using `references/adversarial-plan-check.md`.
 8. **Slice implementation**: produce bounded tasks with allowed scope, forbidden scope, dependencies, invariant, validation, review focus, and stop condition.
 9. **Define validation model**: map each important invariant or risk to automated, manual, review-only, or currently uncovered validation.
-10. **Prepare handoff**: state whether the plan is ready for implementation, needs grounding, needs decision, should go to strict review, or should be promoted to plan-first workflow.
+10. **Prepare handoff**: state whether the plan artifact is ready for downstream convergence, needs grounding, needs a decision, can proceed directly only by explicit policy, or should be promoted to Plan-First. An implementation-bound plan is not automatically implementation-ready merely because the planning artifact is complete.
 
 ## Plan shape selection
 
@@ -227,6 +228,7 @@ Use for `quick_plan`.
 ```markdown
 ## 快速技术计划
 - 状态：ready / needs-grounding / needs-decision / blocked
+- 下一门禁：dbx-plan-convergence / implementation-by-explicit-policy / none
 - 推荐路径：
 - 关键假设：
 - 最高风险：
@@ -245,6 +247,7 @@ Use for normal `grounded_plan`, `bug_fix_strategy`, `validation_plan`, and moder
 ```markdown
 ## 技术计划结论
 - 状态：ready / needs-grounding / needs-decision / blocked
+- 下一门禁：dbx-plan-convergence / implementation-by-explicit-policy / dbx-software-plan-first-* / none
 - 推荐方向：
 - 最高风险：
 - 不建议直接做的事：
@@ -291,7 +294,7 @@ Use for normal `grounded_plan`, `bug_fix_strategy`, `validation_plan`, and moder
 
 ## Handoff
 - 下一步建议：
-- 可交给：implementation / dbx-linus-review / dbx-software-plan-first-* / dbx-diff-review / dbx-code-ratchet
+- 可交给：dbx-plan-convergence / implementation-by-explicit-policy / dbx-linus-review / dbx-software-plan-first-* / dbx-diff-review / dbx-code-ratchet
 - Handoff contract:
 ```
 
@@ -340,7 +343,9 @@ Use `references/handoff-contracts.md`.
 
 Default handoff decisions:
 
-- If the plan changes architecture, state owner, data model, public API, cache lifetime, compatibility, or migration strategy, recommend `dbx-linus-review` before implementation.
+- If the generated plan is intended to guide implementation, hand off to `dbx-plan-convergence` unless the user or an authorized parent workflow explicitly selects a direct low-risk policy or supplies a current convergence `ready-for-handoff` result.
+- In the DBX implementation-bound planning profile, bind `dbx-linus-review` as the initial strict reviewer through the collection workflow. Do not make `dbx-technical-plan` run or emulate the reviewer.
+- Use `dbx-linus-review` directly for standalone one-pass critique when no convergence loop is requested.
 - If the user wants a formal persistent workflow, promote to `dbx-software-plan-first-plan-issue` or `dbx-software-plan-first-ground-plan` rather than writing ad hoc state.
 - If a concrete diff already exists, hand off to `dbx-diff-review` instead of continuing plan speculation.
 - If the plan is implemented and bounded review-repair is explicitly requested, hand off to `dbx-code-ratchet`.
@@ -357,6 +362,8 @@ You may say the plan is ready only when:
 - validation is mapped to important risks and invariants;
 - adversarial check did not reveal an unresolved blocker;
 - handoff and stop conditions are clear.
+
+“Plan is ready” means the planning artifact is complete enough for its declared next gate. It does not mean implementation may begin when the output declares `下一门禁: dbx-plan-convergence`. Only `dbx-plan-convergence` may produce `ready-for-handoff`.
 
 You may not say the plan is safe, verified, tested, green, or repo-grounded unless the relevant evidence exists in the current session.
 

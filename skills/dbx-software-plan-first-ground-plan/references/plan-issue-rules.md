@@ -1,6 +1,6 @@
 # Plan Issue 规则
 
-`plan-issue` 是对话收敛阶段，不是仓库探索阶段，也不是写文件阶段。
+`plan-issue` 是 proposal shaping 阶段，不是 `dbx-plan-convergence` controller、仓库探索阶段或写文件阶段。
 
 ## 禁止事项
 

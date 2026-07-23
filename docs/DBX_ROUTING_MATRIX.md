@@ -32,6 +32,7 @@ Read it when:
 | Audit repository/module architecture health, long-term decay, AI-coding operability, or anti-decay roadmap | `dbx-architecture-health` | `dbx-diff-review` for concrete changes; `dbx-technical-plan` for implementation planning; `dbx-linus-review` for strict proposal critique. |
 | Judge architecture plans, data models, over-engineering, or explicit strict technical risk | `dbx-linus-review` | `dbx-diff-review`, unless a concrete diff target must be selected first. |
 | Control a bounded review-revision loop for an existing technical plan, architecture proposal, migration plan, ADR draft, or implementation proposal | `dbx-plan-convergence`, when directly requested or explicitly delegated by an already user-authorized parent workflow | `dbx-technical-plan` for first drafts, `dbx-linus-review` for standalone critique, `dbx-code-ratchet` for code repair, or `dbx-software-plan-first-*` for named phase execution. |
+| Create and converge an implementation-bound technical plan before coding | `dbx-technical-plan` -> `dbx-plan-convergence`, with `dbx-linus-review` as the DBX default strict reviewer provider | A second controller, direct Linus as the convergence owner, or Plan-First phases unless explicitly selected. |
 | Judge product, feature, PRD, UX, IA, content, implementation alignment, roadmap, or competitor correctness | `dbx-product-judgment` | `dbx-diff-review`, unless ordinary code-change review is primary; `dbx-decision-framing`, unless non-product trade-off dominates. |
 | Judge or shape UI, flow, screenshot, prototype, PRD-to-design brief, component, design system, or code-backed interface design | `dbx-design-judgment` | Implementation/frontend coding skills when the user asks to edit files; `dbx-product-judgment` when product viability or business correctness dominates. |
 | Make a high-impact real decision | `dbx-decision-framing` | `dbx-linus-review`, unless code/design evidence dominates. |
@@ -67,6 +68,8 @@ Current graph:
 | `dbx-architecture-health` hands off to plan/review/repair skills | Use for read-only architecture decay diagnosis and anti-decay roadmap; do not silently switch to implementation planning, concrete diff review, or code changes. |
 | `dbx-linus-review` handles explicit strict critique | Use it when the user asks for Linus-style, harsh, over-engineering, model, or merge/readiness judgment. |
 | `dbx-plan-convergence` controls existing-plan convergence through replaceable providers | Use after direct explicit invocation or explicit delegation from an already user-authorized parent workflow with artifact, scope, provider bindings, budget, and modification authority. Bind review passes to artifact identity, choose one transition, and hand evidence, decisions, alternatives, or pivots to external providers. |
+| `dbx-technical-plan` hands implementation-bound plans to `dbx-plan-convergence` | The planner produces the artifact and next-gate handoff; it does not run or emulate the reviewer and does not claim convergence completion. |
+| `dbx-linus-review` is the DBX default strict reviewer provider for implementation-bound planning | The collection binding supplies read-only full/scoped review; `dbx-plan-convergence` remains provider-agnostic and owns transitions. |
 | `dbx-crystallize` precedes judgment/planning/implementation when requirements are fuzzy | Use it to produce a requirement contract before `dbx-product-judgment`, `dbx-design-judgment`, `dbx-technical-plan`, or implementation. Do not use it when the user already asks for a product verdict, design critique, concrete code review, or direct implementation. |
 | `dbx-product-judgment` handles product correctness judgment | Use it when a product artifact, target user/job, evidence boundary, or product decision dominates; route ordinary code diffs to `dbx-diff-review` and non-product trade-offs to `dbx-decision-framing`. |
 | `dbx-design-judgment` handles design correctness and design shaping | Use it when a design surface, task path, IA, visual hierarchy, interaction states, visual system, accessibility, responsive behavior, or design handoff dominates; it may read code as design evidence but must not edit files. |
@@ -87,8 +90,9 @@ Current graph:
 | `dbx-conversation-align` competes with `dbx-decision-framing` | Communication wording vs real-world trade-off. |
 | `dbx-open-source-commit-pr` competes with `dbx-work-commit-pr` | Public OSS artifact vs internal work artifact. |
 | `dbx-write` competes with artifact-specific writing and judgment skills | Use it only when the dominant artifact is viewpoint-driven prose; route commit/PR text, product/design correctness, interpersonal message strategy, technical planning, code review, and plain summarization away. |
-| `dbx-software-plan-first-plan-issue` handoff to `dbx-software-plan-first-ground-plan` | Use only after explicit invocation and only when repository facts are needed before finalizing a plan. |
-| `dbx-software-plan-first-ground-plan` handoff to `dbx-software-plan-first-finalize-plan` | Grounding output supplies verified facts, source-of-truth boundaries, and validation candidates for plan finalization. |
+| `dbx-software-plan-first-plan-issue` shapes a proposal and selects a handoff | Use only after explicit invocation; hand off to grounding when repository facts are needed, to external convergence when the parent profile selects it, or to direct/manual finalize when convergence is already confirmed. |
+| `dbx-software-plan-first-ground-plan` hands off by parent policy | Grounding supplies verified facts, source-of-truth boundaries, proposal identity, and validation candidates to external convergence or finalize. |
+| `dbx-plan-convergence` may be an external Plan-First pre-seal gate | Only when explicitly selected by the user or an authorized parent workflow; it is not a new Plan-First phase. |
 | `dbx-software-plan-first-finalize-plan` precedes `dbx-software-plan-first-implement-feature` | A sealed `plan.md` / `tasks.md` workflow is required before review-gated implementation. |
 | `dbx-software-plan-first-showhand` is the gated automation variant | It may continue across tasks only when decision completeness, grounding, validation, source-of-truth, and worktree-safety gates pass. |
 
@@ -105,6 +109,15 @@ Use `dbx-code-ratchet` only when the user explicitly asks for code ratchet, 棘�
 ### Plan convergence
 
 Use `dbx-plan-convergence` when the user directly asks to control convergence of an existing technical plan or proposal, or when an already user-authorized parent workflow explicitly delegates that convergence step with artifact, scope, provider bindings, budget, and modification authority. It binds reviews to artifact versions, selects one `next_action` plus a distinct `final_state`, and pauses for external evidence, decisions, alternatives, or pivots. Route first-draft plan creation to `dbx-technical-plan`, standalone strict critique to `dbx-linus-review`, concrete code review-repair to `dbx-code-ratchet`, and named Plan-First workflow phases to `dbx-software-plan-first-*`.
+
+### Implementation-bound planning
+
+- No technical plan: no plan convergence.
+- Implementation-bound technical plan: one bounded Linus-driven convergence by default.
+- Standalone strict critique: use `dbx-linus-review` directly.
+- Existing-plan convergence: use `dbx-plan-convergence` directly or by explicit delegation from an authorized parent.
+- Default budget: one full review, one local plan-text revision, and one scoped re-review.
+- Reviewer findings do not authorize plan/code modification or decide convergence transitions.
 
 ### Architecture health
 
@@ -164,7 +177,17 @@ If the task depends on Codex `/goal`, subagents, or `fork_context`, consult `doc
 
 ### Software Plan-First phases
 
-The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do not infer them from phrases like "先计划", "plan-first", "读一下仓库", "按 tasks.md 做", or "一路做完" unless the user explicitly names the DBX-prefixed skill. When invoked, preserve the phase order: plan issue -> ground plan -> finalize plan -> implement feature, with showhand only as a stricter automation path.
+The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do not infer them from phrases like "先计划", "plan-first", "读一下仓库", "按 tasks.md 做", or "一路做完" unless the user explicitly names the DBX-prefixed skill. When invoked, preserve the phase order:
+
+```text
+plan issue
+-> ground plan (when needed)
+-> [external dbx-plan-convergence, only when explicitly selected]
+-> finalize plan
+-> implement feature
+```
+
+The external gate is not a Plan-First phase. Direct/manual finalize remains available when the user confirms convergence and every existing evidence gate is satisfied. Showhand remains the stricter automation path.
 
 ## 4. Near-Miss Examples
 
@@ -175,6 +198,7 @@ The `dbx-software-plan-first-*` skills are manual-only and phase-specific. Do no
 | “对 staged changes 跑 L2 代码棘轮，明确问题可以自动修，不要 commit。” | `dbx-code-ratchet`. |
 | “帮我对这个仓库做一次架构健康体检，重点看长期腐化和 AI agent 风险。” | `dbx-architecture-health`. |
 | “给 auth/cache 架构问题写具体 implementation plan。” | `dbx-technical-plan`, unless an architecture health audit is explicitly requested first. |
+| “先给技术计划，并在开始实现前自动做一次 Linus 方案棘轮。” | `dbx-technical-plan` -> `dbx-plan-convergence`, with `dbx-linus-review` as the strict reviewer provider. |
 | “对这份现有方案和 review report 跑方案收敛 gate-only，只判断该局部修、补证据、找人决策还是换方向。” | `dbx-plan-convergence`. |
 | “父 workflow 已获用户授权执行有界方案收敛；现在携带 artifact、scope、provider bindings、预算和方案文本修改权限显式委托 convergence。” | `dbx-plan-convergence`. |
 | “自动帮我做方案、review、实现和提交，流程你自己决定。” | Direct orchestration, not `dbx-plan-convergence` without explicit convergence delegation. |

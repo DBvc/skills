@@ -263,6 +263,59 @@ def validate_evals_json(report: SkillReport, path: Path) -> None:
         issue(report, "warning", path, "Output evals should include near_miss, failure_mode, or safety cases.")
 
 
+def validate_trajectories_json(report: SkillReport, path: Path) -> None:
+    data, error = read_json(path)
+    if error:
+        issue(report, "error", path, f"Invalid JSON: {error}")
+        return
+    if not isinstance(data, dict):
+        issue(report, "error", path, "trajectories.json must be a JSON object.")
+        return
+    if data.get("skill_name") and data.get("skill_name") != report.name:
+        issue(report, "warning", path, f"skill_name is '{data.get('skill_name')}', expected '{report.name}'.")
+    trajectories = data.get("trajectories")
+    if not isinstance(trajectories, list) or not trajectories:
+        issue(report, "warning", path, "trajectories.json should contain a non-empty trajectories array.")
+        return
+
+    seen_ids: set[str] = set()
+    for idx, item in enumerate(trajectories):
+        item_path = f"{path}#{idx}"
+        if not isinstance(item, dict):
+            issue(report, "error", path, f"Trajectory {idx} must be an object.")
+            continue
+        trajectory_id = item.get("id")
+        if not isinstance(trajectory_id, str) or not trajectory_id.strip():
+            issue(report, "error", path, f"{item_path}: missing non-empty id.")
+        elif trajectory_id in seen_ids:
+            issue(report, "error", path, f"{item_path}: duplicate id '{trajectory_id}'.")
+        else:
+            seen_ids.add(trajectory_id)
+
+        if not isinstance(item.get("initial"), dict):
+            issue(report, "error", path, f"{item_path}: initial must be an object.")
+
+        expected_steps = item.get("expected_steps")
+        if not isinstance(expected_steps, list) or len(expected_steps) < 2 or not all(
+            isinstance(step, str) and step.strip() for step in expected_steps
+        ):
+            issue(report, "error", path, f"{item_path}: expected_steps must contain at least two non-empty strings.")
+
+        failure_signals = item.get("failure_signals")
+        if not isinstance(failure_signals, list) or not failure_signals or not all(
+            isinstance(signal, str) and signal.strip() for signal in failure_signals
+        ):
+            issue(report, "error", path, f"{item_path}: failure_signals must contain non-empty strings.")
+
+        history = item.get("history")
+        if history is not None and not isinstance(history, (list, dict)):
+            issue(report, "error", path, f"{item_path}: history must be a list or object if present.")
+
+        mutation = item.get("mutation")
+        if mutation is not None and not isinstance(mutation, (str, dict)):
+            issue(report, "error", path, f"{item_path}: mutation must be a string or object if present.")
+
+
 def validate_skill(skill_dir: Path, root: Path) -> SkillReport:
     report = SkillReport(name=skill_dir.name, path=str(skill_dir.relative_to(root)))
     skill_md = skill_dir / "SKILL.md"
@@ -293,6 +346,7 @@ def validate_skill(skill_dir: Path, root: Path) -> SkillReport:
     if evals_dir.exists():
         triggers = evals_dir / "triggers.json"
         evals = evals_dir / "evals.json"
+        trajectories = evals_dir / "trajectories.json"
         if triggers.exists():
             validate_triggers_json(report, triggers)
         else:
@@ -301,6 +355,8 @@ def validate_skill(skill_dir: Path, root: Path) -> SkillReport:
             validate_evals_json(report, evals)
         else:
             issue(report, "warning", evals, "Missing output evals. Add evals/evals.json for serious skills.")
+        if trajectories.exists():
+            validate_trajectories_json(report, trajectories)
     else:
         issue(report, "warning", evals_dir, "Missing evals directory. Simple skills may accept this, but serious skills need evals.")
 

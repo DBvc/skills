@@ -2,9 +2,12 @@
 
 本工作流的门控顺序固定，但入口按已满足的证据门选择。不要把它理解成每次都必须从 `plan-issue` 跑满到 `implement-feature`。
 
+DBX implementation-bound planning profile 可以在 grounding 与 finalize 之间插入 external `dbx-plan-convergence` gate。该 gate 不是 Plan-First phase，不改变 phase skill 的 manual-only activation，也不改变 seal、implement 或 showhand 语义。
+
 ```text
 dbx-software-plan-first-plan-issue（仅当决策未收敛）
   -> dbx-software-plan-first-ground-plan（仅当需要仓库事实）
+  -> [external dbx-plan-convergence，只有父 workflow/用户显式选择时]
   -> dbx-software-plan-first-finalize-plan（需要完整决策和必要证据）
   -> dbx-software-plan-first-implement-feature（需要 sealed plan/tasks）
   -> dbx-software-plan-first-showhand（只在适合自动化时使用）
@@ -16,11 +19,13 @@ dbx-software-plan-first-plan-issue（仅当决策未收敛）
 | --- | --- | --- |
 | `plan-issue` | Goal、Scope、Approach、Validation、Plan Strategy、Impact Profile 或 Impact Boundary 尚未收敛，需要先在对话中定边界 | 用户要求读仓库、写文件、seal 或实现；本阶段只能输出 `clarifying`、`blocked` 或 `proposal-ready` |
 | `ground-plan` | 计划或用户输入需要仓库事实来确认路径、项目规则、source of truth、契约、验证命令、ownership 或 protected/generated 区域 | 用户要求在 grounding 阶段写计划文件或实现代码；只输出 `grounding-handoff` |
-| `finalize-plan` | Mandatory Decision Gate 已完整，且所有会影响计划的仓库事实已由 grounding、当前上下文或用户确认支持 | 缺少验证、source of truth、artifact/evidence boundary、产物归属或项目事实；先回到 `plan-issue` 或 `ground-plan` |
+| `finalize-plan` | Mandatory Decision Gate 已完整，且所有会影响计划的仓库事实已由 grounding、当前上下文或用户确认支持；implementation-bound profile 下还必须有匹配 current artifact 的 `ready-for-handoff` | 缺少验证、source of truth、artifact/evidence boundary、产物归属或项目事实；selected profile 的 receipt 缺失、stale 或 identity mismatch；先回到 `plan-issue`、`ground-plan` 或 external `dbx-plan-convergence` |
 | `implement-feature` | 已有 sealed `plan.md` / `tasks.md`，workflow status/next 指向第一个未完成 task，工作区安全 | 没有 seal、seal hash 不一致、计划假设错误、验证模型不适用、scope 需要扩大或用户改动不明 |
 | `showhand` | `implement-feature` 的所有前提成立，且 showhand 条件全部满足 | 需要主观判断、高风险写入、外部副作用、source of truth 缺失或工作区不安全 |
 
 入口可以跳过已经满足的上游阶段，但不能跳过对应证据门：决策未完整不能 finalize；需要仓库事实但未确认不能 seal；没有 sealed task 不能 implement。
+
+Direct/manual `finalize-plan` 保持兼容：用户显式确认当前计划已经收敛，且所有现有证据门都满足时，可以不提供外部 convergence receipt。
 
 ## 脚本命令
 

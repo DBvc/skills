@@ -71,6 +71,20 @@
       "prompt": "帮我规划全仓迁移到新状态管理方案，但我没有提供仓库结构、现有状态 owner 或验证方式。",
       "expected_trigger": true,
       "rationale": "Should trigger but mark needs-grounding or ask blocking questions rather than invent repo facts."
+    },
+    {
+      "id": "near-miss-explicit-plan-convergence",
+      "kind": "near_miss",
+      "prompt": "对这个已经存在的 plan-v2 跑 dbx-plan-convergence bounded_loop，不要重新写第一版计划。",
+      "expected_trigger": false,
+      "rationale": "Existing-plan convergence belongs to dbx-plan-convergence, not first-draft technical planning."
+    },
+    {
+      "id": "near-miss-scoped-linus-rereview",
+      "kind": "near_miss",
+      "prompt": "对 plan-v2 做一次 Linus scoped re-review，只检查 F-001 和 revision contract RC-E1-R1。",
+      "expected_trigger": false,
+      "rationale": "A scoped strict review of an existing plan belongs to the delegated reviewer path, not plan generation."
     }
   ]
 }

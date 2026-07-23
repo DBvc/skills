@@ -1,6 +1,6 @@
 ---
 name: dbx-linus-review
-description: Strict pragmatic, evidence-driven technical review for code changes, architecture plans, data models, and implementation proposals. Use when the user explicitly requests Linus-style review, harsh/strict review, pragmatic critique, over-engineering judgment, merge/readiness judgment, or asks whether a technical plan or code change is good enough. Shares judgment principles with dbx-diff-review but uses a stricter artifact-agnostic critique loop. Do not use for ordinary code explanation, implementation-only requests, generic encouragement, interpersonal judgment, or normal diff review unless strict/pragmatic critique is explicitly requested.
+description: Strict pragmatic, evidence-driven technical review for code changes, architecture plans, data models, and implementation proposals. Use when the user explicitly requests Linus-style review, harsh/strict review, pragmatic critique, over-engineering judgment, merge/readiness judgment, or asks whether a technical plan or code change is good enough. It may also act as a read-only reviewer provider when an already user-authorized controller explicitly delegates a full or scoped strict review with artifact identity, scope, evidence boundary, and write prohibition. Shares judgment principles with dbx-diff-review but uses a stricter artifact-agnostic critique loop. Do not use for ordinary code explanation, implementation-only requests, generic encouragement, interpersonal judgment, or normal diff review unless strict/pragmatic critique is explicitly requested.
 ---
 # Strict Pragmatic Technical Review
 
@@ -28,6 +28,7 @@ Use this skill when the user explicitly asks for:
 - judgment on whether a change or plan is good enough, worth doing, safe to merge, or too complex;
 - evaluation of data model, state ownership, API contract, compatibility, or maintainability risk;
 - risk review before merge or release when the user asks for a hard technical judgment.
+- read-only full or scoped strict review explicitly delegated by an already user-authorized parent controller with artifact identity, scope, evidence boundary, and write prohibition.
 
 Do not use it when:
 
@@ -38,6 +39,7 @@ Do not use it when:
 - the user wants emotional validation, interpersonal judgment, or personal attack;
 - there is no artifact to review and no clear technical proposal;
 - the task is primarily legal/compliance analysis or broad security threat modeling.
+- an ordinary implementation or “automatically improve this plan” request lacks an authorized delegated-review envelope.
 
 ## Artifact modes
 
@@ -51,6 +53,62 @@ Select one mode before reviewing:
 | `merge_risk` | near-merge change or release gate | What blocks merge/release and what is merely advisory? |
 
 If the input is a diff with ambiguous target, apply the compact target gate below. For ordinary target-heavy review, route to `dbx-diff-review`.
+
+## Delegated reviewer-provider activation
+
+A parent controller may delegate this skill only when the parent workflow is already user-authorized and supplies:
+
+```yaml
+delegated_review:
+  parent_controller: ""
+  originating_intent: ""
+  artifact:
+    type: technical_plan | architecture_proposal | migration_plan | adr | implementation_proposal | data_model | diff
+    version: ""
+    fingerprint: null
+    content_ref: inline | path | current_context
+  review_scope:
+    kind: full | scoped
+    contract_id: null
+    accepted_finding_ids: []
+    check_direct_regressions: false
+    check_anchor_drift: false
+    check_evidence_boundary: false
+    check_scope_and_bloat: false
+  requested_dimensions: []
+  evidence_boundary: {}
+  non_goals: []
+  write_prohibition:
+    modify_artifact: false
+    modify_code: false
+    commit: false
+    push: false
+```
+
+Rules:
+
+- The reviewer is read-only. It never revises the artifact.
+- The reviewer returns findings and review judgment, not convergence `next_action`, `final_state`, revision contracts, or workflow completion decisions.
+- Missing artifact identity, unclear scope, missing evidence boundary, or absent read-only write prohibition fails closed. Ask the parent for the smallest missing envelope fields.
+- A scoped re-review must include the revision contract id and current artifact version.
+- Delegation does not permit ordinary implementation requests to activate this skill.
+
+### Delegated full plan review
+
+Use `plan_strict`. Review the current artifact version across only the requested dimensions. Echo the artifact version and review scope before findings so the parent can bind provenance.
+
+### Delegated scoped plan re-review
+
+Check only:
+
+- closure of accepted finding ids;
+- direct regressions caused by the revision;
+- core-anchor drift;
+- evidence-boundary drift;
+- scope or complexity growth;
+- any material change to direction, ownership, public contract, migration, or validation topology.
+
+Do not reopen a full review merely to discover new nits. If the revision materially changed the direction or exceeded the revision contract, report that scope break explicitly and stop the scoped judgment. The parent controller decides the next transition.
 
 ## Hard gates
 
@@ -186,6 +244,20 @@ For architecture or plan review, adapt Evidence to proposal sections, assumption
 
 Default output in Chinese. Fill the structure with concrete evidence; omit sections that do not apply.
 
+For a delegated review, prepend this minimal provenance header:
+
+```markdown
+## Review target
+- Artifact: ...
+- Version: ...
+- Scope: full | scoped
+- Revision contract: ... | not-applicable
+- Requested dimensions: ...
+- Independence: independent | partially_independent | none | unknown
+```
+
+This header does not authorize a `convergence_signals` block or replace the parent controller's transition output.
+
 ### For diff/code review
 
 ```markdown
@@ -265,9 +337,13 @@ If there are no major findings, say so directly, then list residual risks and va
 You may say the review is complete when:
 
 - the artifact and scope were inspected;
+- when delegated, the review confirmed the current artifact identity;
+- when delegated with scoped review, it bound the current revision contract id;
 - the real problem, model/ownership, compatibility, complexity, and practicality were considered where relevant;
 - any touched shared/public surface was classified with owner evidence or marked not relevant;
 - each finding has evidence, impact, fix direction, and confidence;
+- the reviewer did not modify the artifact or claim convergence completion;
+- the reviewer did not choose policy for the decision owner;
 - limitations or missing validation are stated.
 
 You may not claim tests passed, behavior was verified, or the change is safe unless the evidence exists in the current session.

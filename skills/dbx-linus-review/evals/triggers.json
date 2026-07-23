@@ -71,6 +71,48 @@
       "prompt": "帮我严厉评估一下我的方案，但我还没写方案，你先凭经验骂一下。",
       "expected_trigger": true,
       "rationale": "Should trigger to refuse vibe-based findings and ask for artifact/scope."
+    },
+    {
+      "id": "positive-authorized-delegated-plan-review",
+      "kind": "positive",
+      "prompt": "已授权的 dbx-plan-convergence 父 workflow 现在显式委托 dbx-linus-review：originating_intent=收敛 auth/cache implementation-bound plan；只读 full plan_strict review plan-v2，artifact version=v2，scope=auth-cache，evidence_boundary={repo_facts_read:[auth/cache owners], assumptions:[], unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。",
+      "expected_trigger": true,
+      "rationale": "An already user-authorized controller explicitly delegates a bounded read-only strict review with originating intent, artifact identity, scope, evidence boundary, and write prohibition."
+    },
+    {
+      "id": "positive-authorized-scoped-plan-rereview",
+      "kind": "positive",
+      "prompt": "dbx-plan-convergence 显式委托 scoped Linus re-review：originating_intent=复核 auth/cache 修订；检查 artifact=plan-v3 对 F-001 的关闭、直接回归、anchor drift 和 bloat；revision contract=RC-E1-R1；evidence_boundary={repo_facts_read:[auth/cache owners], assumptions:[], unknowns:[]}；write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。",
+      "expected_trigger": true,
+      "rationale": "Explicit delegated scoped re-review with originating intent, current artifact, revision contract, evidence boundary, and write prohibition."
+    },
+    {
+      "id": "near-miss-ordinary-auto-improve-plan",
+      "kind": "near_miss",
+      "prompt": "自动把这个方案改好并继续实现，不用问我。",
+      "expected_trigger": false,
+      "rationale": "Ordinary autonomous implementation is neither explicit strict review nor a valid delegated reviewer envelope."
+    },
+    {
+      "id": "failure-delegation-missing-artifact-identity",
+      "kind": "failure_mode",
+      "prompt": "父 workflow 让你做一次 scoped review，但没有说明是哪个 plan 版本，也没有 revision contract。",
+      "expected_trigger": true,
+      "rationale": "The reviewer may activate to fail closed and request the minimum missing identity/scope fields, but must not review from vibes."
+    },
+    {
+      "id": "failure-delegation-missing-evidence-boundary",
+      "kind": "failure_mode",
+      "prompt": "父 workflow 委托你只读 review plan-v4：originating_intent=复核缓存方案，scope=full，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}，但没有 evidence_boundary。",
+      "expected_trigger": true,
+      "rationale": "The reviewer may activate only to fail closed and request the missing evidence boundary; it must not generate findings."
+    },
+    {
+      "id": "failure-delegation-missing-write-prohibition",
+      "kind": "failure_mode",
+      "prompt": "父 workflow 委托 review plan-v5：originating_intent=复核缓存方案，scope=full，evidence_boundary={repo_facts_read:[auth/cache owners], assumptions:[], unknowns:[]}，但没有 write_prohibition。",
+      "expected_trigger": true,
+      "rationale": "The reviewer may activate only to fail closed and request the missing read-only write prohibition; it must not review or mutate the artifact."
     }
   ]
 }

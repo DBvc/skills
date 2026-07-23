@@ -218,6 +218,27 @@
         "all_required": true,
         "min_score": 0.85
       }
+    },
+    {
+      "id": "selected-profile-grounding-handoff-for-convergence",
+      "kind": "positive",
+      "prompt": "显式运行 dbx-software-plan-first-ground-plan。父 workflow 已选择 implementation-bound planning profile。输出仓库事实 handoff，不要 finalize。",
+      "expected_behavior": "Output a grounding-handoff with proposal identity, evidence, source of truth, validation candidates, and dbx-plan-convergence as the recommended next gate. Do not review or edit the plan.",
+      "checks": {
+        "trigger": [
+          {"type": "must_contain", "value": "状态：grounding-handoff", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(Artifact/proposal version|proposal.*version|版本)", "required": true, "quality": "identity"},
+          {"type": "regex", "value": "(source of truth|项目事实|验证候选)", "required": true, "quality": "evidence"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "dbx-plan-convergence", "required": true, "quality": "routing"},
+          {"type": "must_not_contain", "value": "已修改计划", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
     }
   ]
 }

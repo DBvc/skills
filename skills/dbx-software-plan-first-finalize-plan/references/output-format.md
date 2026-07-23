@@ -38,7 +38,7 @@
 
 ## `proposal-ready`
 
-当计划已经能交给 `ground-plan` 或 `finalize-plan` 时使用。
+当 proposal 已经能交给 `ground-plan`、已授权的 external `dbx-plan-convergence` gate，或 `finalize-plan` 时使用。具体下一门禁由当前父 workflow 决定。
 
 ```text
 状态：proposal-ready
@@ -79,6 +79,12 @@
 Grounding producer：
 - dbx-software-plan-first-ground-plan | none | <项目指定 producer>
 
+下一门禁：
+- dbx-software-plan-first-ground-plan | dbx-plan-convergence | dbx-software-plan-first-finalize-plan
+- Why: <为什么选择该门禁>
+- Parent workflow policy: implementation-bound-planning | direct-manual | none
+- Artifact version: <session-local 或显式版本>
+
 非阻塞问题：
 - <不会改变执行路径的问题；没有则写“无”>
 ```
@@ -110,6 +116,11 @@ Grounding producer：
 
 风险和未知：
 - <仍需用户确认，且会影响计划的内容>
+
+建议下一门禁：
+- dbx-plan-convergence | dbx-software-plan-first-finalize-plan
+- Why: <由父 workflow policy 和剩余风险决定>
+- Artifact/proposal version: <与后续 review 绑定>
 ```
 
 ## `review-ready`

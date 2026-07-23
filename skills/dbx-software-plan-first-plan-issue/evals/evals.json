@@ -205,6 +205,45 @@
         "all_required": true,
         "min_score": 0.85
       }
+    },
+    {
+      "id": "selected-profile-hands-proposal-to-convergence",
+      "kind": "positive",
+      "prompt": "显式运行 dbx-software-plan-first-plan-issue。父 workflow 已选择 dbx-implementation-bound-planning-v1。当前 proposal 不需要 repo grounding。只输出本 phase handoff。",
+      "expected_behavior": "Output proposal-ready with dbx-plan-convergence as the next gate. Do not run convergence, finalize, read the repository, or write files.",
+      "checks": {
+        "trigger": [
+          {"type": "must_contain", "value": "状态：proposal-ready", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(下一门禁|next gate).*dbx-plan-convergence|dbx-plan-convergence", "required": true, "quality": "routing"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "已完成方案收敛", "required": true, "quality": "boundary"},
+          {"type": "must_not_contain", "value": "已写入 plan.md", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "direct-manual-proposal-can-hand-to-finalize",
+      "kind": "positive",
+      "prompt": "显式运行 dbx-software-plan-first-plan-issue。没有父 workflow profile，当前上下文已有足够事实，用户明确说计划讨论完后手动 finalize。",
+      "expected_behavior": "Output proposal-ready and allow a handoff to dbx-software-plan-first-finalize-plan without silently activating convergence.",
+      "checks": {
+        "trigger": [
+          {"type": "must_contain", "value": "状态：proposal-ready", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "dbx-software-plan-first-finalize-plan", "required": true, "quality": "routing"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "ready-for-handoff", "required": true, "quality": "boundary"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
     }
   ]
 }

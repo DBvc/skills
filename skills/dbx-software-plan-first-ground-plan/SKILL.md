@@ -23,7 +23,10 @@ description: Manual trigger only. Use only when the user explicitly names `dbx-s
 - 只读仓库，不修改代码，不写 `plan.md` 或 `tasks.md`。
 - 不替用户做产品、设计、contract 或范围决策。
 - 项目事实来自仓库文件、项目规则、CI、manifest、schema、design/spec 文档、现有代码和用户确认。
-- 只输出 grounding handoff，供 `finalize-plan` 写计划。
+- 只输出 grounding handoff，供已授权父 workflow 的 `dbx-plan-convergence` 或 `dbx-software-plan-first-finalize-plan` 消费。
+- Grounding 不决定是否需要 convergence；下一门禁由已授权父 workflow policy 决定。
+- 父 workflow 声明 pre-seal convergence 时，handoff 必须携带 proposal identity、repo facts、source of truth、validation candidates 和 unresolved gaps。
+- 不调用 reviewer，不修改 plan。
 - 所有沟通和 handoff 使用中文。
 
 ## 必须读取

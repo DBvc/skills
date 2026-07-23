@@ -197,6 +197,153 @@
         "all_required": true,
         "min_score": 0.85
       }
+    },
+    {
+      "id": "implementation-bound-plan-hands-off-to-convergence",
+      "kind": "positive",
+      "prompt": "先别写代码，给 auth/session/cache 重构做一份准备交给实现的技术计划。计划完成后说明下一门禁，不要假装已经 review。",
+      "expected_behavior": "Produce an evidence-bound technical plan. Mark the plan artifact as ready for its next gate, set the next gate to dbx-plan-convergence, and provide a bounded handoff. Do not claim Linus review or plan convergence already happened.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(技术计划结论|快速技术计划)",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(下一门禁|next gate).*(dbx-plan-convergence)|dbx-plan-convergence",
+            "required": true,
+            "quality": "routing"
+          },
+          {
+            "type": "regex",
+            "value": "(source of truth|Source of truth|不变量|evidence|证据边界)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "ready-for-handoff",
+            "required": true,
+            "quality": "boundary"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "已经完成 Linus review",
+            "required": true,
+            "quality": "truthfulness"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "已通过方案收敛",
+            "required": true,
+            "quality": "truthfulness"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "plan-convergence-handoff-binds-identity-and-authority",
+      "kind": "positive",
+      "prompt": "为跨包 API migration 生成实施计划，并给出交给 dbx-plan-convergence 的 handoff contract。不要实现。",
+      "expected_behavior": "The handoff should identify the plan artifact and scope, preserve evidence boundaries and core anchors, use a bounded budget, grant plan_text_only authority, and explicitly forbid code modification.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "plan_convergence_handoff",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(artifact|version|fingerprint)",
+            "required": true,
+            "quality": "identity"
+          },
+          {
+            "type": "regex",
+            "value": "(evidence_boundary|证据边界)",
+            "required": true,
+            "quality": "evidence"
+          },
+          {
+            "type": "regex",
+            "value": "(budget|full_review_passes|local_revision_rounds)",
+            "required": true,
+            "quality": "control"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "modification_authority:\\s*plan_text_only",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "regex",
+            "value": "may_modify_code:\\s*false",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "existing-plan-critique-routes-away-from-planner",
+      "kind": "near_miss",
+      "prompt": "这里已有 plan-v2。只做一次严格的过度设计 review，不要重新生成技术计划。",
+      "expected_behavior": "Do not emit the technical-plan contract. Route to dbx-linus-review for standalone critique, or to dbx-plan-convergence only if a bounded convergence loop is explicitly requested.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "## 技术计划结论",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(dbx-linus-review|严格.*review|strict)",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "实施切片",
+            "required": true,
+            "quality": "routing"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
     }
   ]
 }

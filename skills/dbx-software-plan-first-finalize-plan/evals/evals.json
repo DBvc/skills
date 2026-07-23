@@ -274,6 +274,45 @@
         "all_required": true,
         "min_score": 0.85
       }
+    },
+    {
+      "id": "selected-profile-refuses-missing-convergence-receipt",
+      "kind": "failure_mode",
+      "prompt": "显式运行 dbx-software-plan-first-finalize-plan。父 workflow 声明使用 implementation-bound planning profile，但没有提供 current artifact 的 ready-for-handoff receipt。",
+      "expected_behavior": "Do not write plan.md/tasks.md or seal. Explain that a current identity-bound ready-for-handoff receipt is missing and route back to external dbx-plan-convergence.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(ready-for-handoff|receipt|凭证|artifact.*version)", "required": true, "quality": "gate"}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "dbx-plan-convergence", "required": true, "quality": "routing"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "已写入 plan.md", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "已 seal", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "direct-manual-finalize-remains-compatible",
+      "kind": "positive",
+      "prompt": "用户直接显式运行 dbx-software-plan-first-finalize-plan，并明确确认计划已经收敛；所有现有 decision、grounding、ownership、validation gates 都满足；没有 parent profile。",
+      "expected_behavior": "Keep the existing finalize behavior available without manufacturing a convergence run. Preserve all existing init, write, seal, and safety gates.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(issue-workflow.sh init|plan.md|tasks.md)", "required": true, "quality": "behavior"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(issue-workflow.sh seal|seal)", "required": true, "quality": "behavior"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "必须先运行 dbx-plan-convergence", "required": true, "quality": "compatibility"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
     }
   ]
 }

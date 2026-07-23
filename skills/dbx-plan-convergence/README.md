@@ -182,6 +182,14 @@ skills/dbx-plan-convergence/
 
 本 skill 只暴露稳定的 transition、provider 和 state 协议。
 
+## DBX collection workflow
+
+在 DBX collection 中，implementation-bound technical plan 的默认 provider binding、
+Plan-First pre-seal gate 和未来 Auto 边界见：
+[`docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md`](../../docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md)。
+
+该绑定属于 collection workflow，不进入本 controller kernel。
+
 ## Suggested repository entries
 
 ### README stable skills
