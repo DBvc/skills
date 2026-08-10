@@ -11,19 +11,20 @@ Explicit-only、provider-agnostic 的技术方案收敛控制器。
 - 何时可以 handoff，何时只是文档变胖；
 - 高影响方案如何提高严谨度，而不是盲目增加相同轮数。
 
-## v3 status
+## v4 status
 
-v3 冻结 v2 的 controller kernel，不增加新状态或新执行能力，只修复接口一致性：
+v4 保留 v2 state model，但增加显式 `strict_acceptance` completion profile 与 final full review 协调能力：
 
-- compact 输出只在 blocker / gap 实际存在时展示该部分；
-- scoped re-review envelope 显式携带 revision `contract_id`；
-- 未绑定 reviewer 的空白模板使用 `provider.type: unknown`，不再默认声称来自人类；
-- `convergence_state_version` 仍为 `2`，现有 v2 state 无需迁移。
+- strict path 要求 artifact type、recognized fingerprint scheme、structured content ref、可重算的 exact-artifact SHA-256、fresh independent full review 和 identity-bound receipt；
+- bundle 局部修订在 request/result、scoped re-review 与 final full review 间保留 scheme、两文件引用和前后 identity；
+- delegated reviewer 输出机器可读 judgment 与 per-finding blocking/residual 状态；
+- generic `handoff_ready` 仍是默认 profile，不承担严格验收语义；
+- `convergence_state_version` 仍为 `2`；旧 v2 state 在 resume 时只补 additive defaults，不推断 strict acceptance，无需版本迁移。
 
 ## v2 foundation
 
 - 分离 `next_action` 与 `final_state`，移除把 `in-progress` 当终态的歧义。
-- 所有 review pass 绑定 artifact version/fingerprint，并记录 per-review independence。
+- 所有 review pass 绑定 artifact type/scheme/version/fingerprint/content refs，并记录 per-review independence。
 - 增加 mode-specific input gates、stale review gate 和 resume identity gate。
 - 明确 controller 只协调 review/local revision loop；evidence、decision、alternative 和 pivot 必须 handoff。
 - `explore-alternatives` 使用 `needs-alternatives`，不再误报为当前方向已经失败。
@@ -141,7 +142,7 @@ transition:
 
 ```text
 使用这个 convergence state 和当前 artifact 继续。
-先校验 version/fingerprint；不一致就停止。
+先校验 type/scheme/version/fingerprint/content refs；不一致就停止。
 ```
 
 ## Package layout

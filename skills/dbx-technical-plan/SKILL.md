@@ -1,7 +1,6 @@
 ---
 name: dbx-technical-plan
-description: >-
-  Evidence-grounded technical implementation planning before code changes. Use when the user asks to plan a software feature, refactor, migration, bug-fix strategy, infrastructure change, validation strategy, rollout, or codebase modification before implementation. Produces a scoped plan contract with goal, non-goals, evidence boundary, source of truth, invariants, implementation slices, validation model, risks, and handoff. Do not use for direct implementation, concrete diff review, strict critique of an existing plan, product/design judgment, generic brainstorming, commit/PR writing, or the stateful dbx-software-plan-first phase chain unless explicitly requested.
+description: Evidence-grounded technical implementation planning before code changes. Use when the user asks to plan a software feature, refactor, migration, bug-fix strategy, infrastructure change, validation strategy, rollout, or codebase modification before implementation. Produces a scoped plan contract with goal, non-goals, evidence boundary, source of truth, invariants, implementation slices, validation model, risks, and handoff. Do not use for direct implementation, concrete diff review, strict critique of an existing plan, product/design judgment, generic brainstorming, commit/PR writing, or the stateful dbx-software-plan-first phase chain unless explicitly requested.
 ---
 
 # DBX Technical Plan

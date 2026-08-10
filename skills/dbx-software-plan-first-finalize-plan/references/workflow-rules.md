@@ -2,13 +2,14 @@
 
 本工作流的门控顺序固定，但入口按已满足的证据门选择。不要把它理解成每次都必须从 `plan-issue` 跑满到 `implement-feature`。
 
-DBX implementation-bound planning profile 可以在 grounding 与 finalize 之间插入 external `dbx-plan-convergence` gate。该 gate 不是 Plan-First phase，不改变 phase skill 的 manual-only activation，也不改变 seal、implement 或 showhand 语义。
+DBX implementation-bound planning profile 可以在最终 plan bundle 物化后、seal 前插入 external `dbx-plan-convergence` gate。该 gate 不是 Plan-First phase，不改变 phase skill 的 manual-only activation，也不改变 implement 或 showhand 语义。
 
 ```text
 dbx-software-plan-first-plan-issue（仅当决策未收敛）
   -> dbx-software-plan-first-ground-plan（仅当需要仓库事实）
-  -> [external dbx-plan-convergence，只有父 workflow/用户显式选择时]
-  -> dbx-software-plan-first-finalize-plan（需要完整决策和必要证据）
+  -> dbx-software-plan-first-finalize-plan（物化未 seal 的 plan.md/tasks.md）
+  -> [external dbx-plan-convergence 审核精确文件 bundle，只有父 workflow/用户显式选择时]
+  -> dbx-software-plan-first-finalize-plan（校验 bundle receipt 后 seal）
   -> dbx-software-plan-first-implement-feature（需要 sealed plan/tasks）
   -> dbx-software-plan-first-showhand（只在适合自动化时使用）
 ```
@@ -19,13 +20,15 @@ dbx-software-plan-first-plan-issue（仅当决策未收敛）
 | --- | --- | --- |
 | `plan-issue` | Goal、Scope、Approach、Validation、Plan Strategy、Impact Profile 或 Impact Boundary 尚未收敛，需要先在对话中定边界 | 用户要求读仓库、写文件、seal 或实现；本阶段只能输出 `clarifying`、`blocked` 或 `proposal-ready` |
 | `ground-plan` | 计划或用户输入需要仓库事实来确认路径、项目规则、source of truth、契约、验证命令、ownership 或 protected/generated 区域 | 用户要求在 grounding 阶段写计划文件或实现代码；只输出 `grounding-handoff` |
-| `finalize-plan` | Mandatory Decision Gate 已完整，且所有会影响计划的仓库事实已由 grounding、当前上下文或用户确认支持；implementation-bound profile 下还必须有匹配 current artifact 的 `ready-for-handoff` | 缺少验证、source of truth、artifact/evidence boundary、产物归属或项目事实；selected profile 的 receipt 缺失、stale 或 identity mismatch；先回到 `plan-issue`、`ground-plan` 或 external `dbx-plan-convergence` |
+| `finalize-plan` | Mandatory Decision Gate 已完整，且所有会影响计划的仓库事实已由 grounding、当前上下文或用户确认支持；selected profile 可先物化未 seal 的文件，seal 前必须有匹配 exact `plan.md/tasks.md` bundle 的 `ready-for-handoff` 与 qualifying `strict_acceptance_receipt` | 缺少验证、source of truth、artifact/evidence boundary、产物归属或项目事实时回到 `plan-issue` / `ground-plan`；selected bundle receipt 缺失、stale、identity mismatch、fingerprint 无法重算或 qualification 不满足时保持未 seal 并回 external `dbx-plan-convergence` |
 | `implement-feature` | 已有 sealed `plan.md` / `tasks.md`，workflow status/next 指向第一个未完成 task，工作区安全 | 没有 seal、seal hash 不一致、计划假设错误、验证模型不适用、scope 需要扩大或用户改动不明 |
 | `showhand` | `implement-feature` 的所有前提成立，且 showhand 条件全部满足 | 需要主观判断、高风险写入、外部副作用、source of truth 缺失或工作区不安全 |
 
-入口可以跳过已经满足的上游阶段，但不能跳过对应证据门：决策未完整不能 finalize；需要仓库事实但未确认不能 seal；没有 sealed task 不能 implement。
+入口可以跳过已经满足的上游阶段，但不能跳过对应证据门：决策未完整不能物化 final bundle；需要仓库事实但未确认不能 seal；selected profile 没有 current bundle receipt 不能 seal；没有 sealed task 不能 implement。
 
 Direct/manual `finalize-plan` 保持兼容：用户显式确认当前计划已经收敛，且所有现有证据门都满足时，可以不提供外部 convergence receipt。
+
+Selected profile 的 acceptance artifact 是最终 `plan.md/tasks.md` bundle，不是其上游 proposal。Receipt qualification 固定为：`status: passed`、当前 bundle type/scheme/version/fingerprint 和同一 structured plan/tasks refs、`reviewer_capability` 与 handoff 的 provider binding 相同、`scope: full`、`independence: independent`、`reviewed_after_last_revision: true`、`open_blocker_high: 0`，且 judgment 为 `accept` 或 `accept_with_advisories`。Bundle fingerprint 使用固定 key 顺序、无空白的 UTF-8 JSON `{"plan.md":"<plan_hash>","tasks.md":"<task_hash>"}` 的 SHA-256；两个 file hash 也是 exact bytes 的小写 SHA-256。Finalize 不接受 proposal receipt 或普通 `handoff_ready` 代替严格回执，receipt 通过后也不得再改文件。
 
 ## 脚本命令
 
@@ -33,6 +36,7 @@ Direct/manual `finalize-plan` 保持兼容：用户显式确认当前计划已�
 
 ```sh
 scripts/issue-workflow.sh init <issue-id>
+scripts/issue-workflow.sh bundle-fingerprint <issue-id>
 scripts/issue-workflow.sh seal <issue-id>
 scripts/issue-workflow.sh status <issue-id>
 scripts/issue-workflow.sh next <issue-id>
@@ -46,6 +50,7 @@ scripts/issue-workflow.sh complete <issue-id>
 ```sh
 scripts/issue-workflow.sh --root <workspace-root> status <issue-id>
 scripts/issue-workflow.sh --repo <repo-name> review-ready <issue-id>
+scripts/issue-workflow.sh --expected-bundle-scheme <scheme> --expected-bundle-fingerprint <fingerprint> seal <issue-id>
 ```
 
 默认 root 解析顺序：`--root`、`PLAN_FIRST_ROOT`、向上查找 `.plan-first/config.toml`、当前 Git root。`init` 会创建最小 `.plan-first/config.toml` 作为 workspace root marker；非 Git workspace 首次裸 `init` 必须在 workspace root 当前目录运行，或显式传 `--root <workspace-root>`。
@@ -56,8 +61,9 @@ scripts/issue-workflow.sh --repo <repo-name> review-ready <issue-id>
 
 1. 运行 `scripts/issue-workflow.sh init <issue-id>` 创建中文 `plan.md` 和 `tasks.md` 模板。
 2. 填写计划和任务。
-3. 运行 `scripts/issue-workflow.sh seal <issue-id>` 写入 seal。
-4. 报告本地计划文件位置、任务数量、workspace root、plan docs 模式和提交模式。计划过程产物固定写在 `.plan-first/issues/<issue-id>/`；默认 `plan_docs.mode = "local"` 时不自动提交。`plan_docs.mode = "tracked"` 时，同步后的 `plan.md` 和 `tasks.md` 会写入配置的项目文档路径。
+3. Direct/manual 路径按既有 gates 运行 `scripts/issue-workflow.sh seal <issue-id>`。Selected profile 先运行 `bundle-fingerprint`；没有匹配 bundle 的 qualifying receipt 时保持未 seal，输出包含完整 delegated activation 字段的 external convergence handoff。
+4. Selected profile 只要已有未 seal bundle 就在入口处分支，无论 receipt 状态都不运行 `init`、不写文件；只读运行 `bundle-fingerprint`，且不得创建或改写 `.git/info/exclude`。Receipt 匹配时把 expected scheme/fingerprint 传给同一次 `seal`，由脚本在写 seal 前复算并拒绝 identity drift。
+5. 报告本地计划文件位置、任务数量、workspace root、plan docs 模式、提交模式、bundle fingerprint 和 seal 状态。计划过程产物固定写在 `.plan-first/issues/<issue-id>/`；默认 `plan_docs.mode = "local"` 时不自动提交。`plan_docs.mode = "tracked"` 时，同步后的 `plan.md` 和 `tasks.md` 会写入配置的项目文档路径。
 
 ## implement-feature 阶段
 

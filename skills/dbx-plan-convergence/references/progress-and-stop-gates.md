@@ -14,7 +14,7 @@ Stop or hand off when:
 
 - review targets an older known version;
 - current artifact changed after review and affected scope is unknown;
-- resume state names a different artifact version/fingerprint;
+- resume state names a different artifact type/scheme/version/fingerprint or bundle content ref;
 - scoped re-review inspected the pre-revision artifact.
 
 Transitions:
@@ -189,11 +189,28 @@ After a local revision, re-review only:
 4. evidence boundary drift;
 5. scope and bloat.
 
-The review pass must bind to the revised artifact version/fingerprint and reference the revision contract.
+The review pass must bind to the revised artifact type/scheme/version/fingerprint/content ref and reference the revision contract.
 
 A full re-review is justified only when revision materially changed direction, scope, contract, ownership, migration, or validation topology. Such a change usually means the previous revision was not local and should be reclassified or moved to a new epoch.
 
-## 10. Budget gate
+Scoped closure alone never proves strict acceptance.
+
+## 10. Strict acceptance gate
+
+Apply only when `completion_profile: strict_acceptance` and the artifact is otherwise a completion candidate.
+
+- Missing a controller/artifact-provider-computed fingerprint matching `^sha256:[0-9a-f]{64}$`, a placeholder, an unknown or identity-mismatched scheme, a bundle `file_bundle` ref with both exact paths, or a hash that cannot be verified from the exact artifact bytes under its recognized scheme: `obtain-artifact + needs-artifact`.
+- Missing reviewer binding or current qualifying review: `obtain-review + needs-review`.
+- Initial full review may qualify when it is independent, bound to the current artifact, and no artifact revision followed it.
+- After any artifact revision, invalidate the old acceptance basis and receipt. Run scoped closure, then a fresh independent full review of the completion candidate.
+- Any open `blocker` or `high`, or a judgment other than `accept` / `accept_with_advisories`, returns to normal finding triage.
+- A `medium` must be fixed or explicitly marked non-blocking by the reviewer; a product, architecture, compatibility, or risk-acceptance choice must also be resolved by the decision owner.
+- Acceptance budget exhausted without a qualifying pass: `stop + stopped-budget`.
+- Only a qualifying pass may issue the identity-bound `strict_acceptance_receipt` and reach ready under this profile.
+
+Do not silently downgrade to `handoff_ready`.
+
+## 11. Budget gate
 
 Soft budget is a checkpoint. Continue beyond it only with progress credit and no disqualifier.
 
@@ -207,7 +224,7 @@ transition:
 
 An override requires an explicit new bounded budget. “继续直到完美” is invalid.
 
-## 11. Ready gate
+## 12. Ready gate
 
 `ready-for-handoff` requires:
 
@@ -231,3 +248,5 @@ bloat_signal: false
 A non-directional implementation unknown may remain only when it is explicit, bounded, and paired with a stop condition before affected work.
 
 Ready is relative to evidence boundary. It is not proof that implementation will succeed.
+
+Under `handoff_ready`, this means the artifact is ready for the caller's normal handoff policy, not that a strict reviewer accepted it. Under `strict_acceptance`, ready additionally requires a valid current `strict_acceptance_receipt`.

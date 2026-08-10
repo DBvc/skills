@@ -1,11 +1,21 @@
 {
   "review_pass": {
     "id": "R1",
+    "artifact_type": "technical_plan",
     "artifact_version": "v1",
+    "artifact_fingerprint_scheme": null,
     "artifact_fingerprint": "",
+    "artifact_content_ref": {
+      "kind": null,
+      "value": null,
+      "plan": null,
+      "tasks": null
+    },
+    "judgment": null,
     "provider": {
       "id": "",
       "type": "unknown",
+      "capability": null,
       "independence": "unknown"
     },
     "dimensions": [],
@@ -24,6 +34,9 @@
         "id": "F-001",
         "source_review_id": "R1",
         "severity": "high",
+        "blocking": true,
+        "residual": false,
+        "decision_owner_required": false,
         "category": "model",
         "evidence": "",
         "impact": "",

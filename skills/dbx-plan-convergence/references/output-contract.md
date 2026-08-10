@@ -171,6 +171,8 @@ Progress gate：
 
 ## 8. Compact ready output
 
+This example uses the default `completion_profile: handoff_ready`. It is a handoff result, not a claim that a strict reviewer accepted the artifact.
+
 ```markdown
 ## 方案收敛结果
 
@@ -178,6 +180,7 @@ Transition:
 - next_action: finalize
 - final_state: ready-for-handoff
 - phase: converge
+- completion_profile: handoff_ready
 
 主要收敛：
 - 删除了未被需求证明的通用 adapter 层。
@@ -197,7 +200,74 @@ Transition:
 - 可以进入实现。
 ```
 
-## 9. Resume mismatch
+## 9. Strict acceptance needs a final review
+
+```markdown
+## 方案收敛结果
+
+Transition:
+- next_action: obtain-review
+- final_state: needs-review
+- completion_profile: strict_acceptance
+
+核心判断：
+- scoped re-review 已关闭已知 findings，但不能证明最终 artifact 已通过严格整体验收。
+
+下一步合同：
+- owner/provider role: reviewer provider
+- required: 对当前 type/scheme/version/fingerprint/content refs 做 fresh independent full review
+- forbidden: 沿用旧 full review 或 scoped review 宣称严格评审通过
+```
+
+## 10. Strict acceptance passed
+
+```yaml
+qualification:
+  completion_profile: strict_acceptance
+  review_freshness: fresh_after_last_revision
+  review_kind: full review
+  review_id: R-final-2
+  reviewer_provider_id: dbx-linus-review
+  reviewer_capability: strict_pragmatic_plan_review
+  review_judgment: accept_with_advisories
+  open_blocker_high: 0
+  artifact_type: technical_plan
+  artifact_version: v3
+  artifact_fingerprint_scheme: exact-bytes-sha256
+  artifact_fingerprint: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+transition:
+  next_action: finalize
+  final_state: ready-for-handoff
+completion_profile: strict_acceptance
+strict_acceptance_receipt:
+  status: passed
+  artifact_type: technical_plan
+  artifact_version: v3
+  artifact_fingerprint_scheme: exact-bytes-sha256
+  artifact_fingerprint: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  artifact_content_ref:
+    kind: current_context
+    value: current_response
+    plan: null
+    tasks: null
+  review_id: R-final-2
+  reviewer_capability: strict_pragmatic_plan_review
+  scope: full
+  independence: independent
+  reviewed_after_last_revision: true
+  open_blocker_high: 0
+  review_judgment: accept_with_advisories
+  residual_findings:
+    - F-009
+```
+
+Any artifact content change invalidates this receipt. Do not output “strict review passed”, “strict PASS”, or equivalent wording without a valid current receipt.
+
+`reviewer_capability` must be copied from the unique `provider_bindings.reviewers` entry matched by the accepting review pass's provider id. It is not inferred from the provider name.
+
+The fence above documents the schema. A successful `strict_acceptance` invocation emits only the raw YAML inside it, with no fence, title, compact Markdown preface, or trailing prose. Other outcomes keep the normal compact or diagnostic format.
+
+## 11. Resume mismatch
 
 ```markdown
 ## 方案收敛结果
@@ -215,21 +285,36 @@ Transition:
 - 提供与 state 一致的 artifact，或为 v3 建立新的 review pass 与 convergence state。
 ```
 
-## 10. Diagnostic output fields
+## 12. Diagnostic output fields
 
 Diagnostic mode may include:
 
 ```yaml
 result:
   mode: gate_only
+  completion_profile: handoff_ready
   risk_profile: high_impact
   phase: explore
   artifact:
+    type: technical_plan
     version: v2
+    fingerprint_scheme: null
     fingerprint: ""
+    content_ref:
+      kind: current_context
+      value: current_response
+      plan: null
+      tasks: null
   review_provenance:
     - id: R1
+      artifact_type: technical_plan
       artifact_version: v2
+      artifact_fingerprint_scheme: null
+      artifact_content_ref:
+        kind: current_context
+        value: current_response
+        plan: null
+        tasks: null
       provider:
         independence: partially_independent
       dimensions:

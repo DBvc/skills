@@ -71,9 +71,13 @@ Record independence on every review pass:
 ```yaml
 reviews:
   - id: R1
+    artifact_type: technical_plan
     artifact_version: v1
+    artifact_fingerprint_scheme: null
+    artifact_content_ref: null
     provider:
       id: ""
+      capability: null
       independence: unknown
 ```
 
@@ -86,11 +90,15 @@ Wrap existing findings in a review pass:
 ```yaml
 reviews:
   - id: R1
+    artifact_type: technical_plan
     artifact_version: v1
+    artifact_fingerprint_scheme: null
     artifact_fingerprint: ""
+    artifact_content_ref: null
     provider:
       id: "legacy-review"
       type: unknown
+      capability: null
       independence: unknown
     dimensions: []
     scope:
@@ -110,11 +118,13 @@ Add:
 ```yaml
 artifact:
   version: v1
+  fingerprint_scheme: null
   fingerprint: ""
+  content_ref: null
   content_location: ""
 ```
 
-A fingerprint is optional. Version is mandatory for resume and multi-version histories.
+A fingerprint is optional. Version is mandatory for resume and multi-version histories. Older v2 state without `fingerprint_scheme` or structured `content_ref` normalizes them to `null`; do not infer a scheme or bundle refs from legacy `content_location`.
 
 ## 7. Anchor status
 
@@ -170,3 +180,21 @@ When a v1 state has ambiguous artifact identity, mixed action/state values, or f
 2. do not guess the intended transition;
 3. request the current artifact and applicable review;
 4. create a fresh v2 state.
+
+## 11. Additive v2 resume normalization
+
+Later v2 fields do not require a new state version. Before identity checks, normalize an older v2 state as follows:
+
+```yaml
+completion_profile: handoff_ready
+artifact:
+  fingerprint_scheme: null
+  content_ref: null
+acceptance:
+  status: not_requested
+budget:
+  final_acceptance_full_review_passes: 2
+  final_acceptance_full_review_passes_used: 0
+```
+
+Apply only defaults for missing fields. Never infer `strict_acceptance`, a fingerprint scheme, bundle refs, or a passed receipt from legacy state. A strict `implementation_plan_bundle` with a null scheme or ref must reacquire exact identity before review.

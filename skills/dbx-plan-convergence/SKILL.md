@@ -1,14 +1,6 @@
 ---
 name: dbx-plan-convergence
-description: >-
-  Explicit-only, provider-agnostic controller for bounded convergence of an existing technical plan,
-  architecture proposal, migration plan, ADR draft, or implementation proposal. Use when the user
-  explicitly asks for 方案收敛, plan convergence, 方案棘轮, or a controlled review-revision loop, or
-  when an already user-authorized parent workflow explicitly delegates that convergence step with
-  artifact, scope, provider bindings, budget, and modification authority. It decides whether to
-  obtain review, revise locally, gather evidence, request a decision, explore alternatives, pivot,
-  finalize, or stop. Do not use for first-draft planning, standalone review, generic brainstorming,
-  code repair, implementation, or open-ended autonomous loops.
+description: Explicit-only, provider-agnostic controller for bounded convergence of an existing technical plan, architecture proposal, migration plan, ADR draft, or implementation proposal. Use when the user explicitly asks for 方案收敛, plan convergence, 方案棘轮, or a controlled review-revision loop, or when an already user-authorized parent workflow explicitly delegates that convergence step with artifact, scope, provider bindings, budget, and modification authority. It decides whether to obtain review, revise locally, gather evidence, request a decision, explore alternatives, pivot, finalize, or stop. Do not use for first-draft planning, standalone review, generic brainstorming, code repair, implementation, or open-ended autonomous loops.
 ---
 
 # DBX Plan Convergence
@@ -57,7 +49,7 @@ transition:
 
 ### Delegated explicit activation
 
-可以被一个已经由用户显式授权的父 workflow 委托调用。父 workflow 必须传递：
+可以被一个已经由用户显式授权的父 workflow 委托调用。父 workflow 必须传递核心 handoff；`completion_profile` 可省略，省略时默认为 `handoff_ready`：
 
 ```yaml
 delegation:
@@ -66,6 +58,7 @@ delegation:
   scope: []
   provider_bindings: {}
   budget: {}
+  completion_profile: handoff_ready | strict_acceptance
   modification_authority: none | plan_text_only
 ```
 
@@ -96,9 +89,20 @@ delegation:
 
 - `gate_only` 没有 review material 时，返回 `next_action: obtain-review`、`final_state: needs-review`。
 - `bounded_loop` 没有现成 review 时，只有已绑定 reviewer 才能获得初始 critique。
-- `resume` 必须确认当前 artifact 与 state 中记录的 version/fingerprint 一致；不一致时返回 `blocked-state-mismatch`。
+- `resume` 必须先归一化旧 v2 state：缺失 `completion_profile` 时按 `handoff_ready`，缺失 fingerprint scheme 或 structured content ref 时按 `null`，缺失 acceptance 状态时按 `not_requested`，缺失 final-acceptance budget 时按 max `2` / used `0`；绝不从旧 state 推断 `strict_acceptance`。归一化后再确认当前 artifact 与 state 中记录的 type/scheme/version/fingerprint 一致；bundle 还必须匹配同一 `file_bundle` plan/tasks refs。不一致时返回 `blocked-state-mismatch`。旧 state 的空 scheme/ref 不影响普通 `handoff_ready`，但不能满足 strict bundle acceptance。
 - `diagnose_stall` 检查 flat/bloat 至少需要一个 before/after transition；检查 oscillation 至少需要两个 anchor flips 或三个可比较 snapshot。历史不足时返回 `blocked-insufficient-history`。
 - 没有现成 artifact 或足够具体 proposal 时，返回 `next_action: obtain-artifact`、`final_state: needs-artifact`。不要偷偷生成第一版方案。
+
+## Completion profiles
+
+`completion_profile` 只改变完成门，不改变 mode、transition 集合或 provider 分工：
+
+- `handoff_ready`：默认通用路径。关闭已知 material findings 并满足 completion contract 后即可交接；不得表述为严格 reviewer 已接受。
+- `strict_acceptance`：用于准备进入实现、并要求严格 reviewer 最终验收的组合路径。DBX implementation-bound technical-plan handoff 默认选择此 profile。
+
+`strict_acceptance` 不新增 final state；通过时仍输出 `finalize + ready-for-handoff`，但必须附带 identity-bound `strict_acceptance_receipt`。
+
+如果初始 full review 已绑定当前 artifact，且之后没有发生 artifact revision，它可以作为最终验收 review。只要 artifact 被修改过，旧 full review 和旧 receipt 立即失效；scoped re-review 只能证明 accepted findings 已关闭，不能单独签发 strict acceptance。
 
 ## Core definitions
 
@@ -109,7 +113,7 @@ delegation:
 - review id；
 - artifact version；
 - optional artifact fingerprint；
-- provider id/type；
+- provider id/type/capability；
 - per-review independence；
 - review dimensions；
 - full 或 scoped review 范围；
@@ -189,14 +193,21 @@ follow_up_if:
 
 ```yaml
 convergence_target:
-  artifact_type: technical_plan | architecture_proposal | migration_plan | adr | implementation_proposal | other
+  artifact_type: technical_plan | implementation_plan_bundle | architecture_proposal | migration_plan | adr | implementation_proposal | other
   artifact_version: ""
+  artifact_fingerprint_scheme: null | exact-bytes-sha256 | plan-first-bundle-sha256-v1
   artifact_fingerprint: ""
+  artifact_content_ref:
+    kind: inline | path | current_context | file_bundle | null
+    value: null
+    plan: null
+    tasks: null
   scope: []
   goal: ""
   non_goals: []
   success_criteria: []
   requested_mode: gate_only | bounded_loop | resume | diagnose_stall
+  completion_profile: handoff_ready | strict_acceptance
   review_material_present: true | false
   reviewer_binding_available: true | false
   may_revise_plan_text: true | false
@@ -214,6 +225,9 @@ convergence_target:
 7. 产品、架构、兼容性、风险接受和不可逆行为，不得由 controller 替 decision owner 决定。
 8. independence 记录在每个 review pass 上；同一上下文承担 author 和 reviewer 时必须标记 `none`。
 9. 任何 safe、verified、validated、ready 声明必须受 completion contract 约束。
+10. `strict_acceptance` 没有可用 reviewer 时返回 `obtain-review + needs-review`；不得降级为 `handoff_ready`。
+11. 没有有效 `strict_acceptance_receipt` 时，不得输出“严格 reviewer 已接受”“strict PASS”或同义声明。
+12. `strict_acceptance` 必须在 review 前由 controller 或 artifact provider 用已声明、可识别的确定性 scheme 计算 `sha256:<64 lowercase hex>`：单文件默认直接 hash exact bytes；`implementation_plan_bundle` 使用 `plan-first-bundle-sha256-v1`。Placeholder、未知 scheme、格式错误或无法重算均返回 `obtain-artifact + needs-artifact`，不得签发 receipt。
 
 ## Phase gate
 
@@ -269,6 +283,7 @@ Finding 是信号，不是命令。Controller 负责合并同根因 finding 并�
 核心原则：
 
 - “两轮”是同一方向的 soft checkpoint，不是普遍质量上限。
+- `strict_acceptance` 的 final full review 使用独立预算；预算耗尽仍未通过时必须 `stop + stopped-budget`。
 - 方案重要性提高时，优先增加证据、review dimensions、independence 和 human checkpoint，而不是只增加相同循环次数。
 - 超过 soft budget 必须有 progress credit。
 - 达到 hard budget 必须停止；用户只能显式增加一个新的有界预算。
@@ -286,6 +301,7 @@ Controller 可以协调已绑定 provider 完成：
 - issue revision contract；
 - bounded local revision；
 - scoped re-review；
+- strict profile 的 final full acceptance review；
 - progress gate。
 
 Controller 必须暂停或 handoff：
@@ -339,16 +355,17 @@ and revision_provider_available
 ## Workflow
 
 1. **Validate activation and mode inputs**：检查 direct/delegated authority、artifact、review、history 和 modification authority。
-2. **Bind artifact identity**：记录 version/fingerprint，拒绝 stale review 或 stale resume state。
+2. **Bind artifact identity**：记录 type/scheme/version/fingerprint 和 structured content ref；bundle 必须保留两个 exact file refs。拒绝 stale review 或 stale resume state。
 3. **Establish state**：选择 risk profile，识别 epoch、phase、applicable anchors 和预算。
 4. **Obtain or consume critique**：`gate_only` 只消费；`bounded_loop` 可调用已绑定 reviewer。
 5. **Normalize and triage**：归类 finding、合并根因、记录 review provenance。
 6. **Choose one transition**：输出 `next_action`、`final_state` 和 optional `follow_up_if`。
-7. **Issue revision contract**：仅在 `revise-local` 时生成，冻结 anchors 和禁止项。
+7. **Issue revision contract**：仅在 `revise-local` 时生成，冻结 anchors、artifact type/scheme/content refs 和禁止项；bundle 必须同时绑定 `plan.md` 与 `tasks.md`。
 8. **Revise through provider**：只在 bounded execution gates 全部通过时执行。
 9. **Scoped re-review**：绑定到新版 artifact，只检查 accepted findings、direct regressions、anchor drift、evidence drift、scope 和 bloat。
-10. **Apply progress gate**：继续当前 epoch、等待外部输入、关闭旧 epoch、finalize 或停止。
-11. **Render output**：按 mode 使用 compact 或 diagnostic 输出；完整 state 只在 resume、诊断或用户要求时展示。
+10. **Apply progress gate**：继续当前 epoch、等待外部输入、关闭旧 epoch、进入候选完成态或停止。
+11. **Apply completion profile**：`handoff_ready` 使用通用完成门；`strict_acceptance` 先检查当前 artifact 是否已有 qualifying independent full review，发生过 revision 时必须运行 fresh full review。新 finding 回到 triage；通过后签发 receipt。
+12. **Render output**：按 mode 使用 compact 或 diagnostic 输出；完整 state 只在 resume、诊断或用户要求时展示。
 
 ## Final states
 
@@ -386,6 +403,16 @@ and revision_provider_available
 10. 高影响或不可逆方案满足 human checkpoint policy。
 11. 没有把“文档更完整”误报为“方案已验证”。
 
+`strict_acceptance` 还必须同时满足：
+
+12. qualifying review 是绑定当前 artifact type、recognized fingerprint scheme、version、structured content ref 和经重算确认的 `sha256:<64 lowercase hex>` fingerprint 的 `full` review，并发生在最后一次 revision 之后。Bundle content ref 必须是带非空 plan/tasks 的 `file_bundle`。
+13. qualifying reviewer 的 independence 为 `independent`；review pass 的 provider id 必须唯一匹配 `provider_bindings.reviewers`，并原样携带该 binding 的非空 capability，不能根据 provider/skill 名称推断；它只接收当前 artifact、scope、evidence boundary、non-goals 和 requested dimensions，不接收作者隐藏推理或旧 reviewer 结论。
+14. 未解决的 `blocker` 和 `high` finding 数量为 0，review judgment 为 `accept` 或 `accept_with_advisories`。
+15. `medium` finding 已修复，或被 reviewer 明确判为非阻塞并作为 residual risk 记录；涉及产品、架构、兼容性或风险接受时还必须由 decision owner 解决。Controller 不得自行降级或接受风险。
+16. 输出 `strict_acceptance_receipt`，绑定 artifact identity、structured content ref、final full review id、由匹配 provider binding 证明的 reviewer capability、independence、judgment 和 residual findings。
+
+任一内容修改都会使 receipt 失效。Final full review 发现新 finding 时，按正常 triage 选择 `revise-local`、`gather-evidence`、`request-decision`、`initiate-pivot` 或 `stop`；不得保留旧 PASS。
+
 ## Output contract
 
 默认输出模式：
@@ -398,34 +425,38 @@ output_mode:
   diagnose_stall: diagnostic
 ```
 
-Compact 输出必须包含：
+`strict_acceptance` 成功是唯一 machine-only 例外：按 `references/output-contract.md` 的顺序输出 raw YAML，从 `qualification` 开始，以 `strict_acceptance_receipt` 结束；不得添加 Markdown fence、标题或周边说明。该 block 已携带 review provenance、artifact identity、唯一 transition、judgment 和 residual findings。
+
+其他 Compact 输出必须包含：
 
 ```markdown
 ## 方案收敛结果
 
 Transition:
-- next_action: ...
-- final_state: ...
-- phase: ...
+- next_action: <required action>
+- final_state: <state or null>
+- phase: <current phase>
 
 核心判断：
-- ...
+- <current judgment>
 
 下一步合同：
-- owner/provider role: ...
-- allowed: ...
-- forbidden: ...
-- stop_if: ...
+- owner/provider role: <role>
+- allowed: <allowed work>
+- forbidden: <forbidden work>
+- stop_if: <stop condition>
 
 证据边界与剩余风险：
-- ...
+- <evidence limits and residual risks>
 ```
+
+`strict_acceptance` 通过时还必须包含 `strict_acceptance_receipt`。未请求该 profile 时，普通 `ready-for-handoff` 不得伪装成严格验收结果。Receipt schema 和示例见 `references/provider-protocol.md` 与 `references/output-contract.md`。
 
 存在 blocker 或 gap 时增加：
 
 ```markdown
 Blocker / gap：
-- ...
+- <material blocker or gap>
 ```
 
 Diagnostic 输出额外包含：review provenance、完整 triage、epoch/budget、progress credits/disqualifiers、anchor status 和 history evidence。

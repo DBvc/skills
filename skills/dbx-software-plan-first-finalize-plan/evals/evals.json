@@ -276,19 +276,29 @@
       }
     },
     {
-      "id": "selected-profile-refuses-missing-convergence-receipt",
+      "id": "selected-profile-materializes-but-does-not-seal-without-bundle-receipt",
       "kind": "failure_mode",
-      "prompt": "显式运行 dbx-software-plan-first-finalize-plan。父 workflow 声明使用 implementation-bound planning profile，但没有提供 current artifact 的 ready-for-handoff receipt。",
-      "expected_behavior": "Do not write plan.md/tasks.md or seal. Explain that a current identity-bound ready-for-handoff receipt is missing and route back to external dbx-plan-convergence.",
+      "prompt": "显式运行 dbx-software-plan-first-finalize-plan。父 workflow id=auto-plan-7，originating intent=为 api migration 生成可实施计划，issue-id=api-migration，已选择 implementation-bound planning profile，决策和 grounding 已满足，但还没有最终 plan.md/tasks.md bundle 的 strict_acceptance_receipt。已确认 repo fact：packages/api 负责 migration；source of truth=api/schema/openapi.yaml；验证候选=cd packages/api && pytest tests/migration；unknowns=[]。",
+      "expected_behavior": "Materialize and validate plan.md/tasks.md, run the deterministic bundle-fingerprint command, keep them unsealed, and emit a complete directly consumable dbx-plan-convergence delegation for the exact bundle.",
       "checks": {
         "trigger": [
-          {"type": "regex", "value": "(ready-for-handoff|receipt|凭证|artifact.*version)", "required": true, "quality": "gate"}
+          {"type": "must_contain", "value": "bundle-fingerprint", "required": true, "quality": "validation"}
         ],
         "process": [
-          {"type": "must_contain", "value": "dbx-plan-convergence", "required": true, "quality": "routing"}
+          {"type": "regex", "value": "(plan.md|tasks.md)", "required": true, "quality": "artifact"},
+          {"type": "must_contain", "value": "dbx-plan-convergence", "required": true, "quality": "placement"}
         ],
         "output": [
-          {"type": "must_not_contain", "value": "已写入 plan.md", "required": true, "quality": "safety"},
+          {"type": "must_contain", "value": "plan_bundle_handoff", "required": true, "quality": "structural"},
+          {"type": "regex", "value": "originating_intent:[^\\r\\n]*(api migration|API migration)", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "type:[ \\t]*implementation_plan_bundle", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "version:[ \\t]*[\\\"']?plan-first-api-migration-bundle-[0-9a-f]{12}", "required": true, "quality": "artifact"},
+          {"type": "must_contain", "value": "fingerprint_scheme: plan-first-bundle-sha256-v1", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "fingerprint:[ \\t]*[\\\"']?sha256:[0-9a-f]{64}", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "content_ref:[\\s\\S]{0,140}kind:[ \\t]*file_bundle[\\s\\S]{0,180}plan:[^\\r\\n]*\\.plan-first/issues/api-migration/plan\\.md[\\s\\S]{0,180}tasks:[^\\r\\n]*\\.plan-first/issues/api-migration/tasks\\.md", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "scope:[\\s\\S]{0,180}(api migration|API migration)[\\s\\S]{0,180}goal:[^\\r\\n]*(api migration|API migration)", "required": true, "quality": "behavior"},
+          {"type": "regex", "value": "evidence_boundary:[\\s\\S]{0,120}repo_facts_read:[\\s\\S]{0,220}packages/api[\\s\\S]{0,220}api/schema/openapi\\.yaml[\\s\\S]{0,220}pytest tests/migration[\\s\\S]{0,300}unknowns:[ \\t]*\\[\\][\\s\\S]{0,400}provider_bindings:[\\s\\S]{0,240}dbx-linus-review[\\s\\S]{0,240}auto-plan-7", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "budget:[\\s\\S]{0,300}final_acceptance_full_review_passes:[ \\t]*[1-9]", "required": true, "quality": "state"},
           {"type": "must_not_contain", "value": "已 seal", "required": true, "quality": "safety"}
         ],
         "safety": []
@@ -308,7 +318,165 @@
           {"type": "regex", "value": "(issue-workflow.sh seal|seal)", "required": true, "quality": "behavior"}
         ],
         "output": [
-          {"type": "must_not_contain", "value": "必须先运行 dbx-plan-convergence", "required": true, "quality": "compatibility"}
+          {"type": "must_not_contain", "value": "必须先运行 dbx-plan-convergence", "required": true, "quality": "behavior"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "selected-profile-accepts-current-qualifying-strict-receipt",
+      "kind": "positive",
+      "prompt": "显式 resume dbx-software-plan-first-finalize-plan。父 workflow 选择 implementation-bound strict_acceptance；issue-id=api-migration，plan.md/tasks.md 已物化且未 seal，bundle type=implementation_plan_bundle，version=plan-first-api-migration-bundle-aaaaaaaaaaaa，scheme=plan-first-bundle-sha256-v1，fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa，content_ref={kind:file_bundle,plan:.plan-first/issues/api-migration/plan.md,tasks:.plan-first/issues/api-migration/tasks.md}。ready-for-handoff 与 receipt 都绑定同一 type/scheme/version/fingerprint/refs；receipt: status=passed, review_id=R5, reviewer_capability=strict_pragmatic_plan_review, scope=full, independence=independent, reviewed_after_last_revision=true, open_blocker_high=0, review_judgment=accept。handoff provider binding 的 capability 也是 strict_pragmatic_plan_review，其他 gates 均满足。",
+      "expected_behavior": "Verify that reviewer_capability matches the handoff provider binding, recompute the exact current bundle, avoid changing plan.md/tasks.md, then seal it and report the bundle identity.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(strict_acceptance_receipt|严格验收回执).*(有效|通过|匹配|qualif)", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "sha256:a{64}", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "bundle-fingerprint", "required": true, "quality": "validation"},
+          {"type": "must_contain", "value": "strict_pragmatic_plan_review", "required": true, "quality": "validation"},
+          {"type": "must_contain", "value": "--expected-bundle-scheme", "required": true, "quality": "validation"},
+          {"type": "must_contain", "value": "--expected-bundle-fingerprint", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(issue-workflow.sh seal|seal)", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(不再修改|不修改|保持不变).*(plan.md|tasks.md)", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "issue-workflow.sh init", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "用中文填写 plan.md", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "返回 dbx-plan-convergence", "required": true, "quality": "placement"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "selected-profile-missing-reviewer-capability-cannot-seal",
+      "kind": "failure_mode",
+      "prompt": "显式 resume dbx-software-plan-first-finalize-plan。selected profile 的当前 bundle identity/refs 与 passed receipt 全部一致，scope=full、independence=independent、reviewed_after_last_revision=true、open_blocker_high=0、review_judgment=accept；handoff provider binding 要求 strict_pragmatic_plan_review，但 receipt 缺少 reviewer_capability。请 seal。",
+      "expected_behavior": "Reject the incomplete receipt, keep the bundle unsealed, and route the current bundle back to dbx-plan-convergence for a qualifying full review receipt.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(reviewer_capability|reviewer capability|评审能力).*(缺失|missing|没有|不完整)", "required": true, "quality": "validation"}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "dbx-plan-convergence", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "issue-workflow.sh seal", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "已 seal", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "issue-workflow.sh init", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "selected-profile-wrong-reviewer-capability-cannot-seal",
+      "kind": "failure_mode",
+      "prompt": "显式 resume dbx-software-plan-first-finalize-plan。selected profile 的当前 bundle identity/refs 与 passed receipt 全部一致，scope=full、independence=independent、reviewed_after_last_revision=true、open_blocker_high=0、review_judgment=accept；handoff provider binding 要求 reviewer_capability=strict_pragmatic_plan_review，但 receipt 写的是 reviewer_capability=generic_plan_review。请 seal。",
+      "expected_behavior": "Reject the capability-mismatched receipt, keep the bundle unsealed, and route the current bundle back to dbx-plan-convergence for a correctly bound full review receipt.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(reviewer_capability|reviewer capability|评审能力).*(不匹配|mismatch|错误|不一致)", "required": true, "quality": "validation"}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "strict_pragmatic_plan_review", "required": true, "quality": "artifact"},
+          {"type": "must_contain", "value": "dbx-plan-convergence", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "issue-workflow.sh seal", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "已 seal", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "issue-workflow.sh init", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "selected-profile-proposal-receipt-cannot-seal-generated-bundle",
+      "kind": "failure_mode",
+      "prompt": "显式 resume dbx-software-plan-first-finalize-plan。plan.md/tasks.md bundle 已存在且未 seal，fingerprint=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb。父 workflow 给了 proposal v3 的 strict_acceptance_receipt，fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa；没有 bundle full review。请 seal。",
+      "expected_behavior": "Reject the proposal receipt for the generated bundle, keep the files unsealed, and route the exact bundle to dbx-plan-convergence for a fresh full review.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(proposal|上游方案).*(receipt|回执).*(不能|不得|不匹配|无效)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "sha256:b{64}", "required": true, "quality": "artifact"},
+          {"type": "must_contain", "value": "dbx-plan-convergence", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "已 seal", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "issue-workflow.sh init", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "用中文填写 plan.md", "required": true, "quality": "safety"},
+          {"type": "regex", "value": "(fresh|新的|重新).*(full review|全量评审)", "required": true, "quality": "validation"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "selected-profile-existing-bundle-without-receipt-is-read-only",
+      "kind": "failure_mode",
+      "prompt": "显式 resume dbx-software-plan-first-finalize-plan。Selected profile 的 plan.md/tasks.md 已存在且未 seal，current bundle fingerprint=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb；父 workflow 没有提供 strict_acceptance_receipt。继续处理。",
+      "expected_behavior": "Treat this as an identity-preserving resume: read the current fingerprint, do not initialize or rewrite either file, keep the bundle unsealed, and emit the current bundle handoff for review.",
+      "checks": {
+        "trigger": [
+          {"type": "must_contain", "value": "bundle-fingerprint", "required": true, "quality": "validation"}
+        ],
+        "process": [
+          {"type": "regex", "value": "sha256:b{64}", "required": true, "quality": "artifact"},
+          {"type": "must_contain", "value": "dbx-plan-convergence", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "issue-workflow.sh init", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "用中文填写 plan.md", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "已 seal", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "selected-profile-stale-bundle-receipt-is-read-only",
+      "kind": "failure_mode",
+      "prompt": "显式 resume dbx-software-plan-first-finalize-plan。plan.md/tasks.md 已存在且未 seal，current bundle fingerprint=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb；receipt 是同类型 bundle，但绑定旧 fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa。请继续。",
+      "expected_behavior": "Invalidate the stale receipt without recreating the bundle, keep it unsealed, and hand the exact current identity to dbx-plan-convergence.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(stale|旧|过期|不匹配|失效)", "required": true, "quality": "state"}
+        ],
+        "process": [
+          {"type": "regex", "value": "sha256:b{64}", "required": true, "quality": "artifact"},
+          {"type": "must_contain", "value": "dbx-plan-convergence", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "issue-workflow.sh init", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "用中文填写 plan.md", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "已 seal", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "selected-profile-missing-evidence-fails-before-consumable-handoff",
+      "kind": "failure_mode",
+      "prompt": "显式运行 dbx-software-plan-first-finalize-plan，父 workflow 选择 implementation-bound profile 并声称 grounding 已完成，但没有提供任何 repo facts、source of truth、验证事实或 unknowns，只要求输出可直接消费的 plan_bundle_handoff 并 seal。",
+      "expected_behavior": "Fail closed on the absent evidence boundary. Do not materialize or seal and do not claim that a blank handoff is directly consumable.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(evidence boundary|evidence_boundary|证据边界).*(缺失|为空|不完整|补充)", "required": true, "quality": "validation"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(ground-plan|needs-evidence|补充.*证据|回到.*ground)", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "issue-workflow.sh seal", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "issue-workflow.sh init", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "directly consumable", "required": true, "quality": "safety"}
         ],
         "safety": []
       },

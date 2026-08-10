@@ -91,11 +91,14 @@ Use this path for local, reversible, low-risk changes whose behavior and validat
 
 ```text
 dbx-technical-plan
--> dbx-plan-convergence(mode=bounded_loop)
-     -> reviewer: dbx-linus-review(plan_strict, full)
-     -> reviser: original plan author
-     -> optional scoped re-review
--> ready-for-handoff
+-> dbx-plan-convergence(mode=bounded_loop, completion_profile=strict_acceptance)
+     -> initial reviewer: dbx-linus-review(plan_strict, full)
+     -> bounded revision and scoped closure by the original plan author
+     -> final acceptance: qualifying independent full review of the final artifact identity
+          -> pass: identity-bound strict_acceptance_receipt
+          -> new finding: bounded triage/revision/re-review
+          -> no progress or exhausted budget: explicit stop state
+-> ready-for-handoff with current receipt
 -> implementation
 ```
 
@@ -103,27 +106,31 @@ Default budget:
 
 ```yaml
 budget:
-  full_review_passes: 1
-  local_revision_rounds: 1
-  scoped_re_review_passes: 1
+  initial_full_review_passes: 1
+  local_revision_rounds: 2
+  scoped_re_review_passes: 2
+  final_acceptance_full_review_passes: 2
 ```
 
-The full review is default whenever a technical plan is intended for implementation. A second full review is not default. After a bounded local revision, re-review only the accepted findings, direct regressions, anchor drift, evidence-boundary drift, scope growth, and bloat.
+Generic `dbx-plan-convergence` still defaults to `handoff_ready`. This collection path explicitly selects `strict_acceptance`: scoped re-review closes accepted findings and direct regressions, but cannot authorize implementation. The initial independent full review may qualify when the artifact is unchanged; after any revision, final acceptance requires a fresh independent full review bound to the final type/scheme/version/fingerprint/content refs. A new material finding returns to the remaining bounded revision budget; exhausted budget stops the workflow without claiming acceptance.
+
+When the exact `plan.md/tasks.md` bundle needs a local revision, the revision request/result preserve `implementation_plan_bundle`, `plan-first-bundle-sha256-v1`, both file refs, and the before/after identities. The provider recomputes the bundle fingerprint after editing; scoped closure and the final full review both bind that new identity.
 
 ### 4.3 Software Plan-First
 
 ```text
 dbx-software-plan-first-plan-issue      # when proposal decisions are incomplete
 -> dbx-software-plan-first-ground-plan  # when repository facts are needed
--> external dbx-plan-convergence gate   # when this profile is explicitly selected
--> dbx-software-plan-first-finalize-plan
+-> dbx-software-plan-first-finalize-plan # materialize unsealed plan.md/tasks.md
+-> external dbx-plan-convergence gate   # strict review of the exact file bundle
+-> dbx-software-plan-first-finalize-plan # verify the current bundle receipt
 -> seal
 -> implement-feature or showhand
 ```
 
-The external convergence gate is not a new Plan-First phase. It does not change manual-only phase activation, the seal format, implementation scripts, or showhand semantics.
+The external convergence gate is not a new Plan-First phase. Selected-profile finalize is resumable: the first invocation materializes the final files and stops unsealed; the second passes the receipt identity into `seal`, which recomputes it before writing. Existing direct/manual seals remain compatible; selected seals add bundle identity fields. This does not change manual-only phase activation, implementation, or showhand semantics.
 
-When a parent workflow selects this profile, `finalize-plan` should require a current `ready-for-handoff` result bound to the proposal version/fingerprint.
+When a parent workflow selects this profile, the acceptance artifact is the exact `plan.md/tasks.md` bundle that implementation will consume. `scripts/issue-workflow.sh bundle-fingerprint <issue-id>` is the canonical producer for `plan-first-bundle-sha256-v1`: it hashes each file's exact bytes, serializes the two lowercase hashes as canonical one-line JSON, then hashes that JSON. `finalize-plan` may not seal until a current `ready-for-handoff` plus valid `strict_acceptance_receipt` bind that bundle type/scheme/version/fingerprint and the same structured plan/tasks refs. A proposal-level receipt may authorize no more than materialization; it cannot authorize the generated bundle. Any file change invalidates the bundle receipt.
 
 Direct/manual `finalize-plan` remains compatible: a user may explicitly confirm that the plan is already converged, provided every existing decision, grounding, ownership, validation, and artifact-boundary gate is satisfied.
 
@@ -142,12 +149,15 @@ convergence_controller:
   capability: bounded_plan_convergence
   preferred_dbx_skill: dbx-plan-convergence
   mode: bounded_loop
+  completion_profile: strict_acceptance
 
 reviewer:
   capability: strict_pragmatic_plan_review
   preferred_dbx_skill: dbx-linus-review
   artifact_mode: plan_strict
   initial_scope: full
+  final_acceptance_scope: full
+  final_acceptance_independence: required
   write_access: none
 
 reviser:
@@ -172,11 +182,17 @@ An implementation-bound technical plan should produce a handoff with enough iden
 plan_convergence_handoff:
   status: needs_plan_convergence
   originating_intent: ""
+  completion_profile: strict_acceptance
   artifact:
     type: technical_plan | architecture_proposal | migration_plan | implementation_proposal
     version: session-v1
-    fingerprint: null
-    content_ref: inline | path | current_response
+    fingerprint_scheme: exact-bytes-sha256
+    fingerprint: ""
+    content_ref:
+      kind: inline | path | current_context
+      value: inline | path | current_response
+      plan: null
+      tasks: null
   scope: []
   goal: ""
   non_goals: []
@@ -198,15 +214,20 @@ plan_convergence_handoff:
   risk_profile: standard | high_impact | irreversible
   reviewer_requirements:
     initial_scope: full
+    final_acceptance_scope: full
     dimensions: []
-    independence_required: none | preferred | required
-  provider_requirements:
-    reviewer_role: strict_pragmatic_plan_reviewer
-    reviser_role: original_plan_author
+    independence_required: required
+  provider_bindings:
+    reviewers:
+      - id: dbx-linus-review
+        capability: strict_pragmatic_plan_review
+    revision_provider:
+      id: original_plan_author
   budget:
-    full_review_passes: 1
-    local_revision_rounds: 1
-    scoped_re_review_passes: 1
+    initial_full_review_passes: 1
+    local_revision_rounds: 2
+    scoped_re_review_passes: 2
+    final_acceptance_full_review_passes: 2
   modification_authority: plan_text_only
   may_modify_code: false
   stop_on:
@@ -226,7 +247,33 @@ plan_convergence_handoff:
 
 `session-v1` is sufficient for same-session inline composition. Resume, persistence, multiple versions, or multiple reviewers require explicit versioning and preferably a fingerprint.
 
-Do not invent non-applicable anchors merely to fill the contract.
+Before delegation, materialize the exact artifact bytes, declare its structured content ref, and compute `sha256:<64 lowercase hex>` under `exact-bytes-sha256`. Blank, placeholder, malformed, unknown-scheme, missing-ref, or unverifiable values stop at `needs-artifact`. Do not invent non-applicable anchors merely to fill the contract.
+
+The final acceptance pass returns an identity-bound receipt:
+
+```yaml
+strict_acceptance_receipt:
+  status: passed
+  artifact_type: technical_plan
+  artifact_version: ""
+  artifact_fingerprint_scheme: exact-bytes-sha256
+  artifact_fingerprint: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  artifact_content_ref:
+    kind: current_context
+    value: current_response
+    plan: null
+    tasks: null
+  review_id: ""
+  reviewer_capability: strict_pragmatic_plan_review
+  scope: full
+  independence: independent
+  reviewed_after_last_revision: true
+  open_blocker_high: 0
+  review_judgment: accept | accept_with_advisories
+  residual_findings: []
+```
+
+The receipt is invalid after any artifact content change. A scoped review cannot issue it.
 
 ## 7. Reviewer delegation
 
@@ -236,11 +283,21 @@ A delegated Linus review must be read-only and receive:
 delegated_review:
   parent_controller: dbx-plan-convergence
   originating_intent: ""
+  completion_profile: handoff_ready | strict_acceptance
+  review_id: ""
+  reviewer_provider_id: ""
+  reviewer_capability: ""
+  reviewer_independence: independent | partially_independent | none | unknown
   artifact:
-    type: technical_plan | architecture_proposal | migration_plan | adr | implementation_proposal | data_model | diff
+    type: technical_plan | implementation_plan_bundle | architecture_proposal | migration_plan | adr | implementation_proposal | data_model | diff
     version: ""
-    fingerprint: null
-    content_ref: inline | path | current_context
+    fingerprint_scheme: null | exact-bytes-sha256 | plan-first-bundle-sha256-v1
+    fingerprint: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    content_ref:
+      kind: inline | path | current_context | file_bundle
+      value: null
+      plan: null
+      tasks: null
   review_scope:
     kind: full | scoped
     contract_id: null
@@ -259,15 +316,17 @@ delegated_review:
     push: false
 ```
 
-The reviewer returns findings, severity, evidence, impact, fix direction, confidence, and relevant direction/complexity judgment. It does not output convergence `next_action`, `final_state`, revision contracts, or completion state.
+The reviewer returns the human review plus `delegated_review_result`, containing the assigned review id, reviewer provider id/capability copied from the binding, exact artifact type/scheme/version/fingerprint/content refs, scope, independence, judgment, and per-finding `blocking` / `residual` / `decision_owner_required` fields. It does not output convergence `next_action`, `final_state`, revision contracts, receipts, or completion state.
 
-A scoped re-review must bind the current artifact version and revision contract id. It checks only accepted finding closure, direct regressions, anchor/evidence drift, scope/bloat, and material direction changes. It does not reopen a full review for new nits.
+The DBX adapter maps `S0/S1/S2/S3` to `blocker/high/medium/low` but consumes structured `judgment` and blocking fields without downgrading them. `accept_with_advisories` is valid only when every residual is reviewer-declared non-blocking; policy or risk-acceptance S2 remains blocking until its decision owner resolves it. Missing or ambiguous structured fields cannot issue a receipt.
+
+A scoped re-review must bind the current artifact type/scheme/version/fingerprint/content refs and revision contract id. It checks only accepted finding closure, direct regressions, anchor/evidence drift, scope/bloat, and material direction changes. It does not reopen a full review for new nits.
 
 ## 8. Transition routing
 
 | Plan Convergence result | Collection action |
 | --- | --- |
-| `ready-for-handoff` | Proceed to implementation or Plan-First finalize/seal |
+| `ready-for-handoff` | Under `strict_acceptance`, proceed only with a current identity-bound receipt; under generic `handoff_ready`, proceed according to the caller's normal completion policy |
 | `needs-artifact` | Route to the artifact provider; the convergence controller must not draft the missing artifact |
 | `needs-review` | Obtain a review bound to the current artifact version |
 | `needs-evidence` | Route to repository grounding/evidence provider, then resume |
@@ -289,9 +348,10 @@ Normal path:
 
 - one authorization for the composite planning workflow;
 - planner creates the artifact;
-- reviewer performs full strict review;
+- reviewer performs the initial full strict review;
 - controller triages findings;
 - local plan revision and scoped re-review happen without a human confirmation round;
+- the current qualifying independent full review issues the strict acceptance receipt; after a revision this must be a fresh full review, or the workflow returns to its remaining bounded budget;
 - human receives the final plan, major simplifications, evidence boundary, and residual risks.
 
 Interrupt the human only when:
@@ -375,6 +435,7 @@ Human Interventions per Accepted Implementation-Bound Plan
 Guardrails:
 
 - false `ready-for-handoff` rate;
+- fresh full-review rejection rate for an unchanged artifact after strict acceptance;
 - scope drift;
 - missing validation;
 - implementation rework caused by plan defects;

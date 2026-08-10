@@ -62,11 +62,21 @@ A parent controller may delegate this skill only when the parent workflow is alr
 delegated_review:
   parent_controller: ""
   originating_intent: ""
+  completion_profile: handoff_ready | strict_acceptance | null
+  review_id: ""
+  reviewer_provider_id: ""
+  reviewer_capability: ""
+  reviewer_independence: independent | partially_independent | none | unknown
   artifact:
-    type: technical_plan | architecture_proposal | migration_plan | adr | implementation_proposal | data_model | diff
+    type: technical_plan | implementation_plan_bundle | architecture_proposal | migration_plan | adr | implementation_proposal | data_model | diff
     version: ""
-    fingerprint: null
-    content_ref: inline | path | current_context
+    fingerprint_scheme: null | exact-bytes-sha256 | plan-first-bundle-sha256-v1
+    fingerprint: null | "sha256:<64 lowercase hex>"
+    content_ref:
+      kind: inline | path | current_context | file_bundle
+      value: null
+      plan: null
+      tasks: null
   review_scope:
     kind: full | scoped
     contract_id: null
@@ -88,10 +98,78 @@ delegated_review:
 Rules:
 
 - The reviewer is read-only. It never revises the artifact.
-- The reviewer returns findings and review judgment, not convergence `next_action`, `final_state`, revision contracts, or workflow completion decisions.
-- Missing artifact identity, unclear scope, missing evidence boundary, or absent read-only write prohibition fails closed. Ask the parent for the smallest missing envelope fields.
+- The reviewer returns findings and the structured review judgment below, not convergence `next_action`, `final_state`, revision contracts, receipts, or workflow completion decisions.
+- Missing review id, declared independence, artifact identity, clear scope, evidence boundary, or read-only write prohibition fails closed. Ask the parent for the smallest missing envelope fields.
 - A scoped re-review must include the revision contract id and current artifact version.
 - Delegation does not permit ordinary implementation requests to activate this skill.
+
+Delegated reviews append this machine-readable block after the human review:
+
+```yaml
+delegated_review_result:
+  review_id: ""
+  reviewer_provider_id: ""
+  reviewer_capability: ""
+  artifact_type: ""
+  artifact_version: ""
+  artifact_fingerprint_scheme: null
+  artifact_fingerprint: null
+  artifact_content_ref:
+    kind: inline | path | current_context | file_bundle | null
+    value: null
+    plan: null
+    tasks: null
+  scope: full | scoped
+  independence: independent | partially_independent | none | unknown
+  judgment: accept | accept_with_advisories | changes_required | reject | insufficient_evidence
+  findings:
+    - id: "F-001"
+      severity: S0 | S1 | S2 | S3
+      blocking: true | false
+      residual: true | false
+      decision_owner_required: true | false
+```
+
+Result rules:
+
+- `S0` and `S1` are always blocking. `S3` is non-blocking unless the review explains otherwise.
+- `S2` is non-blocking only when the reviewer explicitly establishes that it cannot change direction, a required decision, the evidence boundary, or critical validation. Product, architecture, compatibility, or risk-acceptance `S2` remains blocking and sets `decision_owner_required: true` until resolved.
+- `accept` requires no findings. `accept_with_advisories` requires every finding to have `blocking: false` and `residual: true`. Any blocking finding requires `changes_required`, `reject`, or `insufficient_evidence` as appropriate.
+- A strict-acceptance full review must echo the assigned review id, declared reviewer provider id and capability, exact artifact type, recognized fingerprint scheme, version, structured content ref, and a verified fingerprint matching `^sha256:[0-9a-f]{64}$`, and must report `independence: independent` to qualify. Reviewer capability is copied from the parent binding, never inferred from this skill's name. Missing or ambiguous fields fail closed.
+- For `implementation_plan_bundle`, verified means receiving `content_ref.kind: file_bundle` with non-empty `plan` and `tasks`, then recomputing `plan-first-bundle-sha256-v1` from those exact bytes. Report both component SHA-256 values as verification evidence before the structured result. A missing ref, unreadable file, unknown scheme, or fingerprint mismatch fails closed; the reviewer does not guess a bundle representation or directory convention.
+- This block is the review provider result only; it never authorizes workflow completion.
+
+For a clean `strict_acceptance` full review of an `implementation_plan_bundle`, use one machine-only exception: emit raw YAML from `verification` through `delegated_review_result`, with no Markdown fence, provenance header, or surrounding prose. The fixed top-level order is:
+
+```yaml
+verification:
+  recomputation: recompute plan.md and tasks.md
+  fingerprint_scheme: plan-first-bundle-sha256-v1
+  plan_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  tasks_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  review_scope: full
+  human_summary: 未发现 S0/S1 blocker
+material_findings: none
+delegated_review_result:
+  review_id: R-final
+  reviewer_provider_id: bound-reviewer
+  reviewer_capability: bound-capability
+  artifact_type: implementation_plan_bundle
+  artifact_version: v1
+  artifact_fingerprint_scheme: plan-first-bundle-sha256-v1
+  artifact_fingerprint: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+  artifact_content_ref:
+    kind: file_bundle
+    value: null
+    plan: path/to/plan.md
+    tasks: path/to/tasks.md
+  scope: full
+  independence: independent
+  judgment: accept
+  findings: []
+```
+
+The fence above documents the schema; do not emit the fence. Any finding, non-accept judgment, scoped review, or non-bundle artifact uses the normal human review plus appended machine result instead.
 
 ### Delegated full plan review
 
@@ -244,7 +322,7 @@ For architecture or plan review, adapt Evidence to proposal sections, assumption
 
 Default output in Chinese. Fill the structure with concrete evidence; omit sections that do not apply.
 
-For a delegated review, prepend this minimal provenance header:
+For a delegated review, prepend this minimal provenance header, except for the clean strict-acceptance bundle exception defined above:
 
 ```markdown
 ## Review target

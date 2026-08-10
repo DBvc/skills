@@ -50,8 +50,9 @@ description: Manual trigger only. Use only when the user explicitly names `dbx-s
 5. 对 loop/hybrid、generated artifact、migration、batch、formal/destructive write、prototype、screenshot/trace/report 证据，要求 Artifact/Evidence Boundary。
 6. 如果需要仓库事实，停止在 chat proposal，交给 `dbx-software-plan-first-ground-plan`。
 7. 如果当前上下文已经包含足够事实：
-   - 父 workflow 已选择 DBX implementation-bound planning profile 时，交给 external `dbx-plan-convergence`；
+   - 父 workflow 已选择 DBX implementation-bound planning profile 时，交给 `dbx-software-plan-first-finalize-plan` 先物化未 seal 的最终 bundle；
    - 未选择该 profile，且用户明确确认计划已收敛时，交给 `dbx-software-plan-first-finalize-plan`。
+   - 只有用户另行显式要求评审当前 proposal 时，才可在物化前单独 handoff 给 `dbx-plan-convergence`；这不替代 selected profile 对最终 bundle 的严格验收。
 8. 输出本阶段 handoff 后停止，不在同一轮运行 sibling phase 或 controller。
 
 ## 输出

@@ -56,6 +56,7 @@ ISSUE_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 TEMPLATE_RE = re.compile(r"{([A-Za-z_][A-Za-z0-9_]*)}")
 LOCAL_STATE_TEMPLATE_VARS = {"evidence_file", "validation_log"}
 TRACKED_DOC_TEMPLATE_VARS = {"plan_file", "tasks_file"}
+PLAN_BUNDLE_FINGERPRINT_SCHEME = "plan-first-bundle-sha256-v1"
 
 
 def die(message: str, code: int = 1) -> None:
@@ -437,7 +438,6 @@ def build_context(cli_root: Optional[str], allow_cwd_bootstrap: bool = False) ->
         die(f"workspace root 必须是目录：{root}")
     cfg = load_config(root)
     ctx = Context(root=root.resolve(), cfg=cfg, repos=discover_repos(root))
-    ensure_local_exclude(ctx)
     return ctx
 
 
@@ -698,6 +698,19 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def plan_bundle_identity(plan_file: Path, task_file: Path) -> Dict[str, Any]:
+    files = {
+        "plan.md": sha256_file(plan_file),
+        "tasks.md": sha256_file(task_file),
+    }
+    canonical_manifest = json.dumps(files, ensure_ascii=True, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return {
+        "scheme": PLAN_BUNDLE_FINGERPRINT_SCHEME,
+        "files": files,
+        "fingerprint": f"sha256:{hashlib.sha256(canonical_manifest).hexdigest()}",
+    }
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -828,8 +841,15 @@ def repo_manifest_map(payload: Any) -> Optional[Dict[str, str]]:
     return out
 
 
-def write_seal(ctx: Context, paths: Paths, reason: str) -> None:
+def write_seal(
+    ctx: Context,
+    paths: Paths,
+    reason: str,
+    bundle_identity: Optional[Dict[str, Any]] = None,
+) -> None:
     paths.state_dir.mkdir(parents=True, exist_ok=True)
+    plan_hash = bundle_identity["files"]["plan.md"] if bundle_identity else sha256_file(paths.plan_file)
+    task_hash = bundle_identity["files"]["tasks.md"] if bundle_identity else sha256_file(paths.task_file)
     seal = {
         "version": 1,
         "issue_id": paths.issue_id,
@@ -838,11 +858,14 @@ def write_seal(ctx: Context, paths: Paths, reason: str) -> None:
         "workspace_root": str(ctx.root),
         "plan_file": rel(ctx.root, paths.plan_file),
         "task_file": rel(ctx.root, paths.task_file),
-        "plan_hash": sha256_file(paths.plan_file),
-        "task_hash": sha256_file(paths.task_file),
+        "plan_hash": plan_hash,
+        "task_hash": task_hash,
         "commit_mode": ctx.cfg["workspace"]["commit"],
         "repos": repo_payload(ctx),
     }
+    if bundle_identity:
+        seal["bundle_fingerprint_scheme"] = bundle_identity["scheme"]
+        seal["bundle_fingerprint"] = bundle_identity["fingerprint"]
     paths.seal_file.write_text(json.dumps(seal, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
@@ -1223,6 +1246,7 @@ def mark_task_complete(paths: Paths, task: Task) -> None:
 def command_init(ctx: Context, paths: Paths) -> None:
     plan_template, tasks_template = ensure_templates()
     marker = ensure_root_marker_config(ctx.root)
+    ensure_local_exclude(ctx)
     paths.plan_dir.mkdir(parents=True, exist_ok=True)
     paths.runs_dir.mkdir(parents=True, exist_ok=True)
     paths.state_dir.mkdir(parents=True, exist_ok=True)
@@ -1249,12 +1273,34 @@ def command_init(ctx: Context, paths: Paths) -> None:
     info("下一步：填写 plan.md/tasks.md 后运行 `scripts/issue-workflow.sh seal <issue-id>`。")
 
 
-def command_seal(ctx: Context, paths: Paths) -> None:
+def command_seal(
+    ctx: Context,
+    paths: Paths,
+    expected_bundle_scheme: Optional[str] = None,
+    expected_bundle_fingerprint: Optional[str] = None,
+) -> None:
     if not paths.plan_file.exists() or not paths.task_file.exists():
         die("缺少 plan.md 或 tasks.md。请先运行 init 并填写计划。")
+    if bool(expected_bundle_scheme) != bool(expected_bundle_fingerprint):
+        die("selected profile seal 必须同时提供 expected bundle scheme 和 fingerprint。")
+    bundle_identity = None
+    if expected_bundle_scheme:
+        bundle_identity = plan_bundle_identity(paths.plan_file, paths.task_file)
+        if (
+            bundle_identity["scheme"] != expected_bundle_scheme
+            or bundle_identity["fingerprint"] != expected_bundle_fingerprint
+        ):
+            die("当前 plan.md/tasks.md bundle identity 与 strict acceptance receipt 不一致；拒绝 seal。")
     tasks = parse_tasks(paths.task_file, require_valid=True)
     tracked_files = sync_tracked_plan_docs(ctx, paths)
-    write_seal(ctx, paths, "finalize-plan seal")
+    if bundle_identity:
+        bundle_identity = plan_bundle_identity(paths.plan_file, paths.task_file)
+        if (
+            bundle_identity["scheme"] != expected_bundle_scheme
+            or bundle_identity["fingerprint"] != expected_bundle_fingerprint
+        ):
+            die("同步后 plan.md/tasks.md bundle identity 已变化；拒绝 seal。")
+    write_seal(ctx, paths, "finalize-plan seal", bundle_identity)
     info("已写入 workflow seal：")
     info(f"- {rel(ctx.root, paths.seal_file)}")
     if tracked_files:
@@ -1264,6 +1310,12 @@ def command_seal(ctx: Context, paths: Paths) -> None:
         info("同步后的项目文档会纳入后续 review snapshot 和 task commit 边界。")
     info(f"任务数量：{len(tasks)}")
     info("`.plan-first/` 计划过程产物是本地 workflow 状态，不自动提交。")
+
+
+def command_bundle_fingerprint(paths: Paths) -> None:
+    if not paths.plan_file.exists() or not paths.task_file.exists():
+        die("缺少 plan.md 或 tasks.md，无法计算 bundle fingerprint。请先运行 init 并填写计划。")
+    print(json.dumps(plan_bundle_identity(paths.plan_file, paths.task_file), ensure_ascii=False, indent=2, sort_keys=True))
 
 
 def command_status(ctx: Context, paths: Paths) -> None:
@@ -1691,7 +1743,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Software Plan-First 中文工作流")
     parser.add_argument("--root", help="workspace root；默认向上查找 .plan-first/config.toml，找不到则使用当前 Git root；init 可在非 Git cwd bootstrap")
     parser.add_argument("--repo", help="仅 auto 模式可用；限制 review-ready 的 Git repo，多 repo auto commit 时必填")
-    parser.add_argument("command", nargs="?", help="init|seal|status|next|notes-template|review-ready|complete，或直接传 issue-id 查看 status")
+    parser.add_argument("--expected-bundle-scheme", help="selected profile seal：strict receipt 绑定的 bundle fingerprint scheme")
+    parser.add_argument("--expected-bundle-fingerprint", help="selected profile seal：strict receipt 绑定的 bundle fingerprint")
+    parser.add_argument("command", nargs="?", help="init|bundle-fingerprint|seal|status|next|notes-template|review-ready|complete，或直接传 issue-id 查看 status")
     parser.add_argument("issue_id", nargs="?")
     args = parser.parse_args()
 
@@ -1699,7 +1753,7 @@ def main() -> None:
         print("用法：scripts/issue-workflow.sh [--root ROOT] [--repo NAME] <command> <issue-id>")
         raise SystemExit(2)
 
-    commands = {"init", "seal", "status", "next", "notes-template", "review-ready", "complete"}
+    commands = {"init", "bundle-fingerprint", "seal", "status", "next", "notes-template", "review-ready", "complete"}
     if args.command in commands:
         command = args.command
         issue_id = args.issue_id
@@ -1714,8 +1768,10 @@ def main() -> None:
 
     if command == "init":
         command_init(ctx, paths)
+    elif command == "bundle-fingerprint":
+        command_bundle_fingerprint(paths)
     elif command == "seal":
-        command_seal(ctx, paths)
+        command_seal(ctx, paths, args.expected_bundle_scheme, args.expected_bundle_fingerprint)
     elif command == "status":
         command_status(ctx, paths)
     elif command == "next":

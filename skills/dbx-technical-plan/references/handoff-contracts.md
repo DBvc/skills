@@ -55,11 +55,17 @@ Use when a generated technical plan is intended to guide implementation and shou
 plan_convergence_handoff:
   status: needs_plan_convergence
   originating_intent: ""
+  completion_profile: strict_acceptance
   artifact:
     type: technical_plan | architecture_proposal | migration_plan | implementation_proposal
     version: session-v1
-    fingerprint: null
-    content_ref: inline | path | current_response
+    fingerprint_scheme: exact-bytes-sha256
+    fingerprint: ""
+    content_ref:
+      kind: inline | path | current_context
+      value: inline | path | current_response
+      plan: null
+      tasks: null
   scope: []
   goal: ""
   non_goals: []
@@ -81,15 +87,20 @@ plan_convergence_handoff:
   risk_profile: standard | high_impact | irreversible
   reviewer_requirements:
     initial_scope: full
+    final_acceptance_scope: full
     dimensions: []
-    independence_required: none | preferred | required
-  provider_requirements:
-    reviewer_role: strict_pragmatic_plan_reviewer
-    reviser_role: original_plan_author
+    independence_required: required
+  provider_bindings:
+    reviewers:
+      - id: dbx-linus-review
+        capability: strict_pragmatic_plan_review
+    revision_provider:
+      id: original_plan_author
   budget:
-    full_review_passes: 1
-    local_revision_rounds: 1
-    scoped_re_review_passes: 1
+    initial_full_review_passes: 1
+    local_revision_rounds: 2
+    scoped_re_review_passes: 2
+    final_acceptance_full_review_passes: 2
   modification_authority: plan_text_only
   may_modify_code: false
   stop_on:
@@ -110,7 +121,11 @@ plan_convergence_handoff:
 Rules:
 
 - `session-v1` is acceptable for same-session inline composition. Resume, persistence, multiple artifact versions, or multiple reviewers require an explicit version and preferably a fingerprint.
-- The handoff specifies reviewer capabilities and dimensions. The DBX collection profile binds `dbx-linus-review`; the generic controller remains provider-agnostic.
+- Before delegation, the parent workflow must materialize the exact plan bytes, compute `sha256:<64 lowercase hex>` under `exact-bytes-sha256`, and fill the identity plus structured content ref. Blank, placeholder, malformed, unknown-scheme, missing-ref, or unverifiable values are not a valid handoff.
+- Generic plan convergence defaults to `completion_profile: handoff_ready`. This implementation-bound technical-plan handoff must request `strict_acceptance`.
+- The handoff binds `dbx-linus-review` for the DBX collection path and declares required dimensions; the generic controller remains provider-agnostic.
+- An unchanged initial independent full review may qualify for strict acceptance. After any local revision and scoped closure, strict acceptance requires a fresh independent full review bound to the final artifact identity.
+- `ready-for-handoff` under this profile requires a current `strict_acceptance_receipt`. A failed final review returns to bounded triage/revision while budget remains; otherwise it stops without claiming acceptance.
 - This handoff does not authorize code modification.
 - Do not populate anchors that are not applicable merely to satisfy the template.
 

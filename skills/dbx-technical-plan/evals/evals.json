@@ -172,7 +172,7 @@
             "type": "must_not_contain",
             "value": "## 技术计划结论",
             "required": true,
-            "quality": "behavior"
+            "quality": "structural"
           }
         ],
         "process": [
@@ -180,7 +180,7 @@
             "type": "regex",
             "value": "(Linus|严厉|过度设计|dbx-linus-review|严格)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "output": [
@@ -188,7 +188,7 @@
             "type": "must_not_contain",
             "value": "实施切片",
             "required": true,
-            "quality": "routing"
+            "quality": "structural"
           }
         ],
         "safety": []
@@ -217,7 +217,7 @@
             "type": "regex",
             "value": "(下一门禁|next gate).*(dbx-plan-convergence)|dbx-plan-convergence",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           },
           {
             "type": "regex",
@@ -231,19 +231,19 @@
             "type": "must_not_contain",
             "value": "ready-for-handoff",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "已经完成 Linus review",
             "required": true,
-            "quality": "truthfulness"
+            "quality": "validation"
           },
           {
             "type": "must_not_contain",
             "value": "已通过方案收敛",
             "required": true,
-            "quality": "truthfulness"
+            "quality": "validation"
           }
         ],
         "safety": []
@@ -256,8 +256,8 @@
     {
       "id": "plan-convergence-handoff-binds-identity-and-authority",
       "kind": "positive",
-      "prompt": "为跨包 API migration 生成实施计划，并给出交给 dbx-plan-convergence 的 handoff contract。不要实现。",
-      "expected_behavior": "The handoff should identify the plan artifact and scope, preserve evidence boundaries and core anchors, use a bounded budget, grant plan_text_only authority, and explicitly forbid code modification.",
+      "prompt": "为跨包 API migration 生成实施计划，并给出交给 dbx-plan-convergence 的 handoff contract。不要实现。父 workflow 已将精确计划物化在 current_response，并按 exact-bytes-sha256 计算 fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa；原样绑定 identity 和 content ref。",
+      "expected_behavior": "The implementation-bound handoff should request strict_acceptance, bind a non-empty plan fingerprint and dbx-linus-review provider, preserve evidence boundaries and core anchors, include a final acceptance full-review budget, grant plan_text_only authority, and explicitly forbid code modification.",
       "checks": {
         "trigger": [
           {
@@ -270,24 +270,54 @@
         "process": [
           {
             "type": "regex",
-            "value": "(artifact|version|fingerprint)",
+            "value": "fingerprint:[ \\t]*[\"']?sha256:[0-9a-f]{64}[\"']?",
             "required": true,
-            "quality": "identity"
+            "quality": "artifact"
+          },
+          {
+            "type": "must_contain",
+            "value": "fingerprint_scheme: exact-bytes-sha256",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "content_ref:[\\s\\S]{0,120}kind:[ \\t]*(inline|path|current_context)[\\s\\S]{0,120}value:[^\\r\\n]+",
+            "required": true,
+            "quality": "artifact"
           },
           {
             "type": "regex",
             "value": "(evidence_boundary|证据边界)",
             "required": true,
-            "quality": "evidence"
+            "quality": "validation"
           },
           {
             "type": "regex",
-            "value": "(budget|full_review_passes|local_revision_rounds)",
+            "value": "(core_anchors|source_of_truth|critical_invariants)",
             "required": true,
-            "quality": "control"
+            "quality": "domain"
           }
         ],
         "output": [
+          {
+            "type": "regex",
+            "value": "completion_profile:[ \\t]*strict_acceptance",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "provider_bindings:[\\s\\S]{0,300}(reviewer|review_provider)[\\s\\S]{0,160}dbx-linus-review",
+            "required": true,
+            "quality": "collection"
+          },
+          {
+            "type": "regex",
+            "value": "final_acceptance_full_review_passes:[ \\t]*[1-9][0-9]*",
+            "required": true,
+            "quality": "state"
+          },
           {
             "type": "regex",
             "value": "modification_authority:\\s*plan_text_only",
@@ -309,6 +339,25 @@
       }
     },
     {
+      "id": "failure-placeholder-fingerprint-is-not-a-valid-convergence-handoff",
+      "kind": "failure_mode",
+      "prompt": "技术计划正文已完成，但 parent 还没有物化并计算 hash。请先用 fingerprint: sha256:<content-hash> 交给 strict_acceptance review。",
+      "expected_behavior": "Do not emit a delegable strict-acceptance handoff with a placeholder. Keep the handoff pending until the parent computes the exact sha256 fingerprint.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(fingerprint|hash|指纹).*(计算|物化|compute|materialize)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "must_not_contain", "value": "fingerprint: sha256:<content-hash>", "required": true, "quality": "safety"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(pending|needs-artifact|待计算|不能交给|不得开始).*(review|评审|handoff|交接)", "required": true, "quality": "state"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
       "id": "existing-plan-critique-routes-away-from-planner",
       "kind": "near_miss",
       "prompt": "这里已有 plan-v2。只做一次严格的过度设计 review，不要重新生成技术计划。",
@@ -319,7 +368,7 @@
             "type": "must_not_contain",
             "value": "## 技术计划结论",
             "required": true,
-            "quality": "routing"
+            "quality": "structural"
           }
         ],
         "process": [
@@ -327,7 +376,7 @@
             "type": "regex",
             "value": "(dbx-linus-review|严格.*review|strict)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "output": [
@@ -335,7 +384,44 @@
             "type": "must_not_contain",
             "value": "实施切片",
             "required": true,
-            "quality": "routing"
+            "quality": "structural"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "negative-approved-plan-implementation-does-not-replan",
+      "kind": "negative",
+      "prompt": "plan-v3 已批准。现在直接按它写代码和回归测试，不要重新生成或修改技术计划。",
+      "expected_behavior": "Do not activate the technical-plan writer for an implementation-only request and do not emit a new technical plan or plan-convergence handoff.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_not_contain",
+            "value": "## 技术计划结论",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "plan_convergence_handoff",
+            "required": true,
+            "quality": "placement"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "completion_profile: strict_acceptance",
+            "required": true,
+            "quality": "state"
           }
         ],
         "safety": []

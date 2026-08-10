@@ -13,7 +13,7 @@
             "type": "regex",
             "value": "(方案收敛|plan convergence|收敛控制)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "process": [
@@ -21,13 +21,13 @@
             "type": "regex",
             "value": "(provider|作者|reviewer|证据|decision owner|决策 owner)",
             "required": true,
-            "quality": "architecture"
+            "quality": "placement"
           },
           {
             "type": "regex",
             "value": "(不依赖|不写死|provider-agnostic|可替换)",
             "required": true,
-            "quality": "decoupling"
+            "quality": "placement"
           }
         ],
         "output": [
@@ -35,13 +35,13 @@
             "type": "must_contain",
             "value": "next_action",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "final_state",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           }
         ],
         "safety": []
@@ -62,7 +62,7 @@
             "type": "regex",
             "value": "(方案收敛|收敛|plan)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "process": [
@@ -70,13 +70,13 @@
             "type": "regex",
             "value": "(direction_failure|方向错误|方向性|根因|state owner|owner)",
             "required": true,
-            "quality": "gate"
+            "quality": "validation"
           },
           {
             "type": "regex",
             "value": "(explore|探索)",
             "required": true,
-            "quality": "phase"
+            "quality": "state"
           }
         ],
         "output": [
@@ -84,13 +84,13 @@
             "type": "must_contain",
             "value": "initiate-pivot",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "pivot-required",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
@@ -117,7 +117,7 @@
             "type": "regex",
             "value": "(方案|review|继续)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "process": [
@@ -125,7 +125,7 @@
             "type": "regex",
             "value": "(evidence_gap|证据缺口|缺.*证据|仓库事实)",
             "required": true,
-            "quality": "evidence"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -133,19 +133,19 @@
             "type": "must_contain",
             "value": "gather-evidence",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "needs-evidence",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(不得|不要|不能).*(事实|已知|既定)",
             "required": true,
-            "quality": "honesty"
+            "quality": "validation"
           }
         ],
         "safety": []
@@ -166,7 +166,7 @@
             "type": "regex",
             "value": "(convergence|收敛|gate)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "process": [
@@ -174,7 +174,7 @@
             "type": "regex",
             "value": "(decision_gap|决策缺口|需要.*决策|owner)",
             "required": true,
-            "quality": "authority"
+            "quality": "safety"
           }
         ],
         "output": [
@@ -182,19 +182,19 @@
             "type": "must_contain",
             "value": "request-decision",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "needs-decision",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(不.*擅自|不能.*替|交给.*owner|请求.*决策)",
             "required": true,
-            "quality": "authority"
+            "quality": "safety"
           }
         ],
         "safety": []
@@ -215,7 +215,7 @@
             "type": "regex",
             "value": "(两轮|高影响|迁移)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -223,19 +223,19 @@
             "type": "regex",
             "value": "(soft checkpoint|软.*检查点|不是.*上限)",
             "required": true,
-            "quality": "policy"
+            "quality": "behavior"
           },
           {
             "type": "regex",
             "value": "(epoch|方向阶段|方向.*周期)",
             "required": true,
-            "quality": "model"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(证据|review.*维度|独立.*评审|human checkpoint|人工.*门禁)",
             "required": true,
-            "quality": "rigor"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -243,7 +243,7 @@
             "type": "regex",
             "value": "(progress credit|信息增益|真实进展|新证据|决策)",
             "required": true,
-            "quality": "continuation"
+            "quality": "state"
           }
         ],
         "safety": []
@@ -264,7 +264,7 @@
             "type": "regex",
             "value": "(两轮|第三轮|新.*证据|调用方)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -272,13 +272,13 @@
             "type": "regex",
             "value": "(progress credit|新.*证据|信息增益|material evidence)",
             "required": true,
-            "quality": "gate"
+            "quality": "validation"
           },
           {
             "type": "regex",
             "value": "(hard budget|硬.*预算|总预算|有界)",
             "required": true,
-            "quality": "budget"
+            "quality": "state"
           }
         ],
         "output": [
@@ -286,7 +286,7 @@
             "type": "regex",
             "value": "(可以.*第三轮|允许.*继续|continue)",
             "required": true,
-            "quality": "decision"
+            "quality": "behavior"
           }
         ],
         "safety": []
@@ -307,7 +307,7 @@
             "type": "regex",
             "value": "(第三轮|第四轮|方案)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -315,7 +315,7 @@
             "type": "regex",
             "value": "(flat|bloat|打转|膨胀|无.*进展)",
             "required": true,
-            "quality": "gate"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -323,7 +323,7 @@
             "type": "regex",
             "value": "(stopped-flat|stopped-bloat)",
             "required": true,
-            "quality": "contract"
+            "quality": "state"
           },
           {
             "type": "regex",
@@ -350,7 +350,7 @@
             "type": "regex",
             "value": "(来回|两次|reviewer)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -358,7 +358,7 @@
             "type": "regex",
             "value": "(oscillat|摆动|来回|方向.*切换)",
             "required": true,
-            "quality": "gate"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -366,13 +366,13 @@
             "type": "must_contain",
             "value": "stopped-oscillating",
             "required": true,
-            "quality": "contract"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(证据|decision owner|决策 owner|实验|spike)",
             "required": true,
-            "quality": "next_action"
+            "quality": "state"
           }
         ],
         "safety": []
@@ -393,7 +393,7 @@
             "type": "regex",
             "value": "(旧方向|source of truth|计轮次)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -401,19 +401,19 @@
             "type": "regex",
             "value": "(关闭.*epoch|结束.*epoch|旧.*epoch)",
             "required": true,
-            "quality": "model"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(外部|provider|人类|新.*候选).*(提供|输入|给出).*(再|后).*(新.*epoch|开启.*epoch)",
             "required": true,
-            "quality": "execution_boundary"
+            "quality": "placement"
           },
           {
             "type": "regex",
             "value": "(总预算.*不.*清零|保留.*总预算|历史.*保留)",
             "required": true,
-            "quality": "budget"
+            "quality": "state"
           }
         ],
         "output": [
@@ -421,13 +421,13 @@
             "type": "must_contain",
             "value": "pivot-required",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(rejection reason|否决理由|淘汰理由)",
             "required": true,
-            "quality": "traceability"
+            "quality": "artifact"
           }
         ],
         "safety": []
@@ -448,7 +448,7 @@
             "type": "regex",
             "value": "(obtain-artifact|needs-artifact|已有.*方案|artifact provider|方案 provider)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "process": [],
@@ -457,7 +457,7 @@
             "type": "must_not_contain",
             "value": "以下是完整第一版技术方案",
             "required": true,
-            "quality": "boundary"
+            "quality": "placement"
           }
         ],
         "safety": []
@@ -486,7 +486,7 @@
             "type": "regex",
             "value": "(flat|oscillat|bloat|方向|证据|决策)",
             "required": true,
-            "quality": "gates"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -515,7 +515,7 @@
             "type": "regex",
             "value": "(完全正确|已经验证|blocker)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -523,7 +523,7 @@
             "type": "regex",
             "value": "(evidence boundary|证据边界)",
             "required": true,
-            "quality": "honesty"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -531,19 +531,19 @@
             "type": "must_contain",
             "value": "finalize",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "ready-for-handoff",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(不.*表示.*完全正确|不.*代表.*已验证|尚未.*实现|没有.*生产验证)",
             "required": true,
-            "quality": "completion"
+            "quality": "validation"
           }
         ],
         "safety": []
@@ -564,7 +564,7 @@
             "type": "regex",
             "value": "(gate_only|方案收敛|收敛结果)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "process": [
@@ -572,7 +572,7 @@
             "type": "regex",
             "value": "(局部|local_revision|revise-local)",
             "required": true,
-            "quality": "triage"
+            "quality": "behavior"
           }
         ],
         "output": [
@@ -580,31 +580,31 @@
             "type": "must_contain",
             "value": "next_action",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "revise-local",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "final_state",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(final_state\\s*[:：]\\s*(null|none|空)|final_state.*null)",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "must_not_contain",
             "value": "final_state: in-progress",
             "required": true,
-            "quality": "regression"
+            "quality": "validation"
           }
         ],
         "safety": []
@@ -625,7 +625,7 @@
             "type": "regex",
             "value": "(convergence|收敛|gate)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "process": [
@@ -633,7 +633,7 @@
             "type": "regex",
             "value": "(没有.*证明.*错误|方向.*未.*失败|比较标准|alternatives)",
             "required": true,
-            "quality": "semantics"
+            "quality": "behavior"
           }
         ],
         "output": [
@@ -641,19 +641,19 @@
             "type": "must_contain",
             "value": "explore-alternatives",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "needs-alternatives",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(不.*pivot-required|不是.*方向失败|未.*否决)",
             "required": true,
-            "quality": "boundary"
+            "quality": "placement"
           }
         ],
         "safety": []
@@ -674,7 +674,7 @@
             "type": "regex",
             "value": "(v1|v2|gate_only|review)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -682,7 +682,7 @@
             "type": "regex",
             "value": "(stale|旧版本|版本.*不.*一致|不适用)",
             "required": true,
-            "quality": "provenance"
+            "quality": "artifact"
           }
         ],
         "output": [
@@ -690,13 +690,13 @@
             "type": "must_contain",
             "value": "obtain-review",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "needs-review",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
@@ -723,7 +723,7 @@
             "type": "regex",
             "value": "(gate_only|plan convergence|方案收敛)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "process": [
@@ -731,7 +731,7 @@
             "type": "regex",
             "value": "(没有.*review|缺.*review|gate_only.*不.*review)",
             "required": true,
-            "quality": "mode_gate"
+            "quality": "behavior"
           }
         ],
         "output": [
@@ -739,13 +739,13 @@
             "type": "must_contain",
             "value": "obtain-review",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "needs-review",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           }
         ],
         "safety": []
@@ -766,7 +766,7 @@
             "type": "regex",
             "value": "(resume|state|继续)",
             "required": true,
-            "quality": "routing"
+            "quality": "placement"
           }
         ],
         "process": [
@@ -774,7 +774,7 @@
             "type": "regex",
             "value": "(版本|fingerprint|identity).*(不一致|mismatch|不同)",
             "required": true,
-            "quality": "state_gate"
+            "quality": "state"
           }
         ],
         "output": [
@@ -782,7 +782,7 @@
             "type": "must_contain",
             "value": "blocked-state-mismatch",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
@@ -809,7 +809,7 @@
             "type": "regex",
             "value": "(R1|R2|review provenance|convergence state)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -817,7 +817,7 @@
             "type": "regex",
             "value": "(每个.*review|per-review|review pass)",
             "required": true,
-            "quality": "provenance"
+            "quality": "artifact"
           }
         ],
         "output": [
@@ -825,19 +825,19 @@
             "type": "regex",
             "value": "(R1[\\s\\S]{0,200}(none|非独立)|none[\\s\\S]{0,200}R1)",
             "required": true,
-            "quality": "per_pass"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(R2[\\s\\S]{0,200}independent|independent[\\s\\S]{0,200}R2)",
             "required": true,
-            "quality": "per_pass"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(不.*全局.*provider_independence|删除.*全局|不是.*全局)",
             "required": true,
-            "quality": "regression"
+            "quality": "validation"
           }
         ],
         "safety": []
@@ -858,7 +858,7 @@
             "type": "regex",
             "value": "(bounded_loop|controller|迁移)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -866,7 +866,7 @@
             "type": "regex",
             "value": "(evidence_gap|证据缺口|会翻转)",
             "required": true,
-            "quality": "gate"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -874,19 +874,19 @@
             "type": "must_contain",
             "value": "gather-evidence",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "needs-evidence",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(暂停|handoff|交给.*evidence|不.*自己.*读仓库)",
             "required": true,
-            "quality": "execution_boundary"
+            "quality": "placement"
           }
         ],
         "safety": []
@@ -907,7 +907,7 @@
             "type": "regex",
             "value": "(refactor|core anchors|方案收敛)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -915,7 +915,7 @@
             "type": "regex",
             "value": "(not_applicable|不适用)",
             "required": true,
-            "quality": "applicability"
+            "quality": "behavior"
           }
         ],
         "output": [
@@ -923,19 +923,19 @@
             "type": "regex",
             "value": "(public.*contract|public API)[\\s\\S]{0,120}(not_applicable|不适用)",
             "required": true,
-            "quality": "anchor"
+            "quality": "artifact"
           },
           {
             "type": "regex",
             "value": "(migration|rollout|rollback|迁移|发布)[\\s\\S]{0,120}(not_applicable|不适用)",
             "required": true,
-            "quality": "anchor"
+            "quality": "artifact"
           },
           {
             "type": "regex",
             "value": "(validation|验证|invariant|不变量).*(仍|必须|需要)",
             "required": true,
-            "quality": "completion"
+            "quality": "validation"
           }
         ],
         "safety": []
@@ -956,7 +956,7 @@
             "type": "regex",
             "value": "(bounded_loop|ready|默认输出)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -964,7 +964,7 @@
             "type": "regex",
             "value": "(compact|紧凑|只.*非空|不.*空.*分类)",
             "required": true,
-            "quality": "presentation"
+            "quality": "structural"
           }
         ],
         "output": [
@@ -972,31 +972,31 @@
             "type": "must_contain",
             "value": "ready-for-handoff",
             "required": true,
-            "quality": "state_contract"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(证据边界|evidence boundary)",
             "required": true,
-            "quality": "honesty"
+            "quality": "validation"
           },
           {
             "type": "regex",
             "value": "(剩余风险|residual risk)",
             "required": true,
-            "quality": "risk"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "非空 blocker / gap：",
             "required": true,
-            "quality": "conditional_section"
+            "quality": "structural"
           },
           {
             "type": "must_not_contain",
             "value": "Blocker / gap：",
             "required": true,
-            "quality": "conditional_section"
+            "quality": "structural"
           }
         ],
         "safety": []
@@ -1017,7 +1017,7 @@
             "type": "regex",
             "value": "(reviewer|冲突|next action)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -1025,7 +1025,7 @@
             "type": "regex",
             "value": "(先.*证据|gather-evidence)",
             "required": true,
-            "quality": "ordering"
+            "quality": "behavior"
           }
         ],
         "output": [
@@ -1033,25 +1033,25 @@
             "type": "must_contain",
             "value": "gather-evidence",
             "required": true,
-            "quality": "action_contract"
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "follow_up_if",
             "required": true,
-            "quality": "conditional"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(request-decision|请求.*决策)",
             "required": true,
-            "quality": "follow_up"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(不.*动作数组|一个.*主动作|single.*action)",
             "required": true,
-            "quality": "regression"
+            "quality": "validation"
           }
         ],
         "safety": []
@@ -1072,7 +1072,7 @@
             "type": "regex",
             "value": "(scoped re-review|RC-E1-R1|plan v2)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -1080,7 +1080,7 @@
             "type": "regex",
             "value": "(revision contract|contract_id|修订合同)",
             "required": true,
-            "quality": "provenance"
+            "quality": "artifact"
           }
         ],
         "output": [
@@ -1088,19 +1088,19 @@
             "type": "must_contain",
             "value": "contract_id",
             "required": true,
-            "quality": "contract_binding"
+            "quality": "artifact"
           },
           {
             "type": "must_contain",
             "value": "RC-E1-R1",
             "required": true,
-            "quality": "contract_binding"
+            "quality": "artifact"
           },
           {
             "type": "regex",
             "value": "(artifact_version|artifact version)[\\s\\S]{0,80}v2",
             "required": true,
-            "quality": "artifact_identity"
+            "quality": "artifact"
           }
         ],
         "safety": []
@@ -1121,7 +1121,7 @@
             "type": "regex",
             "value": "(review-pass|reviewer|空白)",
             "required": true,
-            "quality": "intent"
+            "quality": "behavior"
           }
         ],
         "process": [
@@ -1129,7 +1129,7 @@
             "type": "regex",
             "value": "(unknown|未知|不.*猜)",
             "required": true,
-            "quality": "epistemic_boundary"
+            "quality": "safety"
           }
         ],
         "output": [
@@ -1137,13 +1137,676 @@
             "type": "regex",
             "value": "(type[\\\"\\s:]+unknown|type:\\s*unknown)",
             "required": true,
-            "quality": "neutral_default"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "\"type\": \"human\"",
             "required": true,
-            "quality": "no_false_provenance"
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "negative-review-only-request-does-not-activate-convergence",
+      "kind": "negative",
+      "prompt": "只用 dbx-linus-review 审核这份技术方案并返回 findings；不要编排修改或收敛循环。",
+      "expected_behavior": "Do not activate plan convergence for a review-only request and do not emit a convergence transition or completion receipt.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(?s)\\A(?!.*[\\\"']?final_state[\\\"']?\\s*:\\s*[\\\"']?ready-for-handoff[\\\"']?).*\\Z",
+            "required": true,
+            "quality": "placement"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(只.*review|仅.*评审|review-only|不.*收敛|不.*convergence)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "next_action",
+            "required": true,
+            "quality": "placement"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "strict_acceptance_receipt",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-strict-scoped-closure-still-needs-full-review",
+      "kind": "failure_mode",
+      "prompt": "completion_profile 是 strict_acceptance。artifact type=technical_plan，scheme=exact-bytes-sha256；plan v1 经 full review R1 发现 F-001，修成 plan v2/fingerprint sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa；R2 只做 scoped re-review 并确认 F-001 已关闭。现在能严格通过吗？",
+      "expected_behavior": "Treat scoped closure as candidate readiness only, emit obtain-review plus needs-review, require a fresh independent full review of exact plan v2, and do not issue a passed strict acceptance receipt.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(strict_acceptance|严格验收)[\\s\\S]{0,200}(scoped|局部复审)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(scoped|局部复审)[\\s\\S]{0,160}(不能|不足|不等于|not enough)[\\s\\S]{0,160}(full|全量|严格)",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "obtain-review",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "must_contain",
+            "value": "needs-review",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(fresh|新的|最终)[\\s\\S]{0,160}(independent|独立)[\\s\\S]{0,160}(full review|全量评审)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?s)\\A(?!.*[\\\"']?final_state[\\\"']?\\s*:\\s*[\\\"']?ready-for-handoff[\\\"']?).*\\Z",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(?s)\\A(?!.*[\\\"']?strict_acceptance_receipt[\\\"']?\\s*:[\\s\\S]{0,240}[\\\"']?status[\\\"']?\\s*:\\s*[\\\"']?passed).*\\Z",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-strict-final-full-high-revises-locally",
+      "kind": "failure_mode",
+      "prompt": "strict_acceptance 的最终 fresh full review 返回原始 Linus delegated_review_result：review_id=R3，artifact_type=technical_plan，artifact_fingerprint_scheme=exact-bytes-sha256，artifact_version=v2，artifact_fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa，scope=full，independence=independent，judgment=changes_required，findings=[{severity:S1,blocking:true,residual:false,decision_owner_required:false,evidence:验证命令写错 package}]。决定下一步。",
+      "expected_behavior": "Do not accept the plan; emit revise-local with final_state null, invalidate any prior acceptance, and issue no ready state or passed strict acceptance receipt.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(strict_acceptance|严格验收)[\\s\\S]{0,200}(S1|high)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(local_revision|局部修复|可局部修|revise-local)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "revise-local",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "final_state\\s*[:：]\\s*(null|none|空)",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(?s)\\A(?!.*[\\\"']?final_state[\\\"']?\\s*:\\s*[\\\"']?ready-for-handoff[\\\"']?).*\\Z",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(?s)\\A(?!.*[\\\"']?strict_acceptance_receipt[\\\"']?\\s*:[\\s\\S]{0,240}[\\\"']?status[\\\"']?\\s*:\\s*[\\\"']?passed).*\\Z",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-strict-final-full-clean-issues-receipt",
+      "kind": "positive",
+      "prompt": "completion_profile=strict_acceptance。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。最后一次修订产出 artifact type=technical_plan、scheme=exact-bytes-sha256、content_ref={kind:current_context,value:current_response}、plan v3/fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb；之后收到原始 delegated_review_result：review_id=R5，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，artifact_type=technical_plan，artifact_fingerprint_scheme=exact-bytes-sha256，artifact_content_ref 同上，artifact_version=v3，artifact_fingerprint 同上，scope=full，independence=independent，judgment=accept_with_advisories，findings=[{id:F-009,severity:S2,blocking:false,residual:true,decision_owner_required:false}]。该 review 在最后修订之后。输出结果。",
+      "expected_behavior": "Match the review provider and capability to the unique binding, finalize as ready-for-handoff, and issue a passed strict_acceptance_receipt bound to plan v3, its exact sha256 fingerprint, and full review R5.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(strict_acceptance|严格验收)[\\s\\S]{0,240}(fresh|新的)[\\s\\S]{0,120}(full review|全量评审)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(artifact|plan)[_ ]?(version)?[\\s\\S]{0,100}v3[\\s\\S]{0,160}sha256:b{64}",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "(S0/S1|blocker.*high)[\\s\\S]{0,80}(0|zero)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(dbx-linus-review|reviewer_provider_id)[\\s\\S]{0,120}strict_pragmatic_plan_review",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "finalize",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "must_contain",
+            "value": "ready-for-handoff",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "must_contain",
+            "value": "strict_acceptance_receipt",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "(?m)\\Aqualification:[ \\t]*\\r?\\n  completion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\n  review_freshness:[ \\t]*fresh_after_last_revision[ \\t]*\\r?\\n  review_kind:[ \\t]*full review[ \\t]*\\r?\\n  review_id:[ \\t]*R5[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept_with_advisories[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v3[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:b{64}[ \\t]*\\r?\\ntransition:[ \\t]*\\r?\\n  next_action:[ \\t]*finalize[ \\t]*\\r?\\n  final_state:[ \\t]*ready-for-handoff[ \\t]*\\r?\\ncompletion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\nstrict_acceptance_receipt:[ \\t]*\\r?\\n  status:[ \\t]*passed[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v3[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:b{64}[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*current_context[ \\t]*\\r?\\n    value:[ \\t]*current_response[ \\t]*\\r?\\n    plan:[ \\t]*null[ \\t]*\\r?\\n    tasks:[ \\t]*null[ \\t]*\\r?\\n  review_id:[ \\t]*R5[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  reviewed_after_last_revision:[ \\t]*true[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept_with_advisories[ \\t]*\\r?\\n  residual_findings:[ \\t]*\\r?\\n    -[ \\t]*F-009[ \\t]*\\r?\\n[ \\t\\r\\n]*\\Z",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?ms)\\A(?![\\s\\S]*^completion_profile:[^\\r\\n]*$[\\s\\S]*^completion_profile:[^\\r\\n]*$)(?![\\s\\S]*\\btransition\\b[\\s\\S]*\\btransition\\b)(?![\\s\\S]*\\bnext_action\\b[\\s\\S]*\\bnext_action\\b)(?![\\s\\S]*\\bfinal_state\\b[\\s\\S]*\\bfinal_state\\b)(?![\\s\\S]*\\bstrict_acceptance_receipt\\b[\\s\\S]*\\bstrict_acceptance_receipt\\b)[\\s\\S]*\\Z",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?s)\\A(?!.*(?:stopped-(?:flat|oscillating|bloat|budget)|needs-(?:artifact|review|evidence|decision|alternatives)|pivot-required|blocked-(?:state-mismatch|insufficient-history))).*\\Z",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(status[\\\"\\s:]+passed|status:\\s*passed)",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "sha256:b{64}",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "artifact_type[\\\"\\s:]+technical_plan[\\s\\S]{0,180}artifact_fingerprint_scheme[\\\"\\s:]+exact-bytes-sha256",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "artifact_content_ref:[\\s\\S]{0,120}kind:[ \\t]*current_context[\\s\\S]{0,120}value:[ \\t]*current_response",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "review_id[\\\"\\s:]+R5",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "open_blocker_high[\\\"\\s:]+0",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "must_contain",
+            "value": "scope: full",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "must_contain",
+            "value": "independence: independent",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "must_contain",
+            "value": "reviewed_after_last_revision: true",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "review_judgment[\\\"\\s:]+(accept|accept_with_advisories)",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-strict-review-missing-capability-provenance-needs-review",
+      "kind": "failure_mode",
+      "prompt": "completion_profile=strict_acceptance。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。当前 technical_plan 的 identity 完整；收到最后修订后的 full independent accept review R-missing，reviewer_provider_id=dbx-linus-review，但 review pass/result 没有 reviewer_capability。是否可签 passed receipt？",
+      "expected_behavior": "Fail closed because the accepting review lacks bound capability provenance; return obtain-review plus needs-review and issue no passed strict receipt.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(reviewer_capability|reviewer capability|评审能力).*(缺失|missing|没有|不完整)", "required": true, "quality": "validation"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(provider_bindings|provider binding|绑定).*(不能推断|不得推断|缺少|无法匹配|cannot infer)", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "obtain-review", "required": true, "quality": "state"},
+          {"type": "must_contain", "value": "needs-review", "required": true, "quality": "state"},
+          {"type": "regex", "value": "(?s)\\A(?!.*[\\\"']?strict_acceptance_receipt[\\\"']?\\s*:[\\s\\S]{0,240}[\\\"']?status[\\\"']?\\s*:\\s*[\\\"']?passed).*\\Z", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-strict-review-capability-mismatch-needs-review",
+      "kind": "failure_mode",
+      "prompt": "completion_profile=strict_acceptance。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。当前 technical_plan 的 identity 完整；收到最后修订后的 full independent accept review R-wrong，reviewer_provider_id=dbx-linus-review，但 reviewer_capability=generic_plan_review。是否可签 passed receipt？",
+      "expected_behavior": "Reject the capability-mismatched accepting review; return obtain-review plus needs-review and issue no passed strict receipt.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(reviewer_capability|reviewer capability|评审能力).*(不匹配|mismatch|错误|不一致)", "required": true, "quality": "validation"}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "strict_pragmatic_plan_review", "required": true, "quality": "artifact"},
+          {"type": "must_contain", "value": "generic_plan_review", "required": true, "quality": "artifact"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "obtain-review", "required": true, "quality": "state"},
+          {"type": "must_contain", "value": "needs-review", "required": true, "quality": "state"},
+          {"type": "regex", "value": "(?s)\\A(?!.*[\\\"']?strict_acceptance_receipt[\\\"']?\\s*:[\\s\\S]{0,240}[\\\"']?status[\\\"']?\\s*:\\s*[\\\"']?passed).*\\Z", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-strict-receipt-invalid-after-artifact-change",
+      "kind": "failure_mode",
+      "prompt": "strict_acceptance_receipt R5 通过的是 technical_plan、scheme=exact-bytes-sha256、plan v3/fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb。回执签发后方案又改成 v4/fingerprint sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc，但没有新的 full review。旧回执还有效吗？",
+      "expected_behavior": "Invalidate the old receipt because artifact identity changed, emit obtain-review plus needs-review for a fresh full review of v4, and do not report ready based on R5.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "v3[\\s\\S]{0,220}sha256:b{64}[\\s\\S]{0,220}v4[\\s\\S]{0,220}sha256:c{64}",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(receipt|回执)[\\s\\S]{0,100}(失效|无效|invalidate|撤销)",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(artifact|方案).*(identity|fingerprint|版本|指纹).*(变化|不一致|mismatch|changed)",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "obtain-review",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "must_contain",
+            "value": "needs-review",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(fresh|新的|重新)[\\s\\S]{0,160}(full review|全量评审)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?s)\\A(?!.*[\\\"']?final_state[\\\"']?\\s*:\\s*[\\\"']?ready-for-handoff[\\\"']?).*\\Z",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(?s)\\A(?!.*[\\\"']?strict_acceptance_receipt[\\\"']?\\s*:[\\s\\S]{0,240}[\\\"']?status[\\\"']?\\s*:\\s*[\\\"']?passed).*\\Z",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-strict-placeholder-fingerprint-needs-artifact",
+      "kind": "failure_mode",
+      "prompt": "completion_profile=strict_acceptance，当前 artifact version=v2，但 fingerprint 仍是 sha256:<content-hash>。reviewer 已绑定。是否可以开始 review 或签发回执？",
+      "expected_behavior": "Reject the placeholder identity, return obtain-artifact plus needs-artifact, and do not start strict review or issue a receipt.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(placeholder|占位|fingerprint|指纹).*(无效|invalid|不合法|重算|计算)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "sha256:[0-9a-f]{64}", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "obtain-artifact", "required": true, "quality": "state"},
+          {"type": "must_contain", "value": "needs-artifact", "required": true, "quality": "state"},
+          {"type": "regex", "value": "(?s)\\A(?!.*[\\\"']?strict_acceptance_receipt[\\\"']?\\s*:[\\s\\S]{0,240}[\\\"']?status[\\\"']?\\s*:\\s*[\\\"']?passed).*\\Z", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-resume-older-v2-defaults-to-handoff-ready",
+      "kind": "positive",
+      "prompt": "resume 一个较早保存的 convergence_state_version=2：artifact version=v2 与当前输入一致，已知 material findings 都已关闭；state 缺少 completion_profile、acceptance 和 final_acceptance_full_review_passes 字段。按兼容规则继续。",
+      "expected_behavior": "Normalize the missing additive fields to handoff_ready, artifact content_ref null, acceptance not_requested, final acceptance budget max 2 and used 0; preserve the ordinary completion path without inventing strict acceptance or bundle refs.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(旧|较早|legacy|older).*v2|convergence_state_version", "required": true, "quality": "state"}
+        ],
+        "process": [
+          {"type": "regex", "value": "completion_profile[\\s:]+handoff_ready", "required": true, "quality": "state"},
+          {"type": "regex", "value": "content_ref[\\s:]+(null|none|空)", "required": true, "quality": "state"},
+          {"type": "regex", "value": "final_acceptance_full_review_passes[\\s:]+2", "required": true, "quality": "state"},
+          {"type": "regex", "value": "final_acceptance_full_review_passes_used[\\s:]+0", "required": true, "quality": "state"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(acceptance[\\s\\S]{0,80}not_requested|not_requested)", "required": true, "quality": "state"},
+          {"type": "regex", "value": "(不推断|不得推断|不.*升级|does not infer)[\\s\\S]{0,80}(strict_acceptance|严格验收)", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-legacy-content-location-does-not-infer-bundle-refs",
+      "kind": "positive",
+      "prompt": "resume 一个旧 convergence_state_version=2：artifact={type:technical_plan,version:v1,content_location:docs/plan.md}，没有 fingerprint_scheme、fingerprint 或 content_ref；completion_profile 也缺失。按兼容规则规范化，但不要从这个标量路径猜测双文件 bundle。",
+      "expected_behavior": "Preserve the legacy scalar content_location, normalize content_ref to null and completion_profile to handoff_ready, and do not infer file_bundle or strict acceptance.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(旧|legacy)[\\s\\S]{0,160}content_location", "required": true, "quality": "state"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(不推断|不得推断|不.*猜测|does not infer)[\\s\\S]{0,120}(bundle|双文件|content_ref)", "required": true, "quality": "safety"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(?ms)^artifact:[ \\t]*$[\\s\\S]{0,120}^  type:[ \\t]*technical_plan[ \\t]*$[\\s\\S]{0,120}^  version:[ \\t]*[\\\"']?v1[\\\"']?[ \\t]*$[\\s\\S]{0,360}^  content_ref:[ \\t]*(null|none)[ \\t]*$[\\s\\S]{0,160}^  content_location:[ \\t]*[\\\"']?docs/plan\\.md[\\\"']?[ \\t]*$", "required": true, "quality": "state"},
+          {"type": "regex", "value": "completion_profile[\\s:]+handoff_ready", "required": true, "quality": "state"},
+          {"type": "must_not_contain", "value": "file_bundle", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "strict_acceptance", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-bundle-local-revision-contract-preserves-full-identity",
+      "kind": "positive",
+      "prompt": "bounded_loop + strict_acceptance。当前 artifact 是 implementation_plan_bundle，scheme=plan-first-bundle-sha256-v1，version=plan-first-api-bundle-aaaaaaaaaaaa，fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa，content refs={plan:.plan-first/issues/api/plan.md,tasks:.plan-first/issues/api/tasks.md}。初始 full review R1 对同一 identity 返回一个可局部修复的 validation finding F-001；允许 original_plan_author 只修改计划文本。输出本轮 transition 和 revision contract。",
+      "expected_behavior": "Choose revise-local with final_state null and issue a revision contract that preserves the bundle type, scheme, both content refs, source review identity, and before identity so the provider can return a recomputed after identity.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "implementation_plan_bundle[\\s\\S]{0,160}plan-first-bundle-sha256-v1", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(局部修复|local revision|revise-local)[\\s\\S]{0,200}(F-001|validation)", "required": true, "quality": "behavior"},
+          {"type": "must_contain", "value": "revision_contract", "required": true, "quality": "structural"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "revise-local", "required": true, "quality": "state"},
+          {"type": "regex", "value": "final_state\\s*[:：]\\s*(null|none|空)", "required": true, "quality": "state"},
+          {"type": "regex", "value": "revision_contract:[\\s\\S]{0,500}type:[ \\t]*implementation_plan_bundle[\\s\\S]{0,220}fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[\\s\\S]{0,260}version_before:[^\\r\\n]*plan-first-api-bundle-aaaaaaaaaaaa[\\s\\S]{0,240}fingerprint_before:[^\\r\\n]*sha256:a{64}", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "content_ref:[\\s\\S]{0,160}kind:[ \\t]*file_bundle[\\s\\S]{0,180}plan:[^\\r\\n]*plan\\.md[\\s\\S]{0,160}tasks:[^\\r\\n]*tasks\\.md", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "source_reviews:[\\s\\S]{0,240}review_id:[ \\t]*[\\\"']?R1[\\s\\S]{0,220}artifact_type:[ \\t]*implementation_plan_bundle[\\s\\S]{0,220}artifact_version:[^\\r\\n]*plan-first-api-bundle-aaaaaaaaaaaa[\\s\\S]{0,220}artifact_fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[\\s\\S]{0,220}artifact_fingerprint:[^\\r\\n]*sha256:a{64}[\\s\\S]{0,260}artifact_content_ref:[\\s\\S]{0,220}plan:[^\\r\\n]*plan\\.md[\\s\\S]{0,160}tasks:[^\\r\\n]*tasks\\.md", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "re_review_scope:[\\s\\S]{0,100}kind:[ \\t]*scoped[\\s\\S]{0,300}artifact_type:[ \\t]*implementation_plan_bundle[\\s\\S]{0,220}artifact_fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[\\s\\S]{0,320}artifact_content_ref:[\\s\\S]{0,220}plan:[^\\r\\n]*plan\\.md[\\s\\S]{0,160}tasks:[^\\r\\n]*tasks\\.md", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "re_review_scope:[\\s\\S]{0,180}contract_id:[ \\t]*[\\\"']?RC-E1-R1[\\s\\S]{0,700}accepted_finding_ids:[\\s\\S]{0,120}F-001[\\s\\S]{0,220}check_direct_regressions:[ \\t]*true[\\s\\S]{0,160}check_anchor_drift:[ \\t]*true[\\s\\S]{0,160}check_evidence_boundary:[ \\t]*true[\\s\\S]{0,160}check_scope_and_bloat:[ \\t]*true", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(may_modify_code|modify_code)[\\s:]+false|不修改代码", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-bundle-revision-result-builds-complete-scoped-review-envelope",
+      "kind": "positive",
+      "prompt": "bounded_loop + strict_acceptance。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。Revision contract RC-E1-R1 接受 F-001。revision_result={contract_id:RC-E1-R1,artifact_type:implementation_plan_bundle,artifact_fingerprint_scheme:plan-first-bundle-sha256-v1,artifact_content_ref:{kind:file_bundle,plan:skills/dbx-linus-review/evals/fixtures/plan.md,tasks:skills/dbx-linus-review/evals/fixtures/tasks.md},artifact_version_before:v1,artifact_fingerprint_before:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,artifact_version_after:plan-first-api-bundle-5b6891e696db,artifact_fingerprint_after:sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b,accepted_findings_addressed:[F-001],scope_expanded:false,anchor_changed:false}。构造下一次 scoped delegated review envelope。",
+      "expected_behavior": "Build a scoped strict-acceptance review request carrying the exact bound reviewer provider id/capability, complete after identity, both fixture refs, RC-E1-R1, F-001, and all four closure/drift/bloat checks; keep it read-only and do not silently make it full.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "revision_result[\\s\\S]{0,220}RC-E1-R1[\\s\\S]{0,220}F-001", "required": true, "quality": "structural"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(scoped|局部复审)[\\s\\S]{0,180}(closure|关闭|drift|漂移)", "required": true, "quality": "behavior"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "delegated_review", "required": true, "quality": "structural"},
+          {"type": "regex", "value": "(?ms)^delegated_review:[ \\t]*$[\\s\\S]{0,180}^  parent_controller:[ \\t]*dbx-plan-convergence[ \\t]*$[\\s\\S]{0,180}^  originating_intent:[ \\t]*[A-Za-z0-9一-龥][^\\\"'{}\\[\\]~\\r\\n]*$[\\s\\S]{0,180}^  completion_profile:[ \\t]*strict_acceptance[ \\t]*$[\\s\\S]{0,180}^  review_id:[ \\t]*[A-Za-z0-9][A-Za-z0-9._:-]*[ \\t]*$[\\s\\S]{0,180}^  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*$[\\s\\S]{0,180}^  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*$[\\s\\S]{0,180}^  reviewer_independence:[ \\t]*(independent|partially_independent|none|unknown)[ \\t]*$", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?mi)\\A(?![\\s\\S]*^  (originating_intent|review_id):[ \\t]*(?:[\\\"']?(?:null|none|unknown)[\\\"']?|~|[\\\"'][ \\t]*[\\\"']|)[ \\t]*$)[\\s\\S]*\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?ms)^delegated_review:[ \\t]*$[\\s\\S]{0,600}^  artifact:[ \\t]*$[\\s\\S]{0,120}^    type:[ \\t]*implementation_plan_bundle[ \\t]*$[\\s\\S]{0,180}^    version:[ \\t]*plan-first-api-bundle-5b6891e696db[ \\t]*$[\\s\\S]{0,180}^    fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[ \\t]*$[\\s\\S]{0,180}^    fingerprint:[ \\t]*[\\\"']?sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b[\\\"']?[ \\t]*$[\\s\\S]{0,160}^    content_ref:[ \\t]*$[\\s\\S]{0,100}^      kind:[ \\t]*file_bundle[ \\t]*$[\\s\\S]{0,180}^      plan:[^\\r\\n]*skills/dbx-linus-review/evals/fixtures/plan\\.md[ \\t]*$[\\s\\S]{0,180}^      tasks:[^\\r\\n]*skills/dbx-linus-review/evals/fixtures/tasks\\.md[ \\t]*$[\\s\\S]{0,800}^  review_scope:[ \\t]*$[\\s\\S]{0,100}^    kind:[ \\t]*scoped[ \\t]*$[\\s\\S]{0,160}^    contract_id:[ \\t]*[\\\"']?RC-E1-R1[\\\"']?[ \\t]*$[\\s\\S]{0,180}^    accepted_finding_ids:[ \\t]*$[\\s\\S]{0,100}^      -[ \\t]*[\\\"']?F-001[\\\"']?[ \\t]*$[\\s\\S]{0,180}^    check_direct_regressions:[ \\t]*true[ \\t]*$[\\s\\S]{0,160}^    check_anchor_drift:[ \\t]*true[ \\t]*$[\\s\\S]{0,160}^    check_evidence_boundary:[ \\t]*true[ \\t]*$[\\s\\S]{0,160}^    check_scope_and_bloat:[ \\t]*true[ \\t]*$[\\s\\S]{0,900}^  write_prohibition:[ \\t]*$[\\s\\S]{0,120}^    modify_artifact:[ \\t]*false[ \\t]*$[\\s\\S]{0,120}^    modify_code:[ \\t]*false[ \\t]*$[\\s\\S]{0,120}^    commit:[ \\t]*false[ \\t]*$[\\s\\S]{0,120}^    push:[ \\t]*false[ \\t]*$", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?ms)^delegated_review:[ \\t]*$[\\s\\S]{0,2800}^  requested_dimensions:[^\\r\\n]*$[\\s\\S]{0,500}^  evidence_boundary:[^\\r\\n]*$[\\s\\S]{0,500}^  non_goals:[^\\r\\n]*$", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?m)^  requested_dimensions:[ \\t]*(\\[[^\\r\\n]*\\][ \\t]*$|$[\\r\\n]+    -[ \\t]+[^\\r\\n]+$)", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?m)^  evidence_boundary:[ \\t]*(\\{[^\\r\\n]*\\}[ \\t]*$|$[\\r\\n]+    [A-Za-z_][A-Za-z0-9_]*:[^\\r\\n]*$)", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?m)^  non_goals:[ \\t]*(\\[[^\\r\\n]*\\][ \\t]*$|$[\\r\\n]+    -[ \\t]+[^\\r\\n]+$)", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "artifact:[\\s\\S]{0,260}type:[ \\t]*implementation_plan_bundle[\\s\\S]{0,220}version:[^\\r\\n]*plan-first-api-bundle-5b6891e696db[\\s\\S]{0,220}fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[\\s\\S]{0,220}fingerprint:[^\\r\\n]*sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "content_ref:[\\s\\S]{0,140}kind:[ \\t]*file_bundle[\\s\\S]{0,220}plan:[^\\r\\n]*skills/dbx-linus-review/evals/fixtures/plan\\.md[\\s\\S]{0,220}tasks:[^\\r\\n]*skills/dbx-linus-review/evals/fixtures/tasks\\.md", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "review_scope:[\\s\\S]{0,120}kind:[ \\t]*scoped[\\s\\S]{0,160}contract_id:[ \\t]*[\\\"']?RC-E1-R1[\\s\\S]{0,180}accepted_finding_ids:[\\s\\S]{0,100}F-001", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "check_direct_regressions:[ \\t]*true[\\s\\S]{0,160}check_anchor_drift:[ \\t]*true[\\s\\S]{0,160}check_evidence_boundary:[ \\t]*true[\\s\\S]{0,160}check_scope_and_bloat:[ \\t]*true", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "write_prohibition:[\\s\\S]{0,240}modify_artifact:[ \\t]*false[\\s\\S]{0,160}modify_code:[ \\t]*false", "required": true, "quality": "safety"},
+          {"type": "regex", "value": "(?s)\\A(?![\\s\\S]*\\breviewer_provider_id\\b[\\s\\S]*\\breviewer_provider_id\\b)(?![\\s\\S]*\\breviewer_capability\\b[\\s\\S]*\\breviewer_capability\\b)(?![\\s\\S]*\\bcompletion_profile\\b[\\s\\S]*\\bcompletion_profile\\b)[\\s\\S]*\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?s)\\A(?!.*review_scope:[\\s\\S]{0,120}kind:[ \\t]*full).*\\Z", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-strict-bundle-full-review-issues-ref-bound-receipt",
+      "kind": "positive",
+      "prompt": "completion_profile=strict_acceptance。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。当前 artifact={type:implementation_plan_bundle,version:plan-first-api-bundle-aaaaaaaaaaaa,fingerprint_scheme:plan-first-bundle-sha256-v1,fingerprint:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,content_ref:{kind:file_bundle,value:null,plan:.plan-first/issues/api/plan.md,tasks:.plan-first/issues/api/tasks.md}}。收到最后修订之后的独立 delegated_review_result RB1，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，scope=full，judgment=accept，且 echo 同一 type/scheme/version/fingerprint/content_ref。输出结果。",
+      "expected_behavior": "Match the review provider and capability to the unique binding, then finalize and issue a passed strict receipt preserving both exact file refs and the accepting review identity.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "implementation_plan_bundle[\\s\\S]{0,180}plan-first-bundle-sha256-v1", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(RB1|full)[\\s\\S]{0,180}(accept|通过)", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(dbx-linus-review|reviewer_provider_id)[\\s\\S]{0,120}strict_pragmatic_plan_review", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "finalize", "required": true, "quality": "state"},
+          {"type": "must_contain", "value": "ready-for-handoff", "required": true, "quality": "state"},
+          {"type": "must_contain", "value": "strict_acceptance_receipt", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "(?m)\\Aqualification:[ \\t]*\\r?\\n  completion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\n  review_freshness:[ \\t]*fresh_after_last_revision[ \\t]*\\r?\\n  review_kind:[ \\t]*full review[ \\t]*\\r?\\n  review_id:[ \\t]*RB1[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  artifact_type:[ \\t]*implementation_plan_bundle[ \\t]*\\r?\\n  artifact_version:[ \\t]*plan-first-api-bundle-aaaaaaaaaaaa[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:a{64}[ \\t]*\\r?\\ntransition:[ \\t]*\\r?\\n  next_action:[ \\t]*finalize[ \\t]*\\r?\\n  final_state:[ \\t]*ready-for-handoff[ \\t]*\\r?\\ncompletion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\nstrict_acceptance_receipt:[ \\t]*\\r?\\n  status:[ \\t]*passed[ \\t]*\\r?\\n  artifact_type:[ \\t]*implementation_plan_bundle[ \\t]*\\r?\\n  artifact_version:[ \\t]*plan-first-api-bundle-aaaaaaaaaaaa[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:a{64}[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*file_bundle[ \\t]*\\r?\\n    value:[ \\t]*null[ \\t]*\\r?\\n    plan:[ \\t]*\\.plan-first/issues/api/plan\\.md[ \\t]*\\r?\\n    tasks:[ \\t]*\\.plan-first/issues/api/tasks\\.md[ \\t]*\\r?\\n  review_id:[ \\t]*RB1[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  reviewed_after_last_revision:[ \\t]*true[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept[ \\t]*\\r?\\n  residual_findings:[ \\t]*\\[\\][ \\t]*\\r?\\n[ \\t\\r\\n]*\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?ms)\\A(?![\\s\\S]*^completion_profile:[^\\r\\n]*$[\\s\\S]*^completion_profile:[^\\r\\n]*$)(?![\\s\\S]*\\btransition\\b[\\s\\S]*\\btransition\\b)(?![\\s\\S]*\\bnext_action\\b[\\s\\S]*\\bnext_action\\b)(?![\\s\\S]*\\bfinal_state\\b[\\s\\S]*\\bfinal_state\\b)(?![\\s\\S]*\\bstrict_acceptance_receipt\\b[\\s\\S]*\\bstrict_acceptance_receipt\\b)[\\s\\S]*\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?s)\\A(?!.*(?:stopped-(?:flat|oscillating|bloat|budget)|needs-(?:artifact|review|evidence|decision|alternatives)|pivot-required|blocked-(?:state-mismatch|insufficient-history))).*\\Z", "required": true, "quality": "state"},
+          {"type": "regex", "value": "artifact_type:[ \\t]*implementation_plan_bundle[\\s\\S]{0,220}artifact_fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[\\s\\S]{0,240}artifact_fingerprint:[^\\r\\n]*sha256:a{64}", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "artifact_content_ref:[\\s\\S]{0,140}kind:[ \\t]*file_bundle[\\s\\S]{0,180}plan:[^\\r\\n]*\\.plan-first/issues/api/plan\\.md[\\s\\S]{0,180}tasks:[^\\r\\n]*\\.plan-first/issues/api/tasks\\.md", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "review_id[\\\"\\s:]+RB1", "required": true, "quality": "validation"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-strict-bundle-missing-task-ref-needs-artifact",
+      "kind": "failure_mode",
+      "prompt": "completion_profile=strict_acceptance。当前 artifact type=implementation_plan_bundle，scheme=plan-first-bundle-sha256-v1，version=plan-first-api-bundle-aaaaaaaaaaaa，fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa，content_ref={kind:file_bundle,plan:.plan-first/issues/api/plan.md,tasks:null}；reviewer 已绑定。开始 full review。",
+      "expected_behavior": "Fail before review because the exact task file ref is missing; return obtain-artifact plus needs-artifact and issue no strict receipt.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(tasks|task file|任务文件).*(缺失|null|为空|missing)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(file_bundle|content_ref|文件引用).*(完整|两个|plan.*tasks|双文件)", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "obtain-artifact", "required": true, "quality": "state"},
+          {"type": "must_contain", "value": "needs-artifact", "required": true, "quality": "state"},
+          {"type": "regex", "value": "(?s)\\A(?!.*[\\\"']?strict_acceptance_receipt[\\\"']?\\s*:[\\s\\S]{0,240}[\\\"']?status[\\\"']?\\s*:\\s*[\\\"']?passed).*\\Z", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-resume-bundle-round-trips-both-file-refs",
+      "kind": "positive",
+      "prompt": "resume convergence_state_version=2，completion_profile=strict_acceptance。state 和 current artifact 都是 implementation_plan_bundle / plan-first-bundle-sha256-v1 / version plan-first-api-bundle-aaaaaaaaaaaa / fingerprint sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa；content_ref 都是 {kind:file_bundle,plan:.plan-first/issues/api/plan.md,tasks:.plan-first/issues/api/tasks.md}。pending transition=obtain-review + needs-review；provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。继续。",
+      "expected_behavior": "Resume without identity mismatch and construct the strict delegated review input with the same structured plan/tasks refs and exact bound reviewer provider id/capability; do not collapse them into content_location.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(resume|恢复)[\\s\\S]{0,160}implementation_plan_bundle", "required": true, "quality": "state"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(identity|身份).*(匹配|一致|match)", "required": true, "quality": "validation"},
+          {"type": "must_contain", "value": "dbx-linus-review", "required": true, "quality": "placement"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "obtain-review", "required": true, "quality": "state"},
+          {"type": "must_contain", "value": "needs-review", "required": true, "quality": "state"},
+          {"type": "regex", "value": "(?ms)^delegated_review:[ \\t]*$[\\s\\S]{0,180}^  parent_controller:[ \\t]*dbx-plan-convergence[ \\t]*$[\\s\\S]{0,180}^  originating_intent:[ \\t]*[A-Za-z0-9一-龥][^\\\"'{}\\[\\]~\\r\\n]*$[\\s\\S]{0,180}^  completion_profile:[ \\t]*strict_acceptance[ \\t]*$[\\s\\S]{0,180}^  review_id:[ \\t]*[A-Za-z0-9][A-Za-z0-9._:-]*[ \\t]*$[\\s\\S]{0,180}^  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*$[\\s\\S]{0,180}^  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*$[\\s\\S]{0,180}^  reviewer_independence:[ \\t]*(independent|partially_independent|none|unknown)[ \\t]*$", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?mi)\\A(?![\\s\\S]*^  (originating_intent|review_id):[ \\t]*(?:[\\\"']?(?:null|none|unknown)[\\\"']?|~|[\\\"'][ \\t]*[\\\"']|)[ \\t]*$)[\\s\\S]*\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?ms)^delegated_review:[ \\t]*$[\\s\\S]{0,500}^  artifact:[ \\t]*$[\\s\\S]{0,100}^    type:[ \\t]*implementation_plan_bundle[ \\t]*$[\\s\\S]{0,180}^    version:[ \\t]*plan-first-api-bundle-aaaaaaaaaaaa[ \\t]*$[\\s\\S]{0,180}^    fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[ \\t]*$[\\s\\S]{0,180}^    fingerprint:[ \\t]*[\\\"']?sha256:a{64}[\\\"']?[ \\t]*$[\\s\\S]{0,160}^    content_ref:[ \\t]*$[\\s\\S]{0,100}^      kind:[ \\t]*file_bundle[ \\t]*$[\\s\\S]{0,180}^      plan:[^\\r\\n]*\\.plan-first/issues/api/plan\\.md[ \\t]*$[\\s\\S]{0,180}^      tasks:[^\\r\\n]*\\.plan-first/issues/api/tasks\\.md[ \\t]*$", "required": true, "quality": "structural"},
+          {"type": "regex", "value": "(?ms)^delegated_review:[ \\t]*$[\\s\\S]{0,2200}^  review_scope:[ \\t]*$[\\s\\S]{0,120}^    kind:[ \\t]*full[ \\t]*$[\\s\\S]{0,600}^  requested_dimensions:[^\\r\\n]*$[\\s\\S]{0,500}^  evidence_boundary:[^\\r\\n]*$[\\s\\S]{0,500}^  non_goals:[^\\r\\n]*$[\\s\\S]{0,500}^  write_prohibition:[ \\t]*$[\\s\\S]{0,120}^    modify_artifact:[ \\t]*false[ \\t]*$[\\s\\S]{0,120}^    modify_code:[ \\t]*false[ \\t]*$[\\s\\S]{0,120}^    commit:[ \\t]*false[ \\t]*$[\\s\\S]{0,120}^    push:[ \\t]*false[ \\t]*$", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?m)^  requested_dimensions:[ \\t]*(\\[[^\\r\\n]*\\][ \\t]*$|$[\\r\\n]+    -[ \\t]+[^\\r\\n]+$)", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?m)^  evidence_boundary:[ \\t]*(\\{[^\\r\\n]*\\}[ \\t]*$|$[\\r\\n]+    [A-Za-z_][A-Za-z0-9_]*:[^\\r\\n]*$)", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?m)^  non_goals:[ \\t]*(\\[[^\\r\\n]*\\][ \\t]*$|$[\\r\\n]+    -[ \\t]+[^\\r\\n]+$)", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "content_ref:[\\s\\S]{0,140}kind:[ \\t]*file_bundle[\\s\\S]{0,180}plan:[^\\r\\n]*\\.plan-first/issues/api/plan\\.md[\\s\\S]{0,180}tasks:[^\\r\\n]*\\.plan-first/issues/api/tasks\\.md", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "(?s)\\A(?![\\s\\S]*\\breviewer_provider_id\\b[\\s\\S]*\\breviewer_provider_id\\b)(?![\\s\\S]*\\breviewer_capability\\b[\\s\\S]*\\breviewer_capability\\b)(?![\\s\\S]*\\bcompletion_profile\\b[\\s\\S]*\\bcompletion_profile\\b)[\\s\\S]*\\Z", "required": true, "quality": "validation"},
+          {"type": "must_not_contain", "value": "blocked-state-mismatch", "required": true, "quality": "state"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "positive-handoff-ready-remains-cheap",
+      "kind": "positive",
+      "prompt": "completion_profile=handoff_ready。plan v2 的 scoped re-review 已关闭全部已知 material findings，progress gate 通过；没有要求严格验收。现在 finalize，不额外扩大 review。",
+      "expected_behavior": "Preserve the cheap ordinary path: finalize as ready-for-handoff without requiring a fresh full review or issuing a strict acceptance receipt.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(handoff_ready|普通交接)[\\s\\S]{0,200}(scoped|局部复审)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(无需|不要求|不强制|不额外)[\\s\\S]{0,160}(fresh|新的|最终)?[\\s\\S]{0,80}(full review|全量评审)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "finalize",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "must_contain",
+            "value": "ready-for-handoff",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(不.*签发|不生成|无需)[\\s\\S]{0,100}(strict_acceptance_receipt|严格验收回执)",
+            "required": true,
+            "quality": "artifact"
           }
         ],
         "safety": []
@@ -1154,5 +1817,5 @@
       }
     }
   ],
-  "version": "3.0"
+  "version": "4.0"
 }

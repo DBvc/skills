@@ -1,4 +1,4 @@
-version: 3
+version: 4
 
 activation:
   allow_direct_explicit: true
@@ -34,8 +34,11 @@ mode_requirements:
       - convergence_state
       - current_artifact
     identity_must_match:
+      - artifact_type
       - artifact_version
+      - artifact_fingerprint_scheme_when_available
       - artifact_fingerprint_when_available
+      - artifact_content_ref_when_bundle
 
   diagnose_stall:
     required:
@@ -52,6 +55,11 @@ artifact_identity:
     - multiple_artifact_versions
     - multiple_review_passes
   fingerprint_optional: true
+  strict_acceptance_fingerprint_pattern: '^sha256:[0-9a-f]{64}$'
+  strict_acceptance_fingerprint_must_match_exact_artifact_bytes: true
+  fingerprint_schemes:
+    default_single_artifact: exact-bytes-sha256
+    implementation_plan_bundle: plan-first-bundle-sha256-v1
   allow_session_local_version_when_unambiguous: true
   stale_review_transition:
     next_action: obtain-review
@@ -95,6 +103,7 @@ execution_policy:
     - issue_revision_contract
     - bounded_local_revision
     - scoped_re_review
+    - final_acceptance_full_review
     - progress_gate
   controller_must_pause_or_handoff:
     - gather-evidence
@@ -167,6 +176,43 @@ profiles:
     human_approval_before_finalize: true
     rollback_or_containment_required: true
 
+completion_profiles:
+  default: handoff_ready
+  handoff_ready:
+    strict_acceptance_receipt_required: false
+  strict_acceptance:
+    reviewer_binding_required: true
+    artifact_identity_required:
+      - type
+      - recognized_fingerprint_scheme
+      - version
+      - fingerprint
+      - structured_content_ref
+    artifact_fingerprint_required: true
+    qualifying_final_review:
+      scope: full
+      independence: independent
+      after_last_revision: true
+      judgments:
+        - accept
+        - accept_with_advisories
+      max_open_blocker_high: 0
+      medium_policy: fixed_or_reviewer_non_blocking_residual_with_decision_owner_when_required
+    budget:
+      final_acceptance_full_review_passes: 2
+    receipt_required: true
+    artifact_change_invalidates_receipt: true
+
+state_compatibility:
+  convergence_state_version: 2
+  missing_completion_profile: handoff_ready
+  missing_artifact_fingerprint_scheme: null
+  missing_artifact_content_ref: null
+  missing_acceptance_status: not_requested
+  missing_final_acceptance_full_review_passes: 2
+  missing_final_acceptance_full_review_passes_used: 0
+  never_infer_strict_acceptance: true
+
 continuation_gate:
   require_any_progress_credit:
     - new_material_evidence
@@ -210,6 +256,8 @@ re_review:
   full_review_after_each_revision: false
   must_bind_to_revised_artifact: true
   scoped_contract_id_required: true
+  scoped_review_can_issue_strict_acceptance: false
+  final_full_review_when: strict_acceptance_candidate_completion
 
 output_policy:
   default_mode:
@@ -236,6 +284,7 @@ output_policy:
     - anchor_status
     - history_evidence
   abnormal_stop_reason_must_never_be_hidden: true
+  strict_pass_wording_requires_valid_receipt: true
 
 completion:
   plan_flipping_evidence_gaps_open: 0
@@ -246,3 +295,9 @@ completion:
   rollout_rollback_or_containment_required_only_when_applicable: true
   current_artifact_reviewed: true
   residual_risks_explicit: true
+  profile_specific:
+    handoff_ready:
+      strict_acceptance_receipt_required: false
+    strict_acceptance:
+      qualifying_final_full_review_required: true
+      strict_acceptance_receipt_required: true

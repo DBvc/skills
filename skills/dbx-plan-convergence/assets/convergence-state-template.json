@@ -2,6 +2,7 @@
   "convergence_state_version": 2,
   "run_id": "",
   "mode": "gate_only",
+  "completion_profile": "handoff_ready",
   "risk_profile": "standard",
   "output_mode": "diagnostic",
   "activation": {
@@ -13,7 +14,14 @@
   "artifact": {
     "type": "technical_plan",
     "version": "",
+    "fingerprint_scheme": null,
     "fingerprint": "",
+    "content_ref": {
+      "kind": null,
+      "value": null,
+      "plan": null,
+      "tasks": null
+    },
     "content_location": "",
     "scope": [],
     "goal": "",
@@ -45,7 +53,9 @@
     "total_revision_rounds_used": 0,
     "flat_rounds": 0,
     "max_flat_rounds": 1,
-    "direction_flips_without_new_evidence": 0
+    "direction_flips_without_new_evidence": 0,
+    "final_acceptance_full_review_passes": 2,
+    "final_acceptance_full_review_passes_used": 0
   },
   "core_anchors": {
     "goal": {
@@ -118,6 +128,11 @@
     "anchor_snapshots": [],
     "rejected_directions": [],
     "transition_summaries": []
+  },
+  "acceptance": {
+    "status": "not_requested",
+    "latest_qualifying_review_id": null,
+    "receipt": null
   },
   "residual_risks": [],
   "evidence_boundary": []

@@ -1,6 +1,6 @@
 {
   "skill_name": "dbx-plan-convergence",
-  "version": "3.0",
+  "version": "4.0",
   "purpose": "Manual or agent trajectory evals for multi-step convergence behavior. These are not regex-only output checks.",
   "trajectories": [
     {
@@ -8,7 +8,8 @@
       "initial": {
         "artifact": "plan v1",
         "review": "R1 of v1 finds one local validation gap",
-        "mode": "bounded_loop"
+        "mode": "bounded_loop",
+        "completion_profile": "handoff_ready"
       },
       "expected_steps": [
         "triage F-001 as validation_gap/local_revision",
@@ -18,6 +19,7 @@
         "run R2 scoped review against v2 and bind it to the revision contract with scope.contract_id",
         "close F-001 without anchor drift",
         "pass progress gate",
+        "do not require a fresh full review or strict acceptance receipt",
         "emit finalize and ready-for-handoff"
       ],
       "failure_signals": [
@@ -25,7 +27,8 @@
         "R2 reviews v1",
         "final_state uses in-progress",
         "empty triage categories dominate output",
-        "R2 omits the revision contract id"
+        "R2 omits the revision contract id",
+        "ordinary handoff_ready path is forced through strict acceptance"
       ]
     },
     {
@@ -166,6 +169,154 @@
       "failure_signals": [
         "silently migrates pending contract",
         "continues on v3 with v2 findings"
+      ]
+    },
+    {
+      "id": "trajectory-strict-scoped-closure-needs-final-full-review",
+      "initial": {
+        "artifact": "plan v2 fingerprint sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "completion_profile": "strict_acceptance",
+        "review_passes": [
+          "R1 full review of v1 finds F-001",
+          "R2 scoped review of v2 closes F-001"
+        ]
+      },
+      "expected_steps": [
+        "treat R2 as closure of known findings, not strict acceptance",
+        "do not issue strict_acceptance_receipt",
+        "emit obtain-review and needs-review",
+        "request a fresh independent full review bound to plan v2 fingerprint sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "failure_signals": [
+        "scoped review alone produces strict acceptance",
+        "controller emits ready-for-handoff before the final full review",
+        "requested full review is not bound to the exact candidate identity"
+      ]
+    },
+    {
+      "id": "trajectory-strict-final-full-high-reopens-local-loop",
+      "initial": {
+        "artifact": "plan v2 fingerprint sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "completion_profile": "strict_acceptance",
+        "review": "fresh independent full review R3 of exact v2/sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa finds one local S1 validation error"
+      },
+      "expected_steps": [
+        "do not issue or retain a passed strict_acceptance_receipt",
+        "triage the S1 as local_revision",
+        "emit revise-local with final_state null",
+        "require closure review and another fresh full review after the next revision before strict acceptance"
+      ],
+      "failure_signals": [
+        "S1 is silently downgraded",
+        "controller emits ready-for-handoff",
+        "R3 remains valid after the artifact is revised"
+      ]
+    },
+    {
+      "id": "trajectory-strict-final-full-clean-issues-bound-receipt",
+      "initial": {
+        "artifact": "technical_plan v3 under exact-bytes-sha256 fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "completion_profile": "strict_acceptance",
+        "reviewer_binding": "dbx-linus-review with capability strict_pragmatic_plan_review",
+        "last_revision_artifact": "plan v3 fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "review": "fresh independent full review R5 from dbx-linus-review with the bound strict_pragmatic_plan_review capability, of exact technical_plan/exact-bytes-sha256/v3/sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, reports judgment accept_with_advisories, no S0/S1, and all S2 blocking=false/residual=true with no unresolved decision-owner acceptance"
+      },
+      "expected_steps": [
+        "verify R5 happened after the last revision and matches exact artifact identity",
+        "verify no open blocker, high, evidence, decision, or direction gap",
+        "emit finalize and ready-for-handoff",
+        "issue strict_acceptance_receipt with status passed, artifact_type technical_plan, artifact_fingerprint_scheme exact-bytes-sha256, review_id R5, reviewer_capability strict_pragmatic_plan_review copied from the matching provider binding, scope full, independence independent, reviewed_after_last_revision true, open_blocker_high 0, review_judgment accept_with_advisories, and exact v3 sha256 identity"
+      ],
+      "failure_signals": [
+        "receipt omits artifact type, fingerprint scheme, artifact fingerprint, review_id, or open_blocker_high",
+        "scoped review is recorded as the accepting review",
+        "unaccepted S2 is omitted from the acceptance gate"
+      ]
+    },
+    {
+      "id": "trajectory-strict-receipt-invalidates-on-artifact-change",
+      "initial": {
+        "completion_profile": "strict_acceptance",
+        "receipt": "R5 passed plan v3 fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "current_artifact": "plan v4 fingerprint sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "current_full_review": null
+      },
+      "expected_steps": [
+        "detect that the accepted identity differs from the current artifact",
+        "invalidate the v3/sha256 strict_acceptance_receipt",
+        "do not report ready based on R5",
+        "emit obtain-review and needs-review",
+        "require a fresh full review bound to exact v4/sha256 identity"
+      ],
+      "failure_signals": [
+        "receipt is treated as transferable across artifact identities",
+        "controller lowers confidence but still reports strict acceptance",
+        "old review id is rebound to v4"
+      ]
+    },
+    {
+      "id": "trajectory-plan-first-final-bundle-to-seal",
+      "initial": {
+        "workflow_profile": "dbx-implementation-bound-planning-v1",
+        "issue_id": "api-migration",
+        "artifact": "unsealed plan.md/tasks.md bundle",
+        "fingerprint_scheme": "plan-first-bundle-sha256-v1",
+        "content_ref": {
+          "kind": "file_bundle",
+          "plan": ".plan-first/issues/api-migration/plan.md",
+          "tasks": ".plan-first/issues/api-migration/tasks.md"
+        },
+        "handoff": "complete delegated activation envelope with bundle version, exact fingerprint, scope, evidence boundary, provider bindings, and bounded budget"
+      },
+      "expected_steps": [
+        "produce the bundle identity with the deterministic bundle-fingerprint command",
+        "replace the old proposal artifact identity instead of merging it into the bundle handoff",
+        "persist and pass the same file_bundle plan/tasks refs into strict convergence and the qualifying independent full review",
+        "issue a receipt bound to the bundle version, scheme, fingerprint, both refs, and accepting review",
+        "resume finalize without init or content writes",
+        "recompute the same bundle identity and seal only while it still matches the receipt"
+      ],
+      "failure_signals": [
+        "proposal receipt authorizes the generated bundle",
+        "handoff omits a delegated activation field or leaves bundle version/fingerprint/plan/tasks refs empty",
+        "producer, controller, or reviewer uses an unknown bundle scheme",
+        "resume rewrites plan.md or tasks.md before receipt verification",
+        "seal is written after a bundle identity mismatch"
+      ]
+    },
+    {
+      "id": "trajectory-plan-first-bundle-local-revision-to-seal",
+      "initial": {
+        "workflow_profile": "dbx-implementation-bound-planning-v1",
+        "artifact": {
+          "type": "implementation_plan_bundle",
+          "fingerprint_scheme": "plan-first-bundle-sha256-v1",
+          "version": "plan-first-api-bundle-aaaaaaaaaaaa",
+          "fingerprint": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "content_ref": {
+            "plan": ".plan-first/issues/api/plan.md",
+            "tasks": ".plan-first/issues/api/tasks.md"
+          }
+        },
+        "reviewer_binding": "dbx-linus-review with capability strict_pragmatic_plan_review",
+        "initial_review": "independent full review R1 requires one local validation fix F-001",
+        "revision_authority": "original_plan_author may modify plan text only"
+      },
+      "expected_steps": [
+        "emit revise-local with final_state null and a revision contract bound to bundle type, scheme, before version/fingerprint, both file refs, and source review R1",
+        "revision provider preserves type, scheme, and both refs, modifies only the accepted local finding, and recomputes after version plan-first-api-bundle-bbbbbbbbbbbb plus fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "invalidate every review or receipt bound to the a identity",
+        "run a kind scoped review R2 with contract id and both refs against the b identity to close F-001 and check direct regressions, anchor/evidence drift, scope, and bloat",
+        "run fresh independent full review R3 against the same b identity and both refs because scoped closure cannot issue strict acceptance",
+        "issue strict_acceptance_receipt bound to implementation_plan_bundle, plan-first-bundle-sha256-v1, the b version/fingerprint, both refs, R3, and reviewer_capability strict_pragmatic_plan_review copied from the matching provider binding",
+        "resume finalize without init or content writes and pass the receipt scheme/fingerprint into the same seal process"
+      ],
+      "failure_signals": [
+        "revision request or result drops the bundle type, scheme, or either file ref",
+        "the after fingerprint is copied instead of recomputed from both exact files",
+        "R1 or R2 is reused as final strict acceptance after the revision",
+        "proposal or a-identity receipt authorizes the b bundle",
+        "resume mutates either bundle file before selected seal"
       ]
     }
   ]

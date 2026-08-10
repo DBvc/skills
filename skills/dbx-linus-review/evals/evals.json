@@ -173,12 +173,12 @@
           {"type": "must_contain", "value": "核心判断", "required": true, "quality": "structural"}
         ],
         "process": [
-          {"type": "regex", "value": "(repo evidence|项目规则|约定|shared surface|共享层|公共|owner|ownership|归属)", "required": true, "quality": "ownership"},
+          {"type": "regex", "value": "(repo evidence|项目规则|约定|shared surface|共享层|公共|owner|ownership|归属)", "required": true, "quality": "domain"},
           {"type": "regex", "value": "(guideKind|业务页面|feature-specific|单一业务|文案|图标|分支)", "required": true, "quality": "specificity"}
         ],
         "output": [
           {"type": "regex", "value": "(generic|shared|公共|共享).*?(leak|泄漏|耦合|coupling|business|业务)", "required": true, "quality": "behavior"},
-          {"type": "regex", "value": "(protocol|adapter|feature-local|中立|适配|owner)", "required": true, "quality": "fix"}
+          {"type": "regex", "value": "(protocol|adapter|feature-local|中立|适配|owner)", "required": true, "quality": "specificity"}
         ],
         "safety": [
           {"type": "must_not_contain", "value": "因为路径像 shared 所以一定错", "required": true, "quality": "safety"}
@@ -189,15 +189,15 @@
     {
       "id": "delegated-full-plan-review-binds-target-and-stays-read-only",
       "kind": "positive",
-      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=收敛 auth/cache implementation-bound plan，artifact=plan-v2，type=architecture_proposal，scope=full，dimensions=[direction_model_ownership, complexity_proportionality]，evidence_boundary={repo_facts_read:[auth/cache owners], assumptions:[], unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请做严格 review。",
-      "expected_behavior": "Echo the artifact version and full scope, perform strict plan review, and return evidence-backed findings. Do not revise the plan or choose a convergence transition.",
+      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=收敛 auth/cache implementation-bound plan，review_id=R5，reviewer_independence=independent，artifact=plan-v2，type=architecture_proposal，fingerprint_scheme=exact-bytes-sha256，fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa，content_ref={kind:current_context,value:current_response,plan:null,tasks:null}，scope=full，dimensions=[direction_model_ownership, complexity_proportionality]，evidence_boundary={repo_facts_read:[auth/cache owners], assumptions:[], unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请做严格 review。",
+      "expected_behavior": "Echo the exact review/artifact identity and full scope, perform strict plan review, and append a structured delegated_review_result. Do not revise the plan or choose a convergence transition.",
       "checks": {
         "trigger": [
           {
             "type": "regex",
             "value": "(Review target|评审目标|Artifact).*(plan-v2)|plan-v2",
             "required": true,
-            "quality": "identity"
+            "quality": "artifact"
           }
         ],
         "process": [
@@ -205,39 +205,87 @@
             "type": "regex",
             "value": "(Scope|范围).*(full)|full",
             "required": true,
-            "quality": "scope"
+            "quality": "behavior"
           },
           {
             "type": "regex",
             "value": "(Evidence|Impact|Fix|Confidence)",
             "required": true,
-            "quality": "review"
+            "quality": "validation"
           }
         ],
         "output": [
           {
+            "type": "must_contain",
+            "value": "delegated_review_result",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "regex",
+            "value": "review_id[\\\"\\s:]+R5",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "artifact_fingerprint[\\s\\\":]+sha256:a{64}",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "artifact_type[\\\"\\s:]+architecture_proposal[\\s\\S]{0,160}artifact_fingerprint_scheme[\\\"\\s:]+exact-bytes-sha256",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "artifact_content_ref:[\\s\\S]{0,120}kind:[ \\t]*current_context[\\s\\S]{0,120}value:[ \\t]*current_response",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "scope[\\\"\\s:]+full",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "independence[\\\"\\s:]+independent",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "judgment[\\\"\\s:]+(accept|accept_with_advisories|changes_required|reject|insufficient_evidence)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
             "type": "must_not_contain",
             "value": "next_action:",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "final_state:",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "ready-for-handoff",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "regex",
             "value": "(?s)\\A(?!.*(?:obtain-artifact|obtain-review|revise-local|gather-evidence|request-decision|explore-alternatives|initiate-pivot|finalize|stop|needs-artifact|needs-review|needs-evidence|needs-decision|needs-alternatives|pivot-required|ready-for-handoff|blocked-state-mismatch|blocked-insufficient-history|stopped-flat|stopped-oscillating|stopped-bloat|stopped-budget)).*\\Z",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
@@ -254,17 +302,136 @@
       }
     },
     {
+      "id": "delegated-full-bundle-review-preserves-both-file-refs",
+      "kind": "positive",
+      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=严格审核最终 api plan bundle，completion_profile=strict_acceptance，review_id=RB1，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact={type:implementation_plan_bundle,version:plan-first-api-bundle-5b6891e696db,fingerprint_scheme:plan-first-bundle-sha256-v1,fingerprint:sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b,content_ref:{kind:file_bundle,value:null,plan:skills/dbx-linus-review/evals/fixtures/plan.md,tasks:skills/dbx-linus-review/evals/fixtures/tasks.md}}，scope=full，evidence_boundary={repo_facts_read:[api ownership],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请读取两个真实 fixture，报告两个 component hash，复算 bundle 后 review。",
+      "expected_behavior": "Read both exact fixture refs, report their component hashes, recompute the declared bundle scheme, perform a full read-only review, emit canonical material_findings: none for this clean fixture, and echo the bound provider capability plus structured refs in delegated_review_result.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "implementation_plan_bundle[\\s\\S]{0,180}plan-first-bundle-sha256-v1", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(复算|recompute|重新计算)[\\s\\S]{0,180}(plan\\.md|plan)[\\s\\S]{0,180}(tasks\\.md|tasks)", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(Scope|范围)[\\s\\S]{0,80}full|scope:[ \\t]*full", "required": true, "quality": "behavior"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "delegated_review_result", "required": true, "quality": "structural"},
+          {"type": "regex", "value": "(?m)\\Averification:[ \\t]*\\r?\\n  recomputation:[ \\t]*recompute plan\\.md and tasks\\.md[ \\t]*\\r?\\n  fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[ \\t]*\\r?\\n  plan_sha256:[ \\t]*052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\n  tasks_sha256:[ \\t]*33d7f2007f4a016c944892625ba9bd8248ad4442457765113bdfd9085ce9c41c[ \\t]*\\r?\\n  review_scope:[ \\t]*full[ \\t]*\\r?\\n  human_summary:[ \\t]*未发现 S0/S1 blocker[ \\t]*\\r?\\nmaterial_findings:[ \\t]*none[ \\t]*\\r?\\ndelegated_review_result:[ \\t]*\\r?\\n  review_id:[ \\t]*RB1[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  artifact_type:[ \\t]*implementation_plan_bundle[ \\t]*\\r?\\n  artifact_version:[ \\t]*plan-first-api-bundle-5b6891e696db[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*file_bundle[ \\t]*\\r?\\n    value:[ \\t]*null[ \\t]*\\r?\\n    plan:[ \\t]*skills/dbx-linus-review/evals/fixtures/plan\\.md[ \\t]*\\r?\\n    tasks:[ \\t]*skills/dbx-linus-review/evals/fixtures/tasks\\.md[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  judgment:[ \\t]*accept[ \\t]*\\r?\\n  findings:[ \\t]*\\[\\][ \\t]*\\r?\\n[ \\t\\r\\n]*\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?s)\\A(?![\\s\\S]*\\bmaterial_findings\\b[\\s\\S]*\\bmaterial_findings\\b)(?![\\s\\S]*\\bdelegated_review_result\\b[\\s\\S]*\\bdelegated_review_result\\b)[\\s\\S]*\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?ims)\\A(?![\\s\\S]*(?:\\[(?:S0[ \\t]+blocker|S1[ \\t]+high)\\]|^[ \\t]*(?:[0-9]+\\.[ \\t]*)?S[01][ \\t]+(?:blocker|high)[ \\t]*:|^(?![^\\r\\n]*(?:no|none|未发现|没有)[^\\r\\n]*S[01])[^\\r\\n]*S[01][^\\r\\n]{0,80}(?:blocker|high|blocking|阻塞|必须修复|需(?:要)?修改|不能接受|拒绝)|blocking[\\\"']?\\s*:\\s*true|judgment[\\\"']?\\s*:\\s*(?:changes_required|reject|insufficient_evidence)))[\\s\\S]*\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "review_id[\\\"\\s:]+RB1", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "artifact_type[\\\"\\s:]+implementation_plan_bundle[\\s\\S]{0,220}artifact_fingerprint_scheme[\\\"\\s:]+plan-first-bundle-sha256-v1", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "(plan\\.md|plan)[^\\r\\n]{0,100}052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(tasks\\.md|tasks)[^\\r\\n]{0,100}33d7f2007f4a016c944892625ba9bd8248ad4442457765113bdfd9085ce9c41c", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "artifact_content_ref:[\\s\\S]{0,140}kind:[ \\t]*file_bundle[\\s\\S]{0,220}plan:[^\\r\\n]*skills/dbx-linus-review/evals/fixtures/plan\\.md[\\s\\S]{0,220}tasks:[^\\r\\n]*skills/dbx-linus-review/evals/fixtures/tasks\\.md", "required": true, "quality": "artifact"},
+          {"type": "must_contain", "value": "sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b", "required": true, "quality": "artifact"},
+          {"type": "must_not_contain", "value": "next_action:", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "delegated-bundle-review-stale-fingerprint-fails-before-review",
+      "kind": "failure_mode",
+      "prompt": "授权 full delegated review：review_id=RB-stale，artifact={type:implementation_plan_bundle,version:v-stale,fingerprint_scheme:plan-first-bundle-sha256-v1,fingerprint:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,content_ref:{kind:file_bundle,plan:skills/dbx-linus-review/evals/fixtures/plan.md,tasks:skills/dbx-linus-review/evals/fixtures/tasks.md}}，reviewer_independence=independent，evidence_boundary={repo_facts_read:[],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请读取 fixture 后评审。",
+      "expected_behavior": "Recompute the real fixture identity, detect that it differs from the supplied fingerprint, and fail before review without a delegated result.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(fingerprint|指纹).*(不匹配|mismatch|stale|错误)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "must_contain", "value": "sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(plan\\.md|plan)[^\\r\\n]{0,100}052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(tasks\\.md|tasks)[^\\r\\n]{0,100}33d7f2007f4a016c944892625ba9bd8248ad4442457765113bdfd9085ce9c41c", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "delegated_review_result", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "judgment:", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "delegated-bundle-review-missing-task-ref-fails-closed",
+      "kind": "failure_mode",
+      "prompt": "授权 full delegated review：review_id=RB2，artifact={type:implementation_plan_bundle,version:v1,fingerprint_scheme:plan-first-bundle-sha256-v1,fingerprint:sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b,content_ref:{kind:file_bundle,plan:skills/dbx-linus-review/evals/fixtures/plan.md,tasks:null}}，reviewer_independence=independent，evidence_boundary={repo_facts_read:[],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请开始评审。",
+      "expected_behavior": "Do not review or emit a delegated result because one exact bundle ref is absent; ask for the missing tasks path.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(tasks|task file|任务文件).*(缺失|null|missing|补充)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(不能|不开始|fail closed|拒绝)[\\s\\S]{0,160}(review|评审|复算)", "required": true, "quality": "safety"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "delegated_review_result", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "judgment:", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "delegated-advisory-s2-is-explicitly-non-blocking",
+      "kind": "positive",
+      "prompt": "授权 full delegated review：review_id=R6，reviewer_independence=independent，artifact=plan-v3/fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb，evidence_boundary={repo_facts_read:[plan-v3],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。评审只发现一个命名一致性 S2；你已核实它不改变方向、required decision、证据边界或关键验证，也不涉及产品/架构/兼容性/风险接受。",
+      "expected_behavior": "Return accept_with_advisories and mark the S2 finding as non-blocking residual without decision-owner acceptance; remain read-only and emit no convergence transition.",
+      "checks": {
+        "trigger": [
+          {"type": "must_contain", "value": "delegated_review_result", "required": true, "quality": "structural"}
+        ],
+        "process": [
+          {"type": "regex", "value": "severity[\\\"\\s:]+S2", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "blocking[\\\"\\s:]+false", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "residual[\\\"\\s:]+true", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "decision_owner_required[\\\"\\s:]+false", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "regex", "value": "judgment[\\\"\\s:]+accept_with_advisories", "required": true, "quality": "state"},
+          {"type": "must_not_contain", "value": "next_action:", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "final_state:", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "delegated-policy-s2-remains-blocking",
+      "kind": "failure_mode",
+      "prompt": "授权 full delegated review：review_id=R7，reviewer_independence=independent，artifact=plan-v4/fingerprint sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc，evidence_boundary={repo_facts_read:[public API],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。发现一个 S2：公共 API 兼容性取舍没有 decision owner 决定。方向其余部分可行。",
+      "expected_behavior": "Do not turn a policy/compatibility S2 into an advisory. Mark it blocking with decision-owner required and return changes_required without a convergence transition.",
+      "checks": {
+        "trigger": [
+          {"type": "must_contain", "value": "delegated_review_result", "required": true, "quality": "structural"}
+        ],
+        "process": [
+          {"type": "regex", "value": "severity[\\\"\\s:]+S2", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "blocking[\\\"\\s:]+true", "required": true, "quality": "safety"},
+          {"type": "regex", "value": "decision_owner_required[\\\"\\s:]+true", "required": true, "quality": "safety"}
+        ],
+        "output": [
+          {"type": "regex", "value": "judgment[\\\"\\s:]+changes_required", "required": true, "quality": "state"},
+          {"type": "must_not_contain", "value": "accept_with_advisories", "required": true, "quality": "safety"},
+          {"type": "must_not_contain", "value": "next_action:", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
       "id": "delegated-scoped-rereview-stays-scoped",
       "kind": "positive",
-      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=复核 auth/cache 修订，artifact=plan-v3，scope=scoped，contract=RC-E1-R1，accepted findings=[F-001]，evidence_boundary={repo_facts_read:[auth/cache owners], assumptions:[], unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。只检查 finding closure、直接回归、anchor/evidence drift、scope 和 bloat。",
-      "expected_behavior": "Bind to plan-v3 and RC-E1-R1. Review only the declared scope. If a material direction change is detected, report a scope break rather than silently reopening a full review.",
+      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=复核 auth/cache 修订，review_id=R8，reviewer_independence=independent，artifact=plan-v3/fingerprint sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd，scope=scoped，contract=RC-E1-R1，accepted findings=[F-001]，evidence_boundary={repo_facts_read:[auth/cache owners], assumptions:[], unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。只检查 finding closure、直接回归、anchor/evidence drift、scope 和 bloat。",
+      "expected_behavior": "Bind to plan-v3 and RC-E1-R1, review only the declared scope, and append delegated_review_result. If a material direction change is detected, report a scope break rather than silently reopening a full review.",
       "checks": {
         "trigger": [
           {
             "type": "regex",
             "value": "(plan-v3|RC-E1-R1)",
             "required": true,
-            "quality": "identity"
+            "quality": "artifact"
           }
         ],
         "process": [
@@ -272,45 +439,57 @@
             "type": "regex",
             "value": "(F-001|finding closure|关闭)",
             "required": true,
-            "quality": "scope"
+            "quality": "behavior"
           },
           {
             "type": "regex",
             "value": "(anchor|evidence|scope|bloat|回归)",
             "required": true,
-            "quality": "scope"
+            "quality": "behavior"
           }
         ],
         "output": [
           {
+            "type": "must_contain",
+            "value": "delegated_review_result",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "regex",
+            "value": "scope[\\\"\\s:]+scoped",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
             "type": "must_not_contain",
             "value": "重新完整评审所有部分",
             "required": true,
-            "quality": "scope"
+            "quality": "behavior"
           },
           {
             "type": "must_not_contain",
             "value": "next_action:",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "final_state:",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "ready-for-handoff",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "regex",
             "value": "(?s)\\A(?!.*(?:obtain-artifact|obtain-review|revise-local|gather-evidence|request-decision|explore-alternatives|initiate-pivot|finalize|stop|needs-artifact|needs-review|needs-evidence|needs-decision|needs-alternatives|pivot-required|ready-for-handoff|blocked-state-mismatch|blocked-insufficient-history|stopped-flat|stopped-oscillating|stopped-bloat|stopped-budget)).*\\Z",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           }
         ],
         "safety": []
@@ -340,7 +519,7 @@
             "type": "must_not_contain",
             "value": "## 主要风险",
             "required": true,
-            "quality": "safety"
+            "quality": "structural"
           },
           {
             "type": "must_not_contain",
@@ -370,25 +549,25 @@
             "type": "must_not_contain",
             "value": "next_action:",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "final_state:",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "ready-for-handoff",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "regex",
             "value": "(?s)\\A(?!.*(?:obtain-artifact|obtain-review|revise-local|gather-evidence|request-decision|explore-alternatives|initiate-pivot|finalize|stop|needs-artifact|needs-review|needs-evidence|needs-decision|needs-alternatives|pivot-required|ready-for-handoff|blocked-state-mismatch|blocked-insufficient-history|stopped-flat|stopped-oscillating|stopped-bloat|stopped-budget)).*\\Z",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
@@ -424,7 +603,7 @@
             "type": "must_not_contain",
             "value": "## 主要风险",
             "required": true,
-            "quality": "safety"
+            "quality": "structural"
           },
           {
             "type": "must_not_contain",
@@ -454,25 +633,25 @@
             "type": "must_not_contain",
             "value": "next_action:",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "final_state:",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "ready-for-handoff",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "regex",
             "value": "(?s)\\A(?!.*(?:obtain-artifact|obtain-review|revise-local|gather-evidence|request-decision|explore-alternatives|initiate-pivot|finalize|stop|needs-artifact|needs-review|needs-evidence|needs-decision|needs-alternatives|pivot-required|ready-for-handoff|blocked-state-mismatch|blocked-insufficient-history|stopped-flat|stopped-oscillating|stopped-bloat|stopped-budget)).*\\Z",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
@@ -508,7 +687,7 @@
             "type": "must_not_contain",
             "value": "## 主要风险",
             "required": true,
-            "quality": "safety"
+            "quality": "structural"
           },
           {
             "type": "must_not_contain",
@@ -538,25 +717,25 @@
             "type": "must_not_contain",
             "value": "next_action:",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "final_state:",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "ready-for-handoff",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "regex",
             "value": "(?s)\\A(?!.*(?:obtain-artifact|obtain-review|revise-local|gather-evidence|request-decision|explore-alternatives|initiate-pivot|finalize|stop|needs-artifact|needs-review|needs-evidence|needs-decision|needs-alternatives|pivot-required|ready-for-handoff|blocked-state-mismatch|blocked-insufficient-history|stopped-flat|stopped-oscillating|stopped-bloat|stopped-budget)).*\\Z",
             "required": true,
-            "quality": "boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
