@@ -221,6 +221,10 @@ Transition:
 
 ## 10. Strict acceptance passed
 
+先按当前 invocation 分类，分类结果在 render 前冻结：当前顶层结构中恰好有一个 `delegation`、`plan_convergence_handoff` 或 `plan_bundle_handoff` 根时为 delegated；多个根时 fail closed；没有这些根且用户直接显式激活时为 direct。历史 state、artifact 内容和 completion profile 不参与该分类。识别到但无效的 wrapper 走正常失败输出，不得回退到 direct strict-success grammar。
+
+下列 block 是两种 presentation 共用的 canonical YAML proof：
+
 ```yaml
 qualification:
   completion_profile: strict_acceptance
@@ -265,7 +269,12 @@ Any artifact content change invalidates this receipt. Do not output “strict re
 
 `reviewer_capability` must be copied from the unique `provider_bindings.reviewers` entry matched by the accepting review pass's provider id. It is not inferred from the provider name.
 
-The fence above documents the schema. A successful `strict_acceptance` invocation emits only the raw YAML inside it, with no fence, title, compact Markdown preface, or trailing prose. Other outcomes keep the normal compact or diagnostic format.
+The fence above documents the schema; it is not itself a universal response wrapper. Presentation grammar:
+
+- **Delegated strict success**：只输出 fence 内的 raw YAML，首行是 `qualification:`；不得有标题、fence 或 trailing prose。
+- **Direct strict success**：响应必须以 `## 方案收敛结果` 开始，先给 compact summary，至少包含 transition、核心判断、final review、artifact identity、证据边界和 residual risks；随后输出唯一的 `## 机器回执` 标题、唯一的 `yaml` opening fence、上面的完整 canonical payload 和 closing fence。Closing fence 必须是 EOF。
+
+Direct summary 必须解释结论，不能只重复字段或 dump 内部 state。`strict_acceptance_receipt` 只在 canonical proof 中出现一次。其他结果保持正常 compact 或 diagnostic 格式。
 
 ## 11. Resume mismatch
 

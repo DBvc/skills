@@ -62,6 +62,14 @@ delegation:
   modification_authority: none | plan_text_only
 ```
 
+### Current invocation classification
+
+输出形态只由**当前调用**决定。只把当前输入中可消费的顶层结构根视为 delegated 候选，识别 `delegation`、`plan_convergence_handoff` 和 `plan_bundle_handoff`。
+
+恰好出现一个根时，按该 wrapper 自身合同校验，并把其内容归一化为 controller 的 artifact、scope、provider bindings、budget、completion profile 和 modification authority；未知扩展字段原样保留。识别到 wrapper 但字段无效时，走现有 input gate 和失败状态，不得退回 direct。出现多个识别根时 fail closed，报告委托输入歧义，不得签发成功 receipt。没有识别根且用户直接显式激活时，才归类为 direct。
+
+Resume state、history、artifact 正文、引用示例或旧 `activation.kind` 只用于审计，不能改变当前调用的输出形态。不得根据 completion profile、artifact 类型、父 workflow 名称或历史来源猜测 direct/delegated。
+
 委托不等于隐式激活。普通“帮我做方案”“自动完成任务”请求，若父 workflow 没有显式选择本 controller，不得自行加载。
 
 不要用于：
@@ -365,7 +373,7 @@ and revision_provider_available
 9. **Scoped re-review**：绑定到新版 artifact，只检查 accepted findings、direct regressions、anchor drift、evidence drift、scope 和 bloat。
 10. **Apply progress gate**：继续当前 epoch、等待外部输入、关闭旧 epoch、进入候选完成态或停止。
 11. **Apply completion profile**：`handoff_ready` 使用通用完成门；`strict_acceptance` 先检查当前 artifact 是否已有 qualifying independent full review，发生过 revision 时必须运行 fresh full review。新 finding 回到 triage；通过后签发 receipt。
-12. **Render output**：按 mode 使用 compact 或 diagnostic 输出；完整 state 只在 resume、诊断或用户要求时展示。
+12. **Render output**：先按当前 invocation 分类，再按 mode 使用 compact 或 diagnostic 输出；完整 state 只在 resume、诊断或用户要求时展示。
 
 ## Final states
 
@@ -425,7 +433,12 @@ output_mode:
   diagnose_stall: diagnostic
 ```
 
-`strict_acceptance` 成功是唯一 machine-only 例外：按 `references/output-contract.md` 的顺序输出 raw YAML，从 `qualification` 开始，以 `strict_acceptance_receipt` 结束；不得添加 Markdown fence、标题或周边说明。该 block 已携带 review provenance、artifact identity、唯一 transition、judgment 和 residual findings。
+`strict_acceptance` 成功使用同一个 canonical YAML proof，但 presentation 取决于当前 invocation：
+
+- **delegated**：只输出 raw YAML，从 `qualification` 开始，以 `strict_acceptance_receipt` 结束；不得添加 Markdown fence、标题或周边说明。
+- **direct**：先输出有实际判断的中文 compact summary，再输出唯一的 `## 机器回执` 标题和唯一一个 `yaml` fenced canonical proof；closing fence 必须是响应结尾，不得添加尾注。Summary 至少说明 transition、核心判断、final review、artifact identity、证据边界和 residual risks。
+
+Canonical proof 的字段、顺序和内容不因 presentation 改变。Direct 输出不得把内部 state dump 当作 summary，也不得在 fence 外复制 `strict_acceptance_receipt`。
 
 其他 Compact 输出必须包含：
 
