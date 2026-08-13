@@ -182,6 +182,14 @@ completion_profiles:
     strict_acceptance_receipt_required: false
   strict_acceptance:
     reviewer_binding_required: true
+    accepted_content_refs:
+      single_artifact:
+        - path
+      implementation_plan_bundle:
+        - file_bundle
+    invalid_content_ref_transition:
+      next_action: obtain-artifact
+      final_state: needs-artifact
     artifact_identity_required:
       - type
       - recognized_fingerprint_scheme

@@ -256,7 +256,7 @@
     {
       "id": "plan-convergence-handoff-binds-identity-and-authority",
       "kind": "positive",
-      "prompt": "为跨包 API migration 生成实施计划，并给出交给 dbx-plan-convergence 的 handoff contract。不要实现。父 workflow 已将精确计划物化在 current_response，并按 exact-bytes-sha256 计算 fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa；原样绑定 identity 和 content ref。",
+      "prompt": "为跨包 API migration 生成实施计划，并给出交给 dbx-plan-convergence 的 handoff contract。不要实现。父 workflow 已将精确计划物化在可读取路径 skills/dbx-technical-plan/evals/fixtures/plan.md，并从该文件 exact bytes 计算 fingerprint=sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b；原样绑定 identity 和 content ref。",
       "expected_behavior": "The implementation-bound handoff should request strict_acceptance, bind a non-empty plan fingerprint and dbx-linus-review provider, preserve evidence boundaries and core anchors, include a final acceptance full-review budget, grant plan_text_only authority, and explicitly forbid code modification.",
       "checks": {
         "trigger": [
@@ -282,7 +282,7 @@
           },
           {
             "type": "regex",
-            "value": "content_ref:[\\s\\S]{0,120}kind:[ \\t]*(inline|path|current_context)[\\s\\S]{0,120}value:[^\\r\\n]+",
+            "value": "content_ref:[\\s\\S]{0,120}kind:[ \\t]*path[\\s\\S]{0,180}value:[^\\r\\n]*skills/dbx-technical-plan/evals/fixtures/plan\\.md",
             "required": true,
             "quality": "artifact"
           },
@@ -352,6 +352,26 @@
         ],
         "output": [
           {"type": "regex", "value": "(pending|needs-artifact|待计算|不能交给|不得开始).*(review|评审|handoff|交接)", "required": true, "quality": "state"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-strict-current-response-needs-materialization",
+      "kind": "failure_mode",
+      "prompt": "技术计划只存在于当前聊天回复 current_response。请直接生成 completion_profile=strict_acceptance 的 plan_convergence_handoff，不要写文件。",
+      "expected_behavior": "Do not emit a consumable strict-acceptance handoff for current_response. Explain that strict acceptance requires a readable path; keep the chat artifact on handoff_ready or report artifact materialization as the next gate.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(current_response|当前.*回复)[\\s\\S]{0,180}(strict_acceptance|严格验收)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(path|文件路径|可读取文件)[\\s\\S]{0,180}(exact bytes|字节|hash|指纹|重新计算)", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "regex", "value": "(handoff_ready|needs-artifact|物化|保存.*文件)", "required": true, "quality": "state"},
+          {"type": "regex", "value": "(?s)\\A(?!.*[\\\"']?plan_convergence_handoff[\\\"']?\\s*[:=]\\s*(?:\\{|\\r?\\n)[\\s\\S]{0,1800}[\\\"']?completion_profile[\\\"']?\\s*[:=]\\s*[\\\"']?strict_acceptance[\\\"']?)[\\s\\S]*\\Z", "required": true, "quality": "safety"}
         ],
         "safety": []
       },

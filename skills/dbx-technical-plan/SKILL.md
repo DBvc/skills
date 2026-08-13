@@ -343,6 +343,7 @@ Use `references/handoff-contracts.md`.
 Default handoff decisions:
 
 - If the generated plan is intended to guide implementation, hand off to `dbx-plan-convergence` unless the user or an authorized parent workflow explicitly selects a direct low-risk policy or supplies a current convergence `ready-for-handoff` result.
+- A plan that exists only inline or in `current_response` uses `completion_profile: handoff_ready`. Request `strict_acceptance` only after the exact single-artifact bytes are available through a readable `content_ref.kind: path`; compute `exact-bytes-sha256` from that file. If strict acceptance is required but no readable path exists, report that artifact materialization is the next gate instead of emitting a consumable strict handoff.
 - In the DBX implementation-bound planning profile, bind `dbx-linus-review` as the initial strict reviewer through the collection workflow. Do not make `dbx-technical-plan` run or emulate the reviewer.
 - Use `dbx-linus-review` directly for standalone one-pass critique when no convergence loop is requested.
 - If the user wants a formal persistent workflow, promote to `dbx-software-plan-first-plan-issue` or `dbx-software-plan-first-ground-plan` rather than writing ad hoc state.

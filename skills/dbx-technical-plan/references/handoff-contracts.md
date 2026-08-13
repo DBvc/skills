@@ -55,12 +55,12 @@ Use when a generated technical plan is intended to guide implementation and shou
 plan_convergence_handoff:
   status: needs_plan_convergence
   originating_intent: ""
-  completion_profile: strict_acceptance
+  completion_profile: handoff_ready | strict_acceptance
   artifact:
     type: technical_plan | architecture_proposal | migration_plan | implementation_proposal
     version: session-v1
-    fingerprint_scheme: exact-bytes-sha256
-    fingerprint: ""
+    fingerprint_scheme: null | exact-bytes-sha256
+    fingerprint: null | "sha256:<64 lowercase hex>"
     content_ref:
       kind: inline | path | current_context
       value: inline | path | current_response
@@ -121,11 +121,12 @@ plan_convergence_handoff:
 Rules:
 
 - `session-v1` is acceptable for same-session inline composition. Resume, persistence, multiple artifact versions, or multiple reviewers require an explicit version and preferably a fingerprint.
-- Before delegation, the parent workflow must materialize the exact plan bytes, compute `sha256:<64 lowercase hex>` under `exact-bytes-sha256`, and fill the identity plus structured content ref. Blank, placeholder, malformed, unknown-scheme, missing-ref, or unverifiable values are not a valid handoff.
-- Generic plan convergence defaults to `completion_profile: handoff_ready`. This implementation-bound technical-plan handoff must request `strict_acceptance`.
+- For `handoff_ready`, an inline or `current_context` plan may be handed off without pretending that its bytes are persistently reproducible. Preserve the structured content ref and use only the identity evidence actually available.
+- For `strict_acceptance`, the parent workflow must materialize the exact single-artifact bytes at a readable `content_ref.kind: path`, compute `sha256:<64 lowercase hex>` under `exact-bytes-sha256`, and fill the identity plus structured content ref. `inline`, `current_context`, blank, placeholder, malformed, unknown-scheme, missing-ref, unreadable, or unverifiable values are not a valid strict handoff. If no readable path exists, stop before delegation and report artifact materialization as the next gate.
+- Generic plan convergence defaults to `completion_profile: handoff_ready`. The implementation-bound profile requests `strict_acceptance` only after the path-backed artifact gate above passes.
 - The handoff binds `dbx-linus-review` for the DBX collection path and declares required dimensions; the generic controller remains provider-agnostic.
 - An unchanged initial independent full review may qualify for strict acceptance. After any local revision and scoped closure, strict acceptance requires a fresh independent full review bound to the final artifact identity.
-- `ready-for-handoff` under this profile requires a current `strict_acceptance_receipt`. A failed final review returns to bounded triage/revision while budget remains; otherwise it stops without claiming acceptance.
+- `ready-for-handoff` under `strict_acceptance` requires a current `strict_acceptance_receipt`. A failed final review returns to bounded triage/revision while budget remains; otherwise it stops without claiming acceptance.
 - This handoff does not authorize code modification.
 - Do not populate anchors that are not applicable merely to satisfy the template.
 

@@ -189,8 +189,8 @@
     {
       "id": "delegated-full-plan-review-binds-target-and-stays-read-only",
       "kind": "positive",
-      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=收敛 auth/cache implementation-bound plan，review_id=R5，reviewer_independence=independent，artifact=plan-v2，type=architecture_proposal，fingerprint_scheme=exact-bytes-sha256，fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa，content_ref={kind:current_context,value:current_response,plan:null,tasks:null}，scope=full，dimensions=[direction_model_ownership, complexity_proportionality]，evidence_boundary={repo_facts_read:[auth/cache owners], assumptions:[], unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请做严格 review。",
-      "expected_behavior": "Echo the exact review/artifact identity and full scope, perform strict plan review, and append a structured delegated_review_result. Do not revise the plan or choose a convergence transition.",
+      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=收敛 API implementation-bound plan，completion_profile=strict_acceptance，review_id=R5，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact=plan-v2，type=technical_plan，fingerprint_scheme=exact-bytes-sha256，fingerprint=sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b，content_ref={kind:path,value:skills/dbx-linus-review/evals/fixtures/plan.md,plan:null,tasks:null}，scope=full，dimensions=[direction_model_ownership, complexity_proportionality]，evidence_boundary={repo_facts_read:[API ownership], assumptions:[], unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请读取真实 fixture，复算 exact-bytes-sha256 后做严格 review。",
+      "expected_behavior": "Read the path-backed artifact, recompute and match its exact SHA-256, echo the review/artifact identity and full scope, perform the strict review, and append a structured delegated_review_result. Do not revise the plan or choose a convergence transition.",
       "checks": {
         "trigger": [
           {
@@ -212,6 +212,12 @@
             "value": "(Evidence|Impact|Fix|Confidence)",
             "required": true,
             "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(recomput|复算|重新计算)[\\s\\S]{0,180}(052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b|match|匹配)",
+            "required": true,
+            "quality": "validation"
           }
         ],
         "output": [
@@ -229,19 +235,25 @@
           },
           {
             "type": "regex",
-            "value": "artifact_fingerprint[\\s\\\":]+sha256:a{64}",
+            "value": "reviewer_capability[\\\"\\s:]+strict_pragmatic_plan_review",
             "required": true,
             "quality": "artifact"
           },
           {
             "type": "regex",
-            "value": "artifact_type[\\\"\\s:]+architecture_proposal[\\s\\S]{0,160}artifact_fingerprint_scheme[\\\"\\s:]+exact-bytes-sha256",
+            "value": "artifact_fingerprint[\\s\\\":]+sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
             "required": true,
             "quality": "artifact"
           },
           {
             "type": "regex",
-            "value": "artifact_content_ref:[\\s\\S]{0,120}kind:[ \\t]*current_context[\\s\\S]{0,120}value:[ \\t]*current_response",
+            "value": "artifact_type[\\\"\\s:]+technical_plan[\\s\\S]{0,160}artifact_fingerprint_scheme[\\\"\\s:]+exact-bytes-sha256",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "artifact_content_ref:[\\s\\S]{0,120}kind:[ \\t]*path[\\s\\S]{0,180}value:[^\\r\\n]*skills/dbx-linus-review/evals/fixtures/plan\\.md",
             "required": true,
             "quality": "artifact"
           },
@@ -300,6 +312,47 @@
         "all_required": true,
         "min_score": 0.85
       }
+    },
+    {
+      "id": "delegated-strict-current-response-fails-qualification",
+      "kind": "failure_mode",
+      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=严格验收聊天中的计划，completion_profile=strict_acceptance，review_id=R-CONTEXT，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact={type:technical_plan,version:v1,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,content_ref:{kind:current_context,value:current_response,plan:null,tasks:null}}，scope=full，evidence_boundary={repo_facts_read:[],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请签发严格验收结果。",
+      "expected_behavior": "Fail strict qualification before substantive acceptance because current_response is not a readable path. Return insufficient_evidence in the provider result and do not claim a verified fingerprint or acceptance.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(current_context|current_response)[\\s\\S]{0,200}(path|文件路径|不可重算|无法重算|不能.*验收)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(strict_acceptance|严格验收)[\\s\\S]{0,180}(fail|失败|不满足|不合格|insufficient)", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "delegated_review_result", "required": true, "quality": "structural"},
+          {"type": "regex", "value": "judgment[\\\"\\s:]+insufficient_evidence", "required": true, "quality": "state"},
+          {"type": "regex", "value": "(?s)\\A(?!.*judgment[\\\"\\s:]+(?:accept|accept_with_advisories))(?!.*(?:fingerprint verified|指纹已验证|strict PASS|严格验收通过))[\\s\\S]*\\Z", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "delegated-single-file-stale-fingerprint-fails-before-review",
+      "kind": "failure_mode",
+      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=严格验收路径中的计划，completion_profile=strict_acceptance，review_id=R-STALE，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact={type:technical_plan,version:v1,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,content_ref:{kind:path,value:skills/dbx-linus-review/evals/fixtures/plan.md,plan:null,tasks:null}}，scope=full，evidence_boundary={repo_facts_read:[],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请读取 fixture，复算 exact bytes 后评审。",
+      "expected_behavior": "Recompute the readable single-file artifact, report the actual SHA-256, detect the mismatch, and fail before substantive review without acceptance or a delegated review result.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(fingerprint|指纹)[\\s\\S]{0,180}(不匹配|mismatch|stale|错误|不一致)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(recomput|复算|重新计算)[\\s\\S]{0,180}052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "must_not_contain", "value": "delegated_review_result", "required": true, "quality": "safety"},
+          {"type": "regex", "value": "(?s)\\A(?!.*judgment[\\\"\\s:]+(?:accept|accept_with_advisories))(?!.*(?:fingerprint verified|指纹已验证|strict PASS|严格验收通过))[\\s\\S]*\\Z", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
     },
     {
       "id": "delegated-full-bundle-review-preserves-both-file-refs",

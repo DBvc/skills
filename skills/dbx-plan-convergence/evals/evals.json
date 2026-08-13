@@ -1199,7 +1199,7 @@
     {
       "id": "failure-strict-scoped-closure-still-needs-full-review",
       "kind": "failure_mode",
-      "prompt": "completion_profile 是 strict_acceptance。artifact type=technical_plan，scheme=exact-bytes-sha256；plan v1 经 full review R1 发现 F-001，修成 plan v2/fingerprint sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa；R2 只做 scoped re-review 并确认 F-001 已关闭。现在能严格通过吗？",
+      "prompt": "completion_profile 是 strict_acceptance。artifact={type:technical_plan,version:v2,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b,content_ref:{kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}}；plan v1 经 full review R1 发现 F-001，修成上述 plan v2；R2 只做 scoped re-review 并确认 F-001 已关闭。现在能严格通过吗？",
       "expected_behavior": "Treat scoped closure as candidate readiness only, emit obtain-review plus needs-review, require a fresh independent full review of exact plan v2, and do not issue a passed strict acceptance receipt.",
       "checks": {
         "trigger": [
@@ -1260,7 +1260,7 @@
     {
       "id": "failure-strict-final-full-high-revises-locally",
       "kind": "failure_mode",
-      "prompt": "strict_acceptance 的最终 fresh full review 返回原始 Linus delegated_review_result：review_id=R3，artifact_type=technical_plan，artifact_fingerprint_scheme=exact-bytes-sha256，artifact_version=v2，artifact_fingerprint=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa，scope=full，independence=independent，judgment=changes_required，findings=[{severity:S1,blocking:true,residual:false,decision_owner_required:false,evidence:验证命令写错 package}]。决定下一步。",
+      "prompt": "strict_acceptance 的最终 fresh full review 返回原始 Linus delegated_review_result：review_id=R3，artifact_type=technical_plan，artifact_fingerprint_scheme=exact-bytes-sha256，artifact_version=v2，artifact_fingerprint=sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b，artifact_content_ref={kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}，scope=full，independence=independent，judgment=changes_required，findings=[{severity:S1,blocking:true,residual:false,decision_owner_required:false,evidence:验证命令写错 package}]。决定下一步。",
       "expected_behavior": "Do not accept the plan; emit revise-local with final_state null, invalidate any prior acceptance, and issue no ready state or passed strict acceptance receipt.",
       "checks": {
         "trigger": [
@@ -1315,7 +1315,7 @@
     {
       "id": "positive-strict-final-full-clean-issues-receipt",
       "kind": "positive",
-      "prompt": "当前顶层调用是完整 plan_convergence_handoff={status:needs_plan_convergence,originating_intent:让技术方案完成严格验收,completion_profile:strict_acceptance,artifact:{type:technical_plan,version:v3,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb,content_ref:{kind:current_context,value:current_response,plan:null,tasks:null}},scope:[技术方案],goal:可执行且可审计,non_goals:[代码实现],success_criteria:[严格验收通过],evidence_boundary:{repo_facts_read:[当前方案],user_supplied_facts:[],external_docs_or_versions:[],assumptions:[],unknowns:[],not_read_or_not_run:[代码与测试]},core_anchors:{problem_goal:stable,source_of_truth:stable,state_or_data_owner:not_applicable,public_contract:stable,migration_rollout_boundary:stable,critical_invariants:stable},risk_profile:standard,reviewer_requirements:{initial_scope:full,final_acceptance_scope:full,dimensions:[correctness],independence_required:required},provider_bindings:{reviewers:[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}],revision_provider:{id:original_plan_author}},budget:{initial_full_review_passes:1,local_revision_rounds:2,scoped_re_review_passes:2,final_acceptance_full_review_passes:2},modification_authority:plan_text_only,may_modify_code:false,stop_on:[needs-artifact,needs-review,needs-evidence,needs-decision,needs-alternatives,pivot-required,blocked-state-mismatch,blocked-insufficient-history,stopped-flat,stopped-oscillating,stopped-bloat,stopped-budget]}。最后一次修订后收到 delegated_review_result={review_id:R5,reviewer_provider_id:dbx-linus-review,reviewer_capability:strict_pragmatic_plan_review,artifact_type:technical_plan,artifact_fingerprint_scheme:exact-bytes-sha256,artifact_content_ref:{kind:current_context,value:current_response,plan:null,tasks:null},artifact_version:v3,artifact_fingerprint:sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb,scope:full,independence:independent,judgment:accept_with_advisories,findings:[{id:F-009,severity:S2,blocking:false,residual:true,decision_owner_required:false}]}。输出结果。",
+      "prompt": "当前顶层调用是完整 plan_convergence_handoff={status:needs_plan_convergence,originating_intent:让技术方案完成严格验收,completion_profile:strict_acceptance,artifact:{type:technical_plan,version:v3,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b,content_ref:{kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}},scope:[技术方案],goal:可执行且可审计,non_goals:[代码实现],success_criteria:[严格验收通过],evidence_boundary:{repo_facts_read:[当前方案],user_supplied_facts:[],external_docs_or_versions:[],assumptions:[],unknowns:[],not_read_or_not_run:[代码与测试]},core_anchors:{problem_goal:stable,source_of_truth:stable,state_or_data_owner:not_applicable,public_contract:stable,migration_rollout_boundary:stable,critical_invariants:stable},risk_profile:standard,reviewer_requirements:{initial_scope:full,final_acceptance_scope:full,dimensions:[correctness],independence_required:required},provider_bindings:{reviewers:[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}],revision_provider:{id:original_plan_author}},budget:{initial_full_review_passes:1,local_revision_rounds:2,scoped_re_review_passes:2,final_acceptance_full_review_passes:2},modification_authority:plan_text_only,may_modify_code:false,stop_on:[needs-artifact,needs-review,needs-evidence,needs-decision,needs-alternatives,pivot-required,blocked-state-mismatch,blocked-insufficient-history,stopped-flat,stopped-oscillating,stopped-bloat,stopped-budget]}。最后一次修订后收到 delegated_review_result={review_id:R5,reviewer_provider_id:dbx-linus-review,reviewer_capability:strict_pragmatic_plan_review,artifact_type:technical_plan,artifact_fingerprint_scheme:exact-bytes-sha256,artifact_content_ref:{kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null},artifact_version:v3,artifact_fingerprint:sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b,scope:full,independence:independent,judgment:accept_with_advisories,findings:[{id:F-009,severity:S2,blocking:false,residual:true,decision_owner_required:false}]}。输出结果。",
       "expected_behavior": "Treat the current plan_convergence_handoff as delegated, match the bound reviewer, and emit only the raw canonical passed receipt for plan v3 and full review R5.",
       "checks": {
         "trigger": [
@@ -1329,7 +1329,7 @@
         "process": [
           {
             "type": "regex",
-            "value": "(artifact|plan)[_ ]?(version)?[\\s\\S]{0,100}v3[\\s\\S]{0,160}sha256:b{64}",
+            "value": "(artifact|plan)[_ ]?(version)?[\\s\\S]{0,100}v3[\\s\\S]{0,180}sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
             "required": true,
             "quality": "artifact"
           },
@@ -1367,7 +1367,7 @@
           },
           {
             "type": "regex",
-            "value": "(?m)\\Aqualification:[ \\t]*\\r?\\n  completion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\n  review_freshness:[ \\t]*fresh_after_last_revision[ \\t]*\\r?\\n  review_kind:[ \\t]*full review[ \\t]*\\r?\\n  review_id:[ \\t]*R5[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept_with_advisories[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v3[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:b{64}[ \\t]*\\r?\\ntransition:[ \\t]*\\r?\\n  next_action:[ \\t]*finalize[ \\t]*\\r?\\n  final_state:[ \\t]*ready-for-handoff[ \\t]*\\r?\\ncompletion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\nstrict_acceptance_receipt:[ \\t]*\\r?\\n  status:[ \\t]*passed[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v3[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:b{64}[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*current_context[ \\t]*\\r?\\n    value:[ \\t]*current_response[ \\t]*\\r?\\n    plan:[ \\t]*null[ \\t]*\\r?\\n    tasks:[ \\t]*null[ \\t]*\\r?\\n  review_id:[ \\t]*R5[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  reviewed_after_last_revision:[ \\t]*true[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept_with_advisories[ \\t]*\\r?\\n  residual_findings:[ \\t]*\\r?\\n    -[ \\t]*F-009[ \\t]*\\r?\\n[ \\t\\r\\n]*\\Z",
+            "value": "(?m)\\Aqualification:[ \\t]*\\r?\\n  completion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\n  review_freshness:[ \\t]*fresh_after_last_revision[ \\t]*\\r?\\n  review_kind:[ \\t]*full review[ \\t]*\\r?\\n  review_id:[ \\t]*R5[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept_with_advisories[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v3[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\ntransition:[ \\t]*\\r?\\n  next_action:[ \\t]*finalize[ \\t]*\\r?\\n  final_state:[ \\t]*ready-for-handoff[ \\t]*\\r?\\ncompletion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\nstrict_acceptance_receipt:[ \\t]*\\r?\\n  status:[ \\t]*passed[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v3[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*path[ \\t]*\\r?\\n    value:[^\\r\\n]*skills/dbx-plan-convergence/evals/fixtures/plan\\.md[ \\t]*\\r?\\n    plan:[ \\t]*null[ \\t]*\\r?\\n    tasks:[ \\t]*null[ \\t]*\\r?\\n  review_id:[ \\t]*R5[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  reviewed_after_last_revision:[ \\t]*true[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept_with_advisories[ \\t]*\\r?\\n  residual_findings:[ \\t]*\\r?\\n    -[ \\t]*F-009[ \\t]*\\r?\\n[ \\t\\r\\n]*\\Z",
             "required": true,
             "quality": "validation"
           },
@@ -1391,7 +1391,7 @@
           },
           {
             "type": "regex",
-            "value": "sha256:b{64}",
+            "value": "sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
             "required": true,
             "quality": "artifact"
           },
@@ -1403,7 +1403,7 @@
           },
           {
             "type": "regex",
-            "value": "artifact_content_ref:[\\s\\S]{0,120}kind:[ \\t]*current_context[\\s\\S]{0,120}value:[ \\t]*current_response",
+            "value": "artifact_content_ref:[\\s\\S]{0,120}kind:[ \\t]*path[\\s\\S]{0,180}value:[^\\r\\n]*skills/dbx-plan-convergence/evals/fixtures/plan\\.md",
             "required": true,
             "quality": "artifact"
           },
@@ -1454,7 +1454,7 @@
     {
       "id": "failure-strict-review-missing-capability-provenance-needs-review",
       "kind": "failure_mode",
-      "prompt": "completion_profile=strict_acceptance。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。当前 technical_plan 的 identity 完整；收到最后修订后的 full independent accept review R-missing，reviewer_provider_id=dbx-linus-review，但 review pass/result 没有 reviewer_capability。是否可签 passed receipt？",
+      "prompt": "completion_profile=strict_acceptance。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。当前 artifact={type:technical_plan,version:v2,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b,content_ref:{kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}}；收到最后修订后的 full independent accept review R-missing，reviewer_provider_id=dbx-linus-review，但 review pass/result 没有 reviewer_capability。是否可签 passed receipt？",
       "expected_behavior": "Fail closed because the accepting review lacks bound capability provenance; return obtain-review plus needs-review and issue no passed strict receipt.",
       "checks": {
         "trigger": [
@@ -1475,7 +1475,7 @@
     {
       "id": "failure-strict-review-capability-mismatch-needs-review",
       "kind": "failure_mode",
-      "prompt": "completion_profile=strict_acceptance。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。当前 technical_plan 的 identity 完整；收到最后修订后的 full independent accept review R-wrong，reviewer_provider_id=dbx-linus-review，但 reviewer_capability=generic_plan_review。是否可签 passed receipt？",
+      "prompt": "completion_profile=strict_acceptance。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。当前 artifact={type:technical_plan,version:v2,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b,content_ref:{kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}}；收到最后修订后的 full independent accept review R-wrong，reviewer_provider_id=dbx-linus-review，但 reviewer_capability=generic_plan_review。是否可签 passed receipt？",
       "expected_behavior": "Reject the capability-mismatched accepting review; return obtain-review plus needs-review and issue no passed strict receipt.",
       "checks": {
         "trigger": [
@@ -1497,13 +1497,13 @@
     {
       "id": "failure-strict-receipt-invalid-after-artifact-change",
       "kind": "failure_mode",
-      "prompt": "strict_acceptance_receipt R5 通过的是 technical_plan、scheme=exact-bytes-sha256、plan v3/fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb。回执签发后方案又改成 v4/fingerprint sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc，但没有新的 full review。旧回执还有效吗？",
+      "prompt": "strict_acceptance_receipt R5 通过的是 technical_plan、scheme=exact-bytes-sha256、plan v3/fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb。回执签发后当前 artifact 改成 {type:technical_plan,version:v4,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b,content_ref:{kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}}，但没有新的 full review。旧回执还有效吗？",
       "expected_behavior": "Invalidate the old receipt because artifact identity changed, emit obtain-review plus needs-review for a fresh full review of v4, and do not report ready based on R5.",
       "checks": {
         "trigger": [
           {
             "type": "regex",
-            "value": "v3[\\s\\S]{0,220}sha256:b{64}[\\s\\S]{0,220}v4[\\s\\S]{0,220}sha256:c{64}",
+            "value": "v3[\\s\\S]{0,220}sha256:b{64}[\\s\\S]{0,360}v4[\\s\\S]{0,220}sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
             "required": true,
             "quality": "artifact"
           }
@@ -1771,14 +1771,14 @@
     {
       "id": "positive-direct-strict-final-human-summary-with-proof",
       "kind": "positive",
-      "prompt": "请直接使用 dbx-plan-convergence 对当前技术方案完成 strict_acceptance 并输出结果。当前 artifact={type:technical_plan,version:v3,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb,content_ref:{kind:current_context,value:current_response,plan:null,tasks:null}}；evidence_boundary={repo_facts_read:[当前方案],user_supplied_facts:[],external_docs_or_versions:[],assumptions:[],unknowns:[],not_read_or_not_run:[代码与测试]}；provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。最后一次修订后收到 fresh independent full review={review_id:R5,reviewer_provider_id:dbx-linus-review,reviewer_capability:strict_pragmatic_plan_review,scope:full,independence:independent,judgment:accept_with_advisories,findings:[{id:F-009,severity:S2,blocking:false,residual:true,decision_owner_required:false}]}，identity 与当前 artifact 完全一致。",
+      "prompt": "请直接使用 dbx-plan-convergence 对当前技术方案完成 strict_acceptance 并输出结果。当前 artifact={type:technical_plan,version:v3,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b,content_ref:{kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}}；evidence_boundary={repo_facts_read:[当前方案],user_supplied_facts:[],external_docs_or_versions:[],assumptions:[],unknowns:[],not_read_or_not_run:[代码与测试]}；provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]。最后一次修订后收到 fresh independent full review={review_id:R5,reviewer_provider_id:dbx-linus-review,reviewer_capability:strict_pragmatic_plan_review,scope:full,independence:independent,judgment:accept_with_advisories,findings:[{id:F-009,severity:S2,blocking:false,residual:true,decision_owner_required:false}]}，identity 与当前 artifact 完全一致。",
       "expected_behavior": "Because the current invocation is direct, render all six required human-summary semantics before the machine section, then exactly one fenced canonical YAML proof with no extra field and the closing fence at EOF.",
       "checks": {
         "trigger": [
           {"type": "regex", "value": "(strict_acceptance|严格验收)[\\s\\S]{0,240}(full review|全量评审)", "required": true, "quality": "behavior"}
         ],
         "process": [
-          {"type": "regex", "value": "(artifact|plan)[_ ]?(version)?[\\s\\S]{0,100}v3[\\s\\S]{0,180}sha256:b{64}", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "(artifact|plan)[_ ]?(version)?[\\s\\S]{0,100}v3[\\s\\S]{0,180}sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b", "required": true, "quality": "artifact"},
           {"type": "regex", "value": "(dbx-linus-review|reviewer_provider_id)[\\s\\S]{0,140}strict_pragmatic_plan_review", "required": true, "quality": "validation"}
         ],
         "output": [
@@ -1788,13 +1788,13 @@
           {"type": "regex", "value": "(?ms)\\A(?:(?!^## 机器回执[ \\t]*$)[\\s\\S])*(Transition|流转|下一步)[\\s\\S]{0,160}(finalize|ready-for-handoff)[\\s\\S]*^## 机器回执[ \\t]*$", "required": true, "quality": "state"},
           {"type": "regex", "value": "(?ms)\\A(?:(?!^## 机器回执[ \\t]*$)[\\s\\S])*(核心判断|核心结论)[\\s\\S]{0,220}(严格验收|通过|可交接|ready-for-handoff)[\\s\\S]*^## 机器回执[ \\t]*$", "required": true, "quality": "behavior"},
           {"type": "regex", "value": "(?ms)\\A(?:(?!^## 机器回执[ \\t]*$)[\\s\\S])*(final review|最终全量评审|最终评审)[\\s\\S]{0,240}R5[\\s\\S]{0,240}(dbx-linus-review|strict_pragmatic_plan_review)[\\s\\S]*^## 机器回执[ \\t]*$", "required": true, "quality": "validation"},
-          {"type": "regex", "value": "(?ms)\\A(?:(?!^## 机器回执[ \\t]*$)[\\s\\S])*(artifact identity|产物身份)[\\s\\S]{0,180}technical_plan[\\s\\S]{0,120}v3[\\s\\S]{0,180}exact-bytes-sha256[\\s\\S]{0,180}sha256:b{64}[\\s\\S]*^## 机器回执[ \\t]*$", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "(?ms)\\A(?:(?!^## 机器回执[ \\t]*$)[\\s\\S])*(artifact identity|产物身份)[\\s\\S]{0,180}technical_plan[\\s\\S]{0,120}v3[\\s\\S]{0,180}exact-bytes-sha256[\\s\\S]{0,180}sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[\\s\\S]*^## 机器回执[ \\t]*$", "required": true, "quality": "artifact"},
           {"type": "regex", "value": "(?ms)\\A(?:(?!^## 机器回执[ \\t]*$)[\\s\\S])*(证据边界|evidence boundary)[\\s\\S]{0,220}(当前方案|代码与测试|not_read|未运行)[\\s\\S]*^## 机器回执[ \\t]*$", "required": true, "quality": "validation"},
           {"type": "regex", "value": "(?ms)\\A(?:(?!^## 机器回执[ \\t]*$)[\\s\\S])*(剩余风险|residual risks?)[\\s\\S]{0,160}F-009[\\s\\S]*^## 机器回执[ \\t]*$", "required": true, "quality": "validation"},
-          {"type": "regex", "value": "(?m)\\A## 方案收敛结果[ \\t]*\\r?\\n[\\s\\S]+^## 机器回执[ \\t]*\\r?\\n\\r?\\n```yaml[ \\t]*\\r?\\nqualification:[ \\t]*\\r?\\n  completion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\n  review_freshness:[ \\t]*fresh_after_last_revision[ \\t]*\\r?\\n  review_kind:[ \\t]*full review[ \\t]*\\r?\\n  review_id:[ \\t]*R5[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept_with_advisories[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v3[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:b{64}[ \\t]*\\r?\\ntransition:[ \\t]*\\r?\\n  next_action:[ \\t]*finalize[ \\t]*\\r?\\n  final_state:[ \\t]*ready-for-handoff[ \\t]*\\r?\\ncompletion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\nstrict_acceptance_receipt:[ \\t]*\\r?\\n  status:[ \\t]*passed[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v3[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:b{64}[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*current_context[ \\t]*\\r?\\n    value:[ \\t]*current_response[ \\t]*\\r?\\n    plan:[ \\t]*null[ \\t]*\\r?\\n    tasks:[ \\t]*null[ \\t]*\\r?\\n  review_id:[ \\t]*R5[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  reviewed_after_last_revision:[ \\t]*true[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept_with_advisories[ \\t]*\\r?\\n  residual_findings:[ \\t]*\\r?\\n    -[ \\t]*F-009[ \\t]*\\r?\\n```[ \\t]*\\r?\\n?\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?m)\\A## 方案收敛结果[ \\t]*\\r?\\n[\\s\\S]+^## 机器回执[ \\t]*\\r?\\n\\r?\\n```yaml[ \\t]*\\r?\\nqualification:[ \\t]*\\r?\\n  completion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\n  review_freshness:[ \\t]*fresh_after_last_revision[ \\t]*\\r?\\n  review_kind:[ \\t]*full review[ \\t]*\\r?\\n  review_id:[ \\t]*R5[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept_with_advisories[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v3[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\ntransition:[ \\t]*\\r?\\n  next_action:[ \\t]*finalize[ \\t]*\\r?\\n  final_state:[ \\t]*ready-for-handoff[ \\t]*\\r?\\ncompletion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\nstrict_acceptance_receipt:[ \\t]*\\r?\\n  status:[ \\t]*passed[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v3[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*path[ \\t]*\\r?\\n    value:[^\\r\\n]*skills/dbx-plan-convergence/evals/fixtures/plan\\.md[ \\t]*\\r?\\n    plan:[ \\t]*null[ \\t]*\\r?\\n    tasks:[ \\t]*null[ \\t]*\\r?\\n  review_id:[ \\t]*R5[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  reviewed_after_last_revision:[ \\t]*true[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept_with_advisories[ \\t]*\\r?\\n  residual_findings:[ \\t]*\\r?\\n    -[ \\t]*F-009[ \\t]*\\r?\\n```[ \\t]*\\r?\\n?\\Z", "required": true, "quality": "validation"},
           {"type": "regex", "value": "(?ms)\\A(?![\\s\\S]*^## 机器回执[^\\r\\n]*$[\\s\\S]*^## 机器回执)(?![\\s\\S]*^strict_acceptance_receipt:[^\\r\\n]*$[\\s\\S]*^strict_acceptance_receipt:)(?![\\s\\S]*^```[^\\r\\n]*$[\\s\\S]*^```[^\\r\\n]*$[\\s\\S]*^```)[\\s\\S]*\\Z", "required": true, "quality": "validation"},
           {"type": "regex", "value": "review_id:[ \\t]*R5[\\s\\S]{0,220}reviewer_capability:[ \\t]*strict_pragmatic_plan_review", "required": true, "quality": "artifact"},
-          {"type": "regex", "value": "artifact_fingerprint:[ \\t]*sha256:b{64}", "required": true, "quality": "artifact"},
+          {"type": "regex", "value": "artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b", "required": true, "quality": "artifact"},
           {"type": "regex", "value": "status:[ \\t]*passed[\\s\\S]{0,900}residual_findings:[ \\t]*\\r?\\n[ \\t]*-[ \\t]*F-009", "required": true, "quality": "validation"}
         ],
         "safety": []
@@ -1825,19 +1825,19 @@
     {
       "id": "positive-direct-wrapper-text-inside-artifact-stays-direct",
       "kind": "positive",
-      "prompt": "请直接使用 dbx-plan-convergence 完成 strict_acceptance；当前顶层没有 delegation wrapper。technical_plan v6 的正文示例中只引用了文本 `plan_convergence_handoff: {status: needs_plan_convergence}`，它不是当前调用根。artifact 使用 exact-bytes-sha256 / sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee / {kind:current_context,value:current_response,plan:null,tasks:null}；fresh independent full review R-EXAMPLE 由 dbx-linus-review 接受，capability=strict_pragmatic_plan_review，findings=[]。",
+      "prompt": "请直接使用 dbx-plan-convergence 完成 strict_acceptance；当前顶层没有 delegation wrapper。technical_plan v6 的正文示例中只引用了文本 `plan_convergence_handoff: {status: needs_plan_convergence}`，它不是当前调用根。artifact 使用 exact-bytes-sha256 / sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b / {kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}；fresh independent full review R-EXAMPLE 由 dbx-linus-review 接受，capability=strict_pragmatic_plan_review，findings=[]。",
       "expected_behavior": "Ignore wrapper text inside the artifact example, classify the current explicit invocation as direct, and emit a human summary plus one fenced canonical proof.",
       "checks": {
         "trigger": [
           {"type": "regex", "value": "(直接|direct)[\\s\\S]{0,160}(artifact|正文|示例)[\\s\\S]{0,160}(不是|非)[\\s\\S]{0,80}(wrapper|调用根|顶层)", "required": true, "quality": "behavior"}
         ],
         "process": [
-          {"type": "regex", "value": "(artifact identity|产物身份|artifact)[\\s\\S]{0,180}(v6|sha256:e{64})", "required": true, "quality": "artifact"}
+          {"type": "regex", "value": "(artifact identity|产物身份|artifact)[\\s\\S]{0,180}(v6|sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b)", "required": true, "quality": "artifact"}
         ],
         "output": [
           {"type": "must_start_with", "value": "## 方案收敛结果", "required": true, "quality": "structural"},
           {"type": "must_contain", "value": "## 机器回执", "required": true, "quality": "structural"},
-          {"type": "regex", "value": "(?ms)^## 机器回执[ \\t]*\\r?\\n\\r?\\n```yaml[ \\t]*\\r?\\nqualification:[\\s\\S]*^  review_id:[ \\t]*R-EXAMPLE[ \\t]*$[\\s\\S]*^strict_acceptance_receipt:[ \\t]*$[\\s\\S]*^```[ \\t]*\\r?\\n?\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?m)\\A## 方案收敛结果[ \\t]*\\r?\\n[\\s\\S]+^## 机器回执[ \\t]*\\r?\\n\\r?\\n```yaml[ \\t]*\\r?\\nqualification:[ \\t]*\\r?\\n  completion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\n  review_freshness:[ \\t]*fresh_after_last_revision[ \\t]*\\r?\\n  review_kind:[ \\t]*full review[ \\t]*\\r?\\n  review_id:[ \\t]*R-EXAMPLE[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v6[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\ntransition:[ \\t]*\\r?\\n  next_action:[ \\t]*finalize[ \\t]*\\r?\\n  final_state:[ \\t]*ready-for-handoff[ \\t]*\\r?\\ncompletion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\nstrict_acceptance_receipt:[ \\t]*\\r?\\n  status:[ \\t]*passed[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v6[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*path[ \\t]*\\r?\\n    value:[^\\r\\n]*skills/dbx-plan-convergence/evals/fixtures/plan\\.md[ \\t]*\\r?\\n    plan:[ \\t]*null[ \\t]*\\r?\\n    tasks:[ \\t]*null[ \\t]*\\r?\\n  review_id:[ \\t]*R-EXAMPLE[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  reviewed_after_last_revision:[ \\t]*true[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept[ \\t]*\\r?\\n  residual_findings:[ \\t]*\\[\\][ \\t]*\\r?\\n```[ \\t]*\\r?\\n?\\Z", "required": true, "quality": "validation"},
           {"type": "regex", "value": "(?ms)\\A(?![\\s\\S]*^## 机器回执[^\\r\\n]*$[\\s\\S]*^## 机器回执)(?![\\s\\S]*^```[^\\r\\n]*$[\\s\\S]*^```[^\\r\\n]*$[\\s\\S]*^```)[\\s\\S]*\\Z", "required": true, "quality": "validation"}
         ],
         "safety": []
@@ -1847,7 +1847,7 @@
     {
       "id": "failure-recognized-handoff-missing-one-field-no-direct-fallback",
       "kind": "failure_mode",
-      "prompt": "当前顶层调用是 plan_convergence_handoff={status:needs_plan_convergence,originating_intent:让技术方案完成严格验收,completion_profile:strict_acceptance,artifact:{type:technical_plan,version:v7,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,content_ref:{kind:current_context,value:current_response,plan:null,tasks:null}},scope:[技术方案],goal:可执行且可审计,non_goals:[代码实现],success_criteria:[严格验收通过],evidence_boundary:{repo_facts_read:[当前方案],user_supplied_facts:[],external_docs_or_versions:[],assumptions:[],unknowns:[],not_read_or_not_run:[代码与测试]},core_anchors:{problem_goal:stable,source_of_truth:stable,state_or_data_owner:not_applicable,public_contract:stable,migration_rollout_boundary:stable,critical_invariants:stable},risk_profile:standard,reviewer_requirements:{initial_scope:full,final_acceptance_scope:full,dimensions:[correctness],independence_required:required},provider_bindings:{reviewers:[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}],revision_provider:{id:original_plan_author}},budget:{initial_full_review_passes:1,local_revision_rounds:2,scoped_re_review_passes:2,final_acceptance_full_review_passes:2},may_modify_code:false,stop_on:[needs-artifact,needs-review,needs-evidence,needs-decision,needs-alternatives,pivot-required,blocked-state-mismatch,blocked-insufficient-history,stopped-flat,stopped-oscillating,stopped-bloat,stopped-budget]}。该 recognized wrapper 仅缺少必填 modification_authority；即使已有 accepting full review R7，也按现有输入失败门处理。",
+      "prompt": "当前顶层调用是 plan_convergence_handoff={status:needs_plan_convergence,originating_intent:让技术方案完成严格验收,completion_profile:strict_acceptance,artifact:{type:technical_plan,version:v7,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b,content_ref:{kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}},scope:[技术方案],goal:可执行且可审计,non_goals:[代码实现],success_criteria:[严格验收通过],evidence_boundary:{repo_facts_read:[当前方案],user_supplied_facts:[],external_docs_or_versions:[],assumptions:[],unknowns:[],not_read_or_not_run:[代码与测试]},core_anchors:{problem_goal:stable,source_of_truth:stable,state_or_data_owner:not_applicable,public_contract:stable,migration_rollout_boundary:stable,critical_invariants:stable},risk_profile:standard,reviewer_requirements:{initial_scope:full,final_acceptance_scope:full,dimensions:[correctness],independence_required:required},provider_bindings:{reviewers:[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}],revision_provider:{id:original_plan_author}},budget:{initial_full_review_passes:1,local_revision_rounds:2,scoped_re_review_passes:2,final_acceptance_full_review_passes:2},may_modify_code:false,stop_on:[needs-artifact,needs-review,needs-evidence,needs-decision,needs-alternatives,pivot-required,blocked-state-mismatch,blocked-insufficient-history,stopped-flat,stopped-oscillating,stopped-bloat,stopped-budget]}。该 recognized wrapper 仅缺少必填 modification_authority；即使已有 accepting full review R7，也按现有输入失败门处理。",
       "expected_behavior": "Recognize the current delegated wrapper, fail its existing input gate for the single missing required field, and never fall back to direct strict-success presentation.",
       "checks": {
         "trigger": [
@@ -1868,22 +1868,22 @@
     {
       "id": "positive-resume-delegated-state-direct-current-human-output",
       "kind": "positive",
-      "prompt": "请直接继续上一次方案收敛并输出严格验收结果。历史 convergence state 的审计元数据记录 activation.kind=delegated；当前调用没有委托 envelope。state 与 current artifact 都绑定 technical_plan v4 / exact-bytes-sha256 / sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc / {kind:current_context,value:current_response,plan:null,tasks:null}。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]；最后一次修订后的 fresh independent full review RCROSS1 judgment=accept、findings=[]，review provider/capability 和 artifact identity 均匹配。",
+      "prompt": "请直接继续上一次方案收敛并输出严格验收结果。历史 convergence state 的审计元数据记录 activation.kind=delegated；当前调用没有委托 envelope。state 与 current artifact 都绑定 technical_plan v4 / exact-bytes-sha256 / sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b / {kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}。provider_bindings.reviewers=[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]；最后一次修订后的 fresh independent full review RCROSS1 judgment=accept、findings=[]，review provider/capability 和 artifact identity 均匹配。",
       "expected_behavior": "Use the current direct invocation for presentation; historical delegated activation is audit-only, so output a human summary plus one fenced proof.",
       "checks": {
         "trigger": [
           {"type": "regex", "value": "(strict_acceptance|严格验收)[\\s\\S]{0,240}(RCROSS1|full review|全量评审)", "required": true, "quality": "behavior"}
         ],
         "process": [
-          {"type": "regex", "value": "(artifact|plan)[_ ]?(version)?[\\s\\S]{0,100}v4[\\s\\S]{0,180}sha256:c{64}", "required": true, "quality": "artifact"}
+          {"type": "regex", "value": "(artifact|plan)[_ ]?(version)?[\\s\\S]{0,100}v4[\\s\\S]{0,180}sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b", "required": true, "quality": "artifact"}
         ],
         "output": [
           {"type": "must_start_with", "value": "## 方案收敛结果", "required": true, "quality": "structural"},
           {"type": "must_contain", "value": "## 机器回执", "required": true, "quality": "structural"},
-          {"type": "regex", "value": "(?ms)\\A## 方案收敛结果[ \\t]*\\r?\\n[\\s\\S]+^## 机器回执[ \\t]*\\r?\\n\\r?\\n```yaml[ \\t]*\\r?\\nqualification:[ \\t]*\\r?\\n[\\s\\S]*^strict_acceptance_receipt:[ \\t]*\\r?\\n[\\s\\S]*^```[ \\t]*\\r?\\n?\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?m)\\A## 方案收敛结果[ \\t]*\\r?\\n[\\s\\S]+^## 机器回执[ \\t]*\\r?\\n\\r?\\n```yaml[ \\t]*\\r?\\nqualification:[ \\t]*\\r?\\n  completion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\n  review_freshness:[ \\t]*fresh_after_last_revision[ \\t]*\\r?\\n  review_kind:[ \\t]*full review[ \\t]*\\r?\\n  review_id:[ \\t]*RCROSS1[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v4[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\ntransition:[ \\t]*\\r?\\n  next_action:[ \\t]*finalize[ \\t]*\\r?\\n  final_state:[ \\t]*ready-for-handoff[ \\t]*\\r?\\ncompletion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\nstrict_acceptance_receipt:[ \\t]*\\r?\\n  status:[ \\t]*passed[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v4[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*path[ \\t]*\\r?\\n    value:[^\\r\\n]*skills/dbx-plan-convergence/evals/fixtures/plan\\.md[ \\t]*\\r?\\n    plan:[ \\t]*null[ \\t]*\\r?\\n    tasks:[ \\t]*null[ \\t]*\\r?\\n  review_id:[ \\t]*RCROSS1[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  reviewed_after_last_revision:[ \\t]*true[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept[ \\t]*\\r?\\n  residual_findings:[ \\t]*\\[\\][ \\t]*\\r?\\n```[ \\t]*\\r?\\n?\\Z", "required": true, "quality": "validation"},
           {"type": "regex", "value": "(?ms)\\A(?![\\s\\S]*^## 机器回执[^\\r\\n]*$[\\s\\S]*^## 机器回执)(?![\\s\\S]*^strict_acceptance_receipt:[^\\r\\n]*$[\\s\\S]*^strict_acceptance_receipt:)(?![\\s\\S]*^```[^\\r\\n]*$[\\s\\S]*^```[^\\r\\n]*$[\\s\\S]*^```)[\\s\\S]*\\Z", "required": true, "quality": "validation"},
           {"type": "regex", "value": "review_id:[ \\t]*RCROSS1", "required": true, "quality": "artifact"},
-          {"type": "regex", "value": "artifact_fingerprint:[ \\t]*sha256:c{64}", "required": true, "quality": "artifact"}
+          {"type": "regex", "value": "artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b", "required": true, "quality": "artifact"}
         ],
         "safety": []
       },
@@ -1892,21 +1892,63 @@
     {
       "id": "positive-resume-direct-state-delegated-current-raw-output",
       "kind": "positive",
-      "prompt": "当前顶层调用是完整 delegation={originating_intent:继续严格验收,artifact:{type:technical_plan,version:v5,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd,content_ref:{kind:current_context,value:current_response,plan:null,tasks:null}},scope:[技术方案],provider_bindings:{reviewers:[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]},budget:{max_full_reviews:2,max_local_revisions:1,max_scoped_rereviews:1},completion_profile:strict_acceptance,modification_authority:none,convergence_state:{convergence_state_version:2,activation:{kind:direct},artifact_version:v5,artifact_fingerprint:sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd}}。最后一次修订后的 fresh independent full review RCROSS2 judgment=accept、findings=[]，review provider/capability 和 artifact identity 均匹配。输出结果。",
+      "prompt": "当前顶层调用是完整 delegation={originating_intent:继续严格验收,artifact:{type:technical_plan,version:v5,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b,content_ref:{kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}},scope:[技术方案],provider_bindings:{reviewers:[{id:dbx-linus-review,capability:strict_pragmatic_plan_review}]},budget:{max_full_reviews:2,max_local_revisions:1,max_scoped_rereviews:1},completion_profile:strict_acceptance,modification_authority:none,convergence_state:{convergence_state_version:2,activation:{kind:direct},artifact_version:v5,artifact_fingerprint:sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b}}。最后一次修订后的 fresh independent full review RCROSS2 judgment=accept、findings=[]，review provider/capability 和 artifact identity 均匹配。输出结果。",
       "expected_behavior": "Use the current delegation wrapper for presentation; historical direct activation is audit-only, so emit only raw canonical YAML.",
       "checks": {
         "trigger": [
           {"type": "regex", "value": "(strict_acceptance|严格验收)[\\s\\S]{0,240}(RCROSS2|full review|全量评审)", "required": true, "quality": "behavior"}
         ],
         "process": [
-          {"type": "regex", "value": "(artifact|plan)[_ ]?(version)?[\\s\\S]{0,100}v5[\\s\\S]{0,180}sha256:d{64}", "required": true, "quality": "artifact"}
+          {"type": "regex", "value": "(artifact|plan)[_ ]?(version)?[\\s\\S]{0,100}v5[\\s\\S]{0,180}sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b", "required": true, "quality": "artifact"}
         ],
         "output": [
           {"type": "must_start_with", "value": "qualification:", "required": true, "quality": "structural"},
           {"type": "must_not_contain", "value": "## 方案收敛结果", "required": true, "quality": "structural"},
           {"type": "must_not_contain", "value": "```", "required": true, "quality": "structural"},
-          {"type": "regex", "value": "(?ms)\\Aqualification:[ \\t]*\\r?\\n[\\s\\S]*^  review_id:[ \\t]*RCROSS2[ \\t]*$[\\s\\S]*^transition:[ \\t]*\\r?\\n[\\s\\S]*^completion_profile:[ \\t]*strict_acceptance[ \\t]*$[\\s\\S]*^strict_acceptance_receipt:[ \\t]*\\r?\\n^  status:[ \\t]*passed[ \\t]*$[\\s\\S]*^  artifact_fingerprint:[ \\t]*sha256:d{64}[ \\t]*$[\\s\\S]*\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "(?m)\\Aqualification:[ \\t]*\\r?\\n  completion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\n  review_freshness:[ \\t]*fresh_after_last_revision[ \\t]*\\r?\\n  review_kind:[ \\t]*full review[ \\t]*\\r?\\n  review_id:[ \\t]*RCROSS2[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v5[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\ntransition:[ \\t]*\\r?\\n  next_action:[ \\t]*finalize[ \\t]*\\r?\\n  final_state:[ \\t]*ready-for-handoff[ \\t]*\\r?\\ncompletion_profile:[ \\t]*strict_acceptance[ \\t]*\\r?\\nstrict_acceptance_receipt:[ \\t]*\\r?\\n  status:[ \\t]*passed[ \\t]*\\r?\\n  artifact_type:[ \\t]*technical_plan[ \\t]*\\r?\\n  artifact_version:[ \\t]*v5[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*exact-bytes-sha256[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*path[ \\t]*\\r?\\n    value:[^\\r\\n]*skills/dbx-plan-convergence/evals/fixtures/plan\\.md[ \\t]*\\r?\\n    plan:[ \\t]*null[ \\t]*\\r?\\n    tasks:[ \\t]*null[ \\t]*\\r?\\n  review_id:[ \\t]*RCROSS2[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  reviewed_after_last_revision:[ \\t]*true[ \\t]*\\r?\\n  open_blocker_high:[ \\t]*0[ \\t]*\\r?\\n  review_judgment:[ \\t]*accept[ \\t]*\\r?\\n  residual_findings:[ \\t]*\\[\\][ \\t]*\\r?\\n[ \\t\\r\\n]*\\Z", "required": true, "quality": "validation"},
           {"type": "regex", "value": "(?s)\\A(?![\\s\\S]*\\bstrict_acceptance_receipt\\b[\\s\\S]*\\bstrict_acceptance_receipt\\b)[\\s\\S]*\\Z", "required": true, "quality": "validation"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-strict-single-file-fingerprint-mismatch-needs-artifact",
+      "kind": "failure_mode",
+      "prompt": "请直接完成 strict_acceptance。当前 technical_plan v1 使用 content_ref={kind:path,value:skills/dbx-plan-convergence/evals/fixtures/plan.md,plan:null,tasks:null}，但声明 exact-bytes-sha256 / sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa。已有 fresh independent full review R-STALE judgment=accept。请签发严格回执。",
+      "expected_behavior": "Recompute the readable file, detect that its actual SHA-256 differs from the declaration, return obtain-artifact plus needs-artifact, and issue neither final review acceptance nor a passed receipt.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(fingerprint|指纹)[\\s\\S]{0,180}(不匹配|mismatch|stale|错误|不一致)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(recomput|复算|重新计算)[\\s\\S]{0,180}052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "obtain-artifact", "required": true, "quality": "state"},
+          {"type": "must_contain", "value": "needs-artifact", "required": true, "quality": "state"},
+          {"type": "regex", "value": "(?s)\\A(?!.*[\\\"']?strict_acceptance_receipt[\\\"']?\\s*[:=]\\s*(?:\\{|\\r?\\n)[\\s\\S]{0,600}[\\\"']?status[\\\"']?\\s*[:=]\\s*[\\\"']?passed[\\\"']?)(?!.*[\\\"']?final_state[\\\"']?\\s*[:=]\\s*[\\\"']?ready-for-handoff[\\\"']?)[\\s\\S]*\\Z", "required": true, "quality": "safety"}
+        ],
+        "safety": []
+      },
+      "pass_criteria": {"all_required": true, "min_score": 0.85}
+    },
+    {
+      "id": "failure-strict-current-context-needs-artifact",
+      "kind": "failure_mode",
+      "prompt": "请直接完成 strict_acceptance。当前 technical_plan v1 声明 exact-bytes-sha256 / sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa，但 content_ref={kind:current_context,value:current_response,plan:null,tasks:null}。已有 fresh independent full review R-CONTEXT judgment=accept。请签发严格回执。",
+      "expected_behavior": "Reject the non-recomputable current-context ref before accepting the review. Return obtain-artifact plus needs-artifact, require a readable path, and issue no passed receipt.",
+      "checks": {
+        "trigger": [
+          {"type": "regex", "value": "(current_context|current_response)[\\s\\S]{0,220}(不可重算|无法重算|path|文件路径|不满足)", "required": true, "quality": "artifact"}
+        ],
+        "process": [
+          {"type": "regex", "value": "(strict_acceptance|严格验收)[\\s\\S]{0,220}(path|文件路径|可读取文件)", "required": true, "quality": "validation"}
+        ],
+        "output": [
+          {"type": "must_contain", "value": "obtain-artifact", "required": true, "quality": "state"},
+          {"type": "must_contain", "value": "needs-artifact", "required": true, "quality": "state"},
+          {"type": "regex", "value": "(?s)\\A(?!.*[\\\"']?strict_acceptance_receipt[\\\"']?\\s*[:=]\\s*(?:\\{|\\r?\\n)[\\s\\S]{0,600}[\\\"']?status[\\\"']?\\s*[:=]\\s*[\\\"']?passed[\\\"']?)(?!.*[\\\"']?final_state[\\\"']?\\s*[:=]\\s*[\\\"']?ready-for-handoff[\\\"']?)[\\s\\S]*\\Z", "required": true, "quality": "safety"}
         ],
         "safety": []
       },

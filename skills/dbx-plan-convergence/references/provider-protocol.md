@@ -28,7 +28,7 @@ artifact:
 
 - `version` is required for persisted state, resume, multiple artifact versions, or multiple review passes.
 - `fingerprint` is optional but recommended when the host can compute a stable content hash or content id.
-- `strict_acceptance` requires the controller or artifact provider to hash the exact artifact bytes before review and declare a recognized scheme. Single artifacts use `exact-bytes-sha256`; implementation bundles use the scheme below. The only accepted fingerprint form is `sha256:<64 lowercase hex>`; placeholders, malformed values, unknown schemes, or values that cannot be recomputed fail as `obtain-artifact + needs-artifact`.
+- `strict_acceptance` requires the controller or artifact provider to hash the exact artifact bytes before review and declare a recognized scheme. A single artifact must use a readable `content_ref.kind: path` plus `exact-bytes-sha256`; an implementation bundle must use `file_bundle` plus the scheme below. `inline`, `current_context`, placeholders, malformed values, unknown schemes, unreadable paths, or values that cannot be recomputed fail as `obtain-artifact + needs-artifact`. They remain valid location forms for ordinary `handoff_ready` when its weaker identity rules are satisfied.
 - `content_ref` is the canonical location contract. `content_location` is retained only for older v2 state and ordinary single-artifact compatibility; do not use it to infer a file bundle.
 - In a single ephemeral turn, when artifact and its review are supplied together with no ambiguity, the controller may assign a session-local version such as `session-v1`.
 - Do not claim a review applies to a changed artifact merely because the title is the same.
@@ -237,6 +237,7 @@ This section applies only when `completion_profile: strict_acceptance`.
 
 A qualifying acceptance review must:
 
+- receive a readable `content_ref.kind: path` for a single artifact, or a complete `file_bundle` for `implementation_plan_bundle`; `inline` and `current_context` are not qualifying strict-acceptance refs;
 - use `scope.kind: full` and bind the current artifact type, recognized fingerprint scheme, version, structured content ref, and a recomputed fingerprint matching `^sha256:[0-9a-f]{64}$`;
 - occur after the last artifact revision;
 - use an `independent` reviewer pass;
@@ -255,10 +256,10 @@ strict_acceptance_receipt:
   artifact_type: "technical_plan"
   artifact_version: "v3"
   artifact_fingerprint_scheme: exact-bytes-sha256
-  artifact_fingerprint: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  artifact_fingerprint: "sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b"
   artifact_content_ref:
-    kind: current_context
-    value: current_response
+    kind: path
+    value: skills/dbx-plan-convergence/evals/fixtures/plan.md
     plan: null
     tasks: null
   review_id: "R-final-2"

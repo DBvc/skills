@@ -174,7 +174,7 @@
     {
       "id": "trajectory-strict-scoped-closure-needs-final-full-review",
       "initial": {
-        "artifact": "plan v2 fingerprint sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "artifact": "plan v2 at skills/dbx-plan-convergence/evals/fixtures/plan.md with fingerprint sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
         "completion_profile": "strict_acceptance",
         "review_passes": [
           "R1 full review of v1 finds F-001",
@@ -185,7 +185,7 @@
         "treat R2 as closure of known findings, not strict acceptance",
         "do not issue strict_acceptance_receipt",
         "emit obtain-review and needs-review",
-        "request a fresh independent full review bound to plan v2 fingerprint sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "request a fresh independent full review bound to plan v2 path skills/dbx-plan-convergence/evals/fixtures/plan.md and fingerprint sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b"
       ],
       "failure_signals": [
         "scoped review alone produces strict acceptance",
@@ -196,9 +196,9 @@
     {
       "id": "trajectory-strict-final-full-high-reopens-local-loop",
       "initial": {
-        "artifact": "plan v2 fingerprint sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "artifact": "plan v2 at skills/dbx-plan-convergence/evals/fixtures/plan.md with fingerprint sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
         "completion_profile": "strict_acceptance",
-        "review": "fresh independent full review R3 of exact v2/sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa finds one local S1 validation error"
+        "review": "fresh independent full review R3 of exact v2/sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b at skills/dbx-plan-convergence/evals/fixtures/plan.md finds one local S1 validation error"
       },
       "expected_steps": [
         "do not issue or retain a passed strict_acceptance_receipt",
@@ -215,17 +215,17 @@
     {
       "id": "trajectory-strict-final-full-clean-issues-bound-receipt",
       "initial": {
-        "artifact": "technical_plan v3 under exact-bytes-sha256 fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "artifact": "technical_plan v3 at skills/dbx-plan-convergence/evals/fixtures/plan.md under exact-bytes-sha256 fingerprint sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
         "completion_profile": "strict_acceptance",
         "reviewer_binding": "dbx-linus-review with capability strict_pragmatic_plan_review",
-        "last_revision_artifact": "plan v3 fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-        "review": "fresh independent full review R5 from dbx-linus-review with the bound strict_pragmatic_plan_review capability, of exact technical_plan/exact-bytes-sha256/v3/sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb, reports judgment accept_with_advisories, no S0/S1, and all S2 blocking=false/residual=true with no unresolved decision-owner acceptance"
+        "last_revision_artifact": "plan v3 at skills/dbx-plan-convergence/evals/fixtures/plan.md with fingerprint sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
+        "review": "fresh independent full review R5 from dbx-linus-review with the bound strict_pragmatic_plan_review capability, of exact technical_plan/exact-bytes-sha256/v3/sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b at content_ref kind path value skills/dbx-plan-convergence/evals/fixtures/plan.md, reports judgment accept_with_advisories, no S0/S1, and all S2 blocking=false/residual=true with no unresolved decision-owner acceptance"
       },
       "expected_steps": [
         "verify R5 happened after the last revision and matches exact artifact identity",
         "verify no open blocker, high, evidence, decision, or direction gap",
         "emit finalize and ready-for-handoff",
-        "issue strict_acceptance_receipt with status passed, artifact_type technical_plan, artifact_fingerprint_scheme exact-bytes-sha256, review_id R5, reviewer_capability strict_pragmatic_plan_review copied from the matching provider binding, scope full, independence independent, reviewed_after_last_revision true, open_blocker_high 0, review_judgment accept_with_advisories, and exact v3 sha256 identity"
+        "issue strict_acceptance_receipt with status passed, artifact_type technical_plan, artifact_fingerprint_scheme exact-bytes-sha256, artifact_content_ref kind path value skills/dbx-plan-convergence/evals/fixtures/plan.md, review_id R5, reviewer_capability strict_pragmatic_plan_review copied from the matching provider binding, scope full, independence independent, reviewed_after_last_revision true, open_blocker_high 0, review_judgment accept_with_advisories, and exact v3 sha256 identity"
       ],
       "failure_signals": [
         "receipt omits artifact type, fingerprint scheme, artifact fingerprint, review_id, or open_blocker_high",
@@ -238,7 +238,7 @@
       "initial": {
         "completion_profile": "strict_acceptance",
         "receipt": "R5 passed plan v3 fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-        "current_artifact": "plan v4 fingerprint sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "current_artifact": "plan v4 at skills/dbx-plan-convergence/evals/fixtures/plan.md with fingerprint sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
         "current_full_review": null
       },
       "expected_steps": [
@@ -246,7 +246,7 @@
         "invalidate the v3/sha256 strict_acceptance_receipt",
         "do not report ready based on R5",
         "emit obtain-review and needs-review",
-        "require a fresh full review bound to exact v4/sha256 identity"
+        "require a fresh full review bound to exact v4/path/sha256 identity"
       ],
       "failure_signals": [
         "receipt is treated as transferable across artifact identities",

@@ -91,14 +91,18 @@ Use this path for local, reversible, low-risk changes whose behavior and validat
 
 ```text
 dbx-technical-plan
--> dbx-plan-convergence(mode=bounded_loop, completion_profile=strict_acceptance)
-     -> initial reviewer: dbx-linus-review(plan_strict, full)
-     -> bounded revision and scoped closure by the original plan author
-     -> final acceptance: qualifying independent full review of the final artifact identity
-          -> pass: identity-bound strict_acceptance_receipt
-          -> new finding: bounded triage/revision/re-review
-          -> no progress or exhausted budget: explicit stop state
--> ready-for-handoff with current receipt
+├─ chat-only artifact
+│  -> dbx-plan-convergence(mode=bounded_loop, completion_profile=handoff_ready)
+│  -> ready-for-handoff without strict receipt
+└─ path-backed artifact
+   -> dbx-plan-convergence(mode=bounded_loop, completion_profile=strict_acceptance)
+      -> initial reviewer: dbx-linus-review(plan_strict, full)
+      -> bounded revision and scoped closure by the original plan author
+      -> final acceptance: qualifying independent full review of the final artifact identity
+           -> pass: identity-bound strict_acceptance_receipt
+           -> new finding: bounded triage/revision/re-review
+           -> no progress or exhausted budget: explicit stop state
+   -> ready-for-handoff with current receipt
 -> implementation
 ```
 
@@ -112,7 +116,7 @@ budget:
   final_acceptance_full_review_passes: 2
 ```
 
-Generic `dbx-plan-convergence` still defaults to `handoff_ready`. This collection path explicitly selects `strict_acceptance`: scoped re-review closes accepted findings and direct regressions, but cannot authorize implementation. The initial independent full review may qualify when the artifact is unchanged; after any revision, final acceptance requires a fresh independent full review bound to the final type/scheme/version/fingerprint/content refs. A new material finding returns to the remaining bounded revision budget; exhausted budget stops the workflow without claiming acceptance.
+Generic `dbx-plan-convergence` defaults to `handoff_ready`, which is also the correct profile for a plan that exists only inline or in `current_response`. This collection path selects `strict_acceptance` only after a single plan is materialized at a readable path and its exact bytes are hashed. Scoped re-review closes accepted findings and direct regressions, but cannot authorize implementation. The initial independent full review may qualify when the artifact is unchanged; after any revision, final acceptance requires a fresh independent full review bound to the final type/scheme/version/fingerprint/content refs. A new material finding returns to the remaining bounded revision budget; exhausted budget stops the workflow without claiming acceptance.
 
 When the exact `plan.md/tasks.md` bundle needs a local revision, the revision request/result preserve `implementation_plan_bundle`, `plan-first-bundle-sha256-v1`, both file refs, and the before/after identities. The provider recomputes the bundle fingerprint after editing; scoped closure and the final full review both bind that new identity.
 
@@ -149,7 +153,7 @@ convergence_controller:
   capability: bounded_plan_convergence
   preferred_dbx_skill: dbx-plan-convergence
   mode: bounded_loop
-  completion_profile: strict_acceptance
+  completion_profile: handoff_ready | strict_acceptance
 
 reviewer:
   capability: strict_pragmatic_plan_review
@@ -182,12 +186,12 @@ An implementation-bound technical plan should produce a handoff with enough iden
 plan_convergence_handoff:
   status: needs_plan_convergence
   originating_intent: ""
-  completion_profile: strict_acceptance
+  completion_profile: handoff_ready | strict_acceptance
   artifact:
     type: technical_plan | architecture_proposal | migration_plan | implementation_proposal
     version: session-v1
-    fingerprint_scheme: exact-bytes-sha256
-    fingerprint: ""
+    fingerprint_scheme: null | exact-bytes-sha256
+    fingerprint: null | "sha256:<64 lowercase hex>"
     content_ref:
       kind: inline | path | current_context
       value: inline | path | current_response
@@ -247,7 +251,7 @@ plan_convergence_handoff:
 
 `session-v1` is sufficient for same-session inline composition. Resume, persistence, multiple versions, or multiple reviewers require explicit versioning and preferably a fingerprint.
 
-Before delegation, materialize the exact artifact bytes, declare its structured content ref, and compute `sha256:<64 lowercase hex>` under `exact-bytes-sha256`. Blank, placeholder, malformed, unknown-scheme, missing-ref, or unverifiable values stop at `needs-artifact`. Do not invent non-applicable anchors merely to fill the contract.
+Before a `strict_acceptance` delegation, materialize the exact single-artifact bytes at a readable `content_ref.kind: path`, declare that structured ref, and compute `sha256:<64 lowercase hex>` under `exact-bytes-sha256`. Inline/current-context plans use `handoff_ready`; they cannot receive a strict receipt. Blank, placeholder, malformed, unknown-scheme, missing-ref, unreadable, or unverifiable values stop at `needs-artifact`. Do not invent non-applicable anchors merely to fill the contract.
 
 The final acceptance pass returns an identity-bound receipt:
 
@@ -257,10 +261,10 @@ strict_acceptance_receipt:
   artifact_type: technical_plan
   artifact_version: ""
   artifact_fingerprint_scheme: exact-bytes-sha256
-  artifact_fingerprint: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  artifact_fingerprint: "sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b"
   artifact_content_ref:
-    kind: current_context
-    value: current_response
+    kind: path
+    value: skills/dbx-plan-convergence/evals/fixtures/plan.md
     plan: null
     tasks: null
   review_id: ""

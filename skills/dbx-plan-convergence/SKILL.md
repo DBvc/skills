@@ -106,7 +106,7 @@ Resume state、history、artifact 正文、引用示例或旧 `activation.kind` 
 `completion_profile` 只改变完成门，不改变 mode、transition 集合或 provider 分工：
 
 - `handoff_ready`：默认通用路径。关闭已知 material findings 并满足 completion contract 后即可交接；不得表述为严格 reviewer 已接受。
-- `strict_acceptance`：用于准备进入实现、并要求严格 reviewer 最终验收的组合路径。DBX implementation-bound technical-plan handoff 默认选择此 profile。
+- `strict_acceptance`：用于准备进入实现、并要求严格 reviewer 最终验收的组合路径。DBX implementation-bound technical-plan handoff 只有在单 artifact 已物化为可读取 path 时才选择此 profile；chat-only artifact 使用 `handoff_ready`。
 
 `strict_acceptance` 不新增 final state；通过时仍输出 `finalize + ready-for-handoff`，但必须附带 identity-bound `strict_acceptance_receipt`。
 
@@ -235,7 +235,7 @@ convergence_target:
 9. 任何 safe、verified、validated、ready 声明必须受 completion contract 约束。
 10. `strict_acceptance` 没有可用 reviewer 时返回 `obtain-review + needs-review`；不得降级为 `handoff_ready`。
 11. 没有有效 `strict_acceptance_receipt` 时，不得输出“严格 reviewer 已接受”“strict PASS”或同义声明。
-12. `strict_acceptance` 必须在 review 前由 controller 或 artifact provider 用已声明、可识别的确定性 scheme 计算 `sha256:<64 lowercase hex>`：单文件默认直接 hash exact bytes；`implementation_plan_bundle` 使用 `plan-first-bundle-sha256-v1`。Placeholder、未知 scheme、格式错误或无法重算均返回 `obtain-artifact + needs-artifact`，不得签发 receipt。
+12. `strict_acceptance` 必须在 review 前由 controller 或 artifact provider 用已声明、可识别的确定性 scheme 计算 `sha256:<64 lowercase hex>`：单文件必须使用可读取的 `content_ref.kind: path` 并直接 hash 该文件的 exact bytes；`implementation_plan_bundle` 必须使用带完整 plan/tasks refs 的 `file_bundle` 和 `plan-first-bundle-sha256-v1`。`inline`、`current_context`、placeholder、未知 scheme、格式错误、不可读取或无法重算均返回 `obtain-artifact + needs-artifact`，不得调用 final review 或签发 receipt。普通 `handoff_ready` 仍可使用 inline/current-context artifact。
 
 ## Phase gate
 
@@ -413,7 +413,7 @@ and revision_provider_available
 
 `strict_acceptance` 还必须同时满足：
 
-12. qualifying review 是绑定当前 artifact type、recognized fingerprint scheme、version、structured content ref 和经重算确认的 `sha256:<64 lowercase hex>` fingerprint 的 `full` review，并发生在最后一次 revision 之后。Bundle content ref 必须是带非空 plan/tasks 的 `file_bundle`。
+12. qualifying review 是绑定当前 artifact type、recognized fingerprint scheme、version、structured content ref 和经重算确认的 `sha256:<64 lowercase hex>` fingerprint 的 `full` review，并发生在最后一次 revision 之后。单 artifact content ref 必须是可读取的 `path`；bundle content ref 必须是带非空 plan/tasks 的 `file_bundle`。`inline` 与 `current_context` 只能用于普通 `handoff_ready`，不能产生 strict receipt。
 13. qualifying reviewer 的 independence 为 `independent`；review pass 的 provider id 必须唯一匹配 `provider_bindings.reviewers`，并原样携带该 binding 的非空 capability，不能根据 provider/skill 名称推断；它只接收当前 artifact、scope、evidence boundary、non-goals 和 requested dimensions，不接收作者隐藏推理或旧 reviewer 结论。
 14. 未解决的 `blocker` 和 `high` finding 数量为 0，review judgment 为 `accept` 或 `accept_with_advisories`。
 15. `medium` finding 已修复，或被 reviewer 明确判为非阻塞并作为 residual risk 记录；涉及产品、架构、兼容性或风险接受时还必须由 decision owner 解决。Controller 不得自行降级或接受风险。

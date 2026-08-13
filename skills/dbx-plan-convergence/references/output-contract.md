@@ -238,7 +238,7 @@ qualification:
   artifact_type: technical_plan
   artifact_version: v3
   artifact_fingerprint_scheme: exact-bytes-sha256
-  artifact_fingerprint: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  artifact_fingerprint: sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b
 transition:
   next_action: finalize
   final_state: ready-for-handoff
@@ -248,10 +248,10 @@ strict_acceptance_receipt:
   artifact_type: technical_plan
   artifact_version: v3
   artifact_fingerprint_scheme: exact-bytes-sha256
-  artifact_fingerprint: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  artifact_fingerprint: sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b
   artifact_content_ref:
-    kind: current_context
-    value: current_response
+    kind: path
+    value: skills/dbx-plan-convergence/evals/fixtures/plan.md
     plan: null
     tasks: null
   review_id: R-final-2
