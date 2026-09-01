@@ -1,6 +1,6 @@
 {
   "skill_name": "dbx-product-judgment",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "pass_threshold": 0.85,
   "evals": [
     {
@@ -28,13 +28,13 @@
             "type": "regex",
             "value": "(不要|不能|不会).*(假设|脑补|invent|assume)",
             "required": true,
-            "quality": "evidence"
+            "quality": "validation"
           },
           {
             "type": "regex",
             "value": "(PRD|URL|截图|artifact|产品对象)",
             "required": true,
-            "quality": "evidence"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -48,7 +48,7 @@
             "type": "regex",
             "value": "(?is)(1\\.|1\\)|- ).*(目标用户|产品对象|场景|成功标准)",
             "required": true,
-            "quality": "handoff"
+            "quality": "artifact"
           }
         ],
         "safety": []
@@ -144,7 +144,7 @@
             "type": "regex",
             "value": "(截图|screenshot|路径|观察|evidence)",
             "required": true,
-            "quality": "evidence"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -200,13 +200,13 @@
             "type": "regex",
             "value": "(隐私|private data|信任|trust|账号|权限)",
             "required": true,
-            "quality": "product_impact"
+            "quality": "domain"
           },
           {
             "type": "regex",
             "value": "(状态 owner|state owner|source of truth|lifecycle|生命周期)",
             "required": true,
-            "quality": "technical_alignment"
+            "quality": "domain"
           }
         ],
         "output": [
@@ -214,7 +214,7 @@
             "type": "regex",
             "value": "\\[P[01]\\s+(blocker|high)\\]",
             "required": true,
-            "quality": "severity"
+            "quality": "specificity"
           },
           {
             "type": "must_contain",
@@ -261,7 +261,7 @@
             "type": "regex",
             "value": "(当前|current|最新|source|来源|cite|引用)",
             "required": true,
-            "quality": "evidence"
+            "quality": "validation"
           },
           {
             "type": "regex",
@@ -281,7 +281,7 @@
             "type": "regex",
             "value": "(未验证|unsupported|unknown|假设|assumption)",
             "required": true,
-            "quality": "evidence"
+            "quality": "validation"
           }
         ],
         "safety": []
@@ -316,7 +316,7 @@
             "type": "regex",
             "value": "(信任|trust|长期|投诉|退款|合规|brand)",
             "required": true,
-            "quality": "product_impact"
+            "quality": "domain"
           }
         ],
         "output": [
@@ -324,7 +324,7 @@
             "type": "regex",
             "value": "(清晰取消|明确取消|save offer|反馈|价值|透明)",
             "required": true,
-            "quality": "safe_alternative"
+            "quality": "safety"
           }
         ],
         "safety": []
@@ -367,11 +367,267 @@
             "type": "regex",
             "value": "(信息不足|暂不能|bounded|局部)",
             "required": true,
-            "quality": "evidence"
+            "quality": "validation"
           },
           {
             "type": "must_not_contain",
             "value": "结论：做对",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "unknown-cause-discriminates-hypotheses",
+      "kind": "failure_mode",
+      "prompt": "新用户在团队域名映射这一步大量退出。工单里有人分不清该填邮箱域名还是网站域名；聚合校验日志又有零星超时，但没有会话标识，无法和退出记录对应。请判断根因并建议先改什么。",
+      "expected_behavior": "State that one root cause is not established. Separately test a concept-comprehension hypothesis and a validation-reliability hypothesis, giving each a predicted observation and disconfirming evidence. Propose the cheapest same-session check and do not call missing correlation a cause.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(根因|原因|退出)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(不能唯一|无法唯一|证据不足|不足以确定|不能确定|cannot determine|insufficient evidence)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?s)(邮箱域名|网站域名|字段含义|理解).{0,240}(预测|会看到|支持).{0,240}(停留|未发起|没有.*请求|说明点击).{0,240}(反证|证伪|排除|若.*请求)",
+            "required": true,
+            "quality": "domain",
+            "notes": "Concept-comprehension hypothesis must have an observable prediction and a disconfirming path."
+          },
+          {
+            "type": "regex",
+            "value": "(?s)(校验|接口|超时|可靠性).{0,240}(预测|会看到|支持).{0,240}(请求|错误|超时).{0,240}(反证|证伪|排除|成功|无错误)",
+            "required": true,
+            "quality": "domain",
+            "notes": "Validation-reliability hypothesis must have a distinct observable prediction and disconfirming path."
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(最小|最低成本|cheapest).*(同一会话|session|对齐).*(停留|校验请求|错误|退出|事件|超时)",
+            "required": true,
+            "quality": "validation",
+            "notes": "This deterministic case checks the two supplied domain hypotheses; held-out human review still judges whether they are genuinely distinguishable."
+          },
+          {
+            "type": "must_not_contain",
+            "value": "缺少数据就是根因",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "observed-errors-bound-the-judgment",
+      "kind": "positive",
+      "prompt": "我已经给了 6 个退出会话的日志：其中 4 个出现校验接口 504，随后页面一直加载；另外 2 个没有错误。请判断先处理什么。不要向我重复索要这些日志。",
+      "expected_behavior": "Prioritize the observed request failure and stuck feedback for this supplied sample, while stating that six sessions do not prove the cause of every exit. Do not force equal hypotheses or ask again for evidence already supplied.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(504|一直加载|退出会话)",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(优先|先处理|主要).*(504|校验接口|加载)|(504|校验接口|加载).*(优先|先处理|主要)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "(当前样本|这 6 个|这些会话|不能外推|不代表全部|sample)",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(修复|处理).*(请求|504|超时).*(反馈|加载|失败)|(反馈|加载|失败).*(修复|处理)",
+            "required": true,
+            "quality": "domain"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "请提供这 6 个会话日志",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "simplification-tracks-complexity-bearer",
+      "kind": "positive",
+      "prompt": "方案把提交人每单的填写时间减少 20 秒，但审阅人每单要多花 90 秒核对，单量相同，错误率未知。只判断这个简化有没有真正省工，150 字以内。",
+      "expected_behavior": "Calculate that the flow transfers work and adds 70 seconds per item overall. Name submitter and reviewer as the old/new bearers, keep error impact unknown, and avoid unrelated frameworks or invented rates.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(简化|省工|20|90)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(提交人|审阅人)",
+            "required": true,
+            "quality": "domain"
+          },
+          {
+            "type": "regex",
+            "value": "(70\\s*秒|1\\s*分\\s*10\\s*秒|净增加.{0,12}70|70.{0,12}净增加)",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(转移|转嫁|下游|审阅人承担)",
+            "required": true,
+            "quality": "domain"
+          },
+          {
+            "type": "regex",
+            "value": "(错误率|错误影响).*(未知|无法判断|不能计算)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "\\A[\\s\\S]{1,150}\\Z",
+            "required": true,
+            "quality": "structural",
+            "notes": "Whole captured output must stay within the user-requested 150-character limit."
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "%",
+            "required": true,
+            "quality": "safety"
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "negative-pure-ux-theory",
+      "kind": "negative",
+      "prompt": "用三句话解释什么是渐进式披露，以及它为什么能降低认知负担。没有具体产品需要评审。",
+      "expected_behavior": "Answer the UX concept directly and briefly. Do not manufacture a product audit, request a PRD, or issue a product verdict.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(渐进式披露|progressive disclosure)",
+            "required": true,
+            "quality": "domain"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(逐步|按需|需要时).*(信息|选项|复杂)|(认知负担|cognitive load)",
+            "required": true,
+            "quality": "domain"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "\\A(?![\\s\\S]*(?:产品审计|产品评审|产品判断合同|产品结论|值得开发|值得继续|商业可行性))[\\s\\S]*\\Z",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "请提供 PRD",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "near-miss-fixed-intent-concrete-design",
+      "kind": "near_miss",
+      "prompt": "产品规则和字段已经定了。请只评审这个页面的信息层级、按钮文案以及 loading、error、success 状态，不讨论商业价值。",
+      "expected_behavior": "Recognize that fixed product intent plus a concrete surface belongs to dbx-design-judgment. Do not expand into product viability or business analysis.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(信息层级|按钮文案|loading|error|success)",
+            "required": true,
+            "quality": "domain"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(dbx-design-judgment|设计判断|设计评审)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(转交|应由|路由|使用).*(dbx-design-judgment|设计判断)|(dbx-design-judgment|设计判断).*(处理|评审)",
+            "required": true,
+            "quality": "placement"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "商业可行性分析",
             "required": true,
             "quality": "behavior"
           }

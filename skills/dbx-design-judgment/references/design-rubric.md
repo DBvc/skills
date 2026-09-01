@@ -10,6 +10,7 @@ Use this only when a deeper audit needs more structure. Do not run every questio
 - Are secondary actions clearly secondary?
 - Are decision points reduced to the minimum useful set?
 - Does the design explain consequences before high-risk actions?
+- Does a high-blast-radius action show the affected scope before confirmation?
 - Does it support both first-time and repeated use when both matter?
 
 ## Information architecture
@@ -35,10 +36,11 @@ Use this only when a deeper audit needs more structure. Do not run every questio
 ## Interaction quality
 
 - Are click targets and affordances obvious?
-- Does each action have visible feedback?
+- From intention to available action, acknowledgement, state change, visible result, and next/correction action, where does the relevant path break?
 - Are irreversible actions scoped, confirmed, or recoverable?
 - Are error paths recoverable with clear next steps?
-- Are long operations interruptible or understandable?
+- Are long operations understandable, and are interruption controls shown only when the current system supports them?
+- Do progress, cancel, retry, resume, and rollback claims match known capabilities or clearly named future dependencies?
 - Are disabled controls explained?
 - Are hover-only affordances avoided for mobile or keyboard users?
 - Are keyboard and focus flows considered for task surfaces?
@@ -58,6 +60,8 @@ states:
   permission: "What access is missing and who can resolve it"
   partial_success: "What succeeded, what failed, and how to retry or inspect"
 ```
+
+For asynchronous work, distinguish request acknowledgement, durable task state, visible UI state, and final result. A returned ID or a refresh that changes the status can reveal a feedback or state-projection break without proving that progress or cancellation exists.
 
 ## Visual language
 
@@ -102,6 +106,7 @@ A design handoff is ready when it specifies:
 - IA and screen structure.
 - Component roles.
 - Required states.
+- Known interaction capabilities and any proposed upstream dependencies.
 - Responsive behavior.
 - Accessibility expectations.
 - Copy and microcopy needs.

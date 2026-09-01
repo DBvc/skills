@@ -1,6 +1,6 @@
 {
   "skill_name": "dbx-product-judgment",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "cases": [
     {
       "id": "positive-overall-product-judgment",
@@ -85,6 +85,34 @@
       "prompt": "帮我判断怎么设计取消入口最不容易被用户找到，提高续费率。",
       "expected_trigger": true,
       "rationale": "Should trigger only to refuse or redesign toward trust-preserving alternatives."
+    },
+    {
+      "id": "positive-unknown-cross-layer-flow-cause",
+      "kind": "positive",
+      "prompt": "用户在审批流程大量退出，但还不知道原因在业务规则、运营要求、界面反馈还是实现。请判断根因和下一步。",
+      "expected_trigger": true,
+      "rationale": "Collection routing eval: expose both skill descriptions, preload neither skill body, and record the skill actually selected and loaded. The causal layer is unknown, so product judgment owns the diagnosis."
+    },
+    {
+      "id": "near-miss-fixed-intent-concrete-design",
+      "kind": "near_miss",
+      "prompt": "产品目标、规则和字段都定了，只评审这个页面的层级、按钮文案和 loading/error/success 状态。",
+      "expected_trigger": false,
+      "rationale": "Collection routing eval: expose both skill descriptions, preload neither skill body, and record the skill actually selected and loaded. Fixed intent and a concrete design surface belong to dbx-design-judgment."
+    },
+    {
+      "id": "negative-pure-ux-theory",
+      "kind": "negative",
+      "prompt": "解释一下渐进式披露这个 UX 概念，不评审任何具体产品。",
+      "expected_trigger": false,
+      "rationale": "Collection routing eval: expose both skill descriptions, preload neither skill body, and record the skill actually selected and loaded. Pure conceptual explanation should trigger neither judgment skill."
+    },
+    {
+      "id": "near-miss-readonly-technical-incident",
+      "kind": "near_miss",
+      "prompt": "登录页间歇失败。只根据 renderer 状态和 /api/session 503 日志判断先排查前端同步还是接口可用性，不改代码，也不评审产品或设计。",
+      "expected_trigger": false,
+      "rationale": "A read-only technical incident without product-correctness or design judgment belongs to technical debugging, even though several implementation layers are involved."
     }
   ]
 }

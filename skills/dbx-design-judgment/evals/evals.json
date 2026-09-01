@@ -1,6 +1,6 @@
 {
   "skill_name": "dbx-design-judgment",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "pass_threshold": 0.85,
   "evals": [
     {
@@ -28,7 +28,7 @@
             "type": "regex",
             "value": "(截图|PRD|URL|prototype|设计对象|design object)",
             "required": true,
-            "quality": "evidence"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -57,7 +57,7 @@
             "type": "regex",
             "value": "(截图|screenshot|可见|visible)",
             "required": true,
-            "quality": "evidence"
+            "quality": "validation"
           }
         ],
         "process": [
@@ -71,7 +71,7 @@
             "type": "regex",
             "value": "(未验证|未知|hidden|not verified|not visible)",
             "required": true,
-            "quality": "uncertainty"
+            "quality": "validation"
           }
         ],
         "output": [
@@ -79,13 +79,13 @@
             "type": "regex",
             "value": "\\[P[0-3]\\s+(blocker|high|medium|low)\\]",
             "required": true,
-            "quality": "severity"
+            "quality": "specificity"
           },
           {
             "type": "must_contain",
             "value": "Evidence",
             "required": true,
-            "quality": "structure"
+            "quality": "structural"
           }
         ],
         "safety": [
@@ -93,7 +93,7 @@
             "type": "must_not_contain",
             "value": "我已经改好了代码",
             "required": true,
-            "quality": "role_boundary"
+            "quality": "safety"
           }
         ]
       },
@@ -121,13 +121,13 @@
             "type": "regex",
             "value": "(loading|empty|error|success|disabled|permission|加载|空态|错误|权限)",
             "required": true,
-            "quality": "state_coverage"
+            "quality": "state"
           },
           {
             "type": "regex",
             "value": "(信息优先级|information priorit|关键路径|primary task path)",
             "required": true,
-            "quality": "design_model"
+            "quality": "domain"
           }
         ],
         "output": [
@@ -135,13 +135,13 @@
             "type": "regex",
             "value": "(交付给实现者|handoff|Components|Responsive|Accessibility|Tokens)",
             "required": true,
-            "quality": "handoff"
+            "quality": "artifact"
           },
           {
             "type": "must_not_contain",
             "value": "```tsx",
             "required": true,
-            "quality": "role_boundary"
+            "quality": "safety"
           }
         ],
         "safety": []
@@ -178,13 +178,257 @@
             "type": "must_not_contain",
             "value": "diff --git",
             "required": true,
-            "quality": "role_boundary"
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "已修复",
             "required": true,
-            "quality": "role_boundary"
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "async-ack-visible-state-break",
+      "kind": "failure_mode",
+      "prompt": "用户点击提交后接口返回 task_id，但页面仍显示“未提交”；用户刷新后才显示“已接收”。当前没有进度或取消能力。请判断这个交互哪里断了。",
+      "expected_behavior": "Trace the relevant interaction timeline and identify a feedback/visible-state projection break after request acknowledgement. Recommend immediate accepted/pending feedback and duplicate-submit protection. Absence of an explicit progress/cancel disclaimer is not a failure; human review should reject any invented capability.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(task_id|未提交|已接收|提交)",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(确认|ack|接口返回|服务端.*受理).*(可见状态|界面状态|状态投影|反馈|客户端|页面)|(可见状态|界面状态|状态投影|反馈|客户端|页面).*(确认|ack|接口返回|服务端.*受理)",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(断裂|不同步|未更新|仍显示|继续显示|误以为)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(已接收|已提交|等待结果|处理中).*(立即|及时|显示|反馈)|(立即|及时|显示|反馈).*(已接收|已提交|等待结果|处理中)",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "(防止|避免|禁用).*(重复提交|再次提交)",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": [
+          {
+            "type": "regex",
+            "value": "\\A(?![\\s\\S]*(?:\\A|[。；\\n])\\s*(?:(?:现在|当前|同时|并且|再|另外)\\s*)?(?<!不)(?:提供|增加|加上|加入|加|显示|开放|启用)(?:(?!没有|无|不支持|不能|不提供)[^。；\\n]){0,20}(?:\\d+\\s*%|百分比(?:进度)?|取消(?:按钮|操作)?|恢复(?:按钮|操作)?|中止(?:按钮|操作)?|断点续作))[\\s\\S]*\\Z",
+            "required": true,
+            "quality": "safety",
+            "notes": "Smoke-check explicit claims that unavailable progress, cancellation, or recovery controls should be added now."
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "current-capability-vs-future-dependency",
+      "kind": "positive",
+      "prompt": "当前后端提交后返回 task_id，只能查询最终成功或失败，没有百分比进度、取消或恢复。请设计当前等待与失败状态，并说明如果未来支持逐项结果和安全的失败项重试，界面怎么调整。",
+      "expected_behavior": "Design current acknowledgement, waiting, and final states around known capabilities. Do not show fake progress/cancel/resume. Clearly label per-item results and failed-only retry as future dependencies and describe the conditional design change.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(task_id|任务回执|等待|排队|失败状态)",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(当前|现有|现状).*(已接收|已受理|等待|排队|最终|成功|失败)",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(未来|以后|依赖|前提|如果支持|若.*支持).*(逐项|单项|失败项重试|补跑.*(?:失败|未成功)|retry)",
+            "required": true,
+            "quality": "domain"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(不显示|不能提供|不应提供|不提供|没有|别给|不放).*(百分比|完成度|进度|取消|中止|恢复|断点续作|resume)",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "regex",
+            "value": "(保留成功|保留其余(?:成功|成果)|仅重试失败|只补跑(?:失败|未成功)|失败项)",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "safety": [
+          {
+            "type": "regex",
+            "value": "\\A(?![\\s\\S]*(?:\\A|[。；\\n])\\s*(?:(?:现在|当前|同时|并且|再|另外)\\s*)?(?<!不)(?:提供|增加|加上|加入|加|显示|开放|启用)(?:(?!没有|无|不支持|不能|不提供)[^。；\\n]){0,20}(?:\\d+\\s*%|百分比(?:进度)?|取消(?:按钮|操作)?|恢复(?:按钮|操作)?|中止(?:按钮|操作)?|断点续作))[\\s\\S]*\\Z",
+            "required": true,
+            "quality": "safety",
+            "notes": "Smoke-check explicit claims that unavailable progress, cancellation, or recovery controls exist now."
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "quick-copy-fix-stays-small",
+      "kind": "positive",
+      "prompt": "导出页有两个都叫“立即处理”的按钮：一个导出当前筛选 CSV，一个清空筛选。请在 150 字内给出具体改名，不做完整设计审计。",
+      "expected_behavior": "Give specific distinct labels for the two actions and a short rationale. Keep the answer compact and do not invent backend behavior or expand into a full audit.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(立即处理|CSV|清空筛选)",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(导出.*CSV|下载.*CSV).*(清空筛选|重置筛选)|(清空筛选|重置筛选).*(导出.*CSV|下载.*CSV)",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "完整设计审计",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "\\A(?![\\s\\S]*(?:后端|接口|删除数据|自动清库))[\\s\\S]*\\Z",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "regex",
+            "value": "\\A[\\s\\S]{1,150}\\Z",
+            "required": true,
+            "quality": "structural",
+            "notes": "Whole captured output must stay within the user-requested 150-character limit."
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "negative-direct-react-styling",
+      "kind": "negative",
+      "prompt": "直接修改 React 和 CSS，把这个页面做漂亮；不要做设计评审。",
+      "expected_behavior": "Route to an implementation/frontend workflow. Do not claim to edit files or provide a design audit as the requested deliverable.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(React|CSS|修改)",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(前端|implementation|实现|coding)",
+            "required": true,
+            "quality": "placement"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "\\A(?![\\s\\S]*(?:我(?:先|会|将)?(?:做|给|输出).{0,8}设计(?:审计|评审)|(?:输出|给出).{0,8}(?:代码|补丁)|(?:代码|页面).{0,8}(?:已经|已)(?:改好|修改|完成)))[\\s\\S]*\\Z",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "near-miss-unknown-cross-layer-cause",
+      "kind": "near_miss",
+      "prompt": "页面和日志都给你了：用户在审批流大量退出，但现在不知道是业务规则、运营要求、界面反馈还是实现问题。请找根因。",
+      "expected_behavior": "Route the unknown cross-layer causal diagnosis to dbx-product-judgment instead of reducing it to layout or interaction polish.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(业务规则|运营要求|界面反馈|实现问题)",
+            "required": true,
+            "quality": "domain"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(dbx-product-judgment|产品判断)",
+            "required": true,
+            "quality": "placement"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(转交|应由|路由|使用).*(dbx-product-judgment|产品判断)|(dbx-product-judgment|产品判断).*(处理|诊断)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "只需要调整布局",
+            "required": true,
+            "quality": "behavior"
           }
         ],
         "safety": []

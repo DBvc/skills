@@ -1,6 +1,6 @@
 ---
 name: dbx-product-judgment
-description: Use when the user asks to judge whether a product, feature, PRD, information architecture, content, interaction, UI flow, live product, implementation, roadmap, or competitor position is right, good, usable, valuable, coherent, worth building, or product-ready. Grounds judgment in target user, job/context, evidence, alternatives, critical path, trust, and implementation alignment. Ask blocking questions or collect evidence before judging when background is missing. Do not use for pure implementation, generic UI inspiration, ordinary code review without product judgment, generic market summaries, or unsupported guesses.
+description: Use when the user asks to judge whether a product, feature, PRD, information architecture, content, interaction, UI flow, live product, implementation, roadmap, or competitor position is right, good, usable, valuable, coherent, worth building, product-ready, or why an aggregate user outcome or product decision is failing across unknown layers. Grounds judgment in target user, job/context, evidence, alternatives, critical path, trust, and implementation alignment. Ask blocking questions or collect evidence before judging when background is missing. Prefer dbx-design-judgment when product intent and rules are fixed and the concrete design surface dominates. Do not use for pure implementation, technical malfunction or incident diagnosis without product judgment, generic UI inspiration, ordinary code review without product judgment, generic market summaries, pure theory, or unsupported guesses.
 ---
 
 # DBX Product Judgment / 产品判断
@@ -25,12 +25,15 @@ Use this skill for:
 - Questions like “这个产品做得对吗”, “这个功能好不好用”, “这个 PRD 是否成立”, “这个交互是否合理”, “这个实现是否支撑产品目标”, “和竞品比有没有优势”, “这个产品为什么感觉别扭”.
 - Evidence-based audits of live URLs, screenshots, code, prototypes, docs, PRDs, analytics descriptions, user feedback, competitor pages, or market/domain materials.
 - Product judgment that may include technical implementation review, but only when the product contract and user impact matter.
+- Cross-layer diagnosis when an aggregate user outcome or product decision is failing and the cause may sit in product rules, operations, interface feedback, or implementation.
 
 Do not use this skill for:
 
 - Direct implementation with no product judgment.
+- Technical malfunction or incident diagnosis without a product-correctness question, even when the investigation is read-only.
 - Ordinary code review focused only on diff correctness, style, or maintainability.
 - Generic visual inspiration, logo/style exploration, or “make it pretty” requests with no product outcome.
+- Concrete UI or flow design when product intent and rules are already fixed. Route to `dbx-design-judgment`.
 - Generic market research that does not judge a specific product decision.
 - One-off writing, summarization, translation, or explanation.
 - Legal, medical, financial, safety-critical, or regulated compliance certification. You may flag product risks and recommend qualified review, but do not claim formal compliance.
@@ -76,6 +79,13 @@ Rules:
 - Competitor pages show positioning and capabilities, not necessarily adoption or quality.
 - If current facts matter, use current external sources when tools are available and cite them in the final answer.
 - If a high-stakes domain is involved, prefer authoritative sources and say when qualified expert review is required.
+
+## Conditional diagnosis checks
+
+Use these only when the question calls for them; do not inflate routine judgment.
+
+- **Unknown cause**: Separate the observed symptom from cause hypotheses. Prefer two evidence-grounded explanations only when they predict different observations. For each retained hypothesis, state what would support it, what would disconfirm it, and the cheapest check that separates it from the alternatives. Evidence gaps are uncertainty, not causes. If evidence already supports a bounded conclusion, give it directly; if useful hypotheses cannot be formed, state the gap and ask the minimum blocking question. Put this reasoning in existing Evidence and Validation fields rather than adding a report section.
+- **Simplification**: When recommending deletion, hiding, automation, or fewer steps, name who or what carries the work now, who or what would carry it afterward, what work remains, and the failure or correction cost. Distinguish eliminated work from system-absorbed work and transferred cost. Keep unknown quality or error effects explicit; time savings alone do not prove a net improvement. Do not invent metrics.
 
 ## Mode routing
 

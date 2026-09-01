@@ -1,6 +1,6 @@
 # Product Judgment Kernel
 
-This reference contains the longer rubric behind `dbx-product-judgment`. Load it for standard or deep audits, formal review reports, or when the product spans several surfaces.
+This reference contains the longer rubric behind `dbx-product-judgment`. Load it for standard or deep audits, formal review reports, causal attribution, or when the product spans several surfaces.
 
 ## First principle
 
@@ -85,12 +85,14 @@ Strong signals:
 - Default choices are safe and useful.
 - Users are not asked to configure before they understand value.
 - Error recovery, cancellation, retry, and back navigation are designed.
+- A shorter path removes work or assigns it to a capable system without hiding unknown quality effects or the remaining correction cost.
 
 Risk signals:
 
 - The main path is interrupted by account creation, empty forms, education walls, setup, or optional decisions.
 - The product optimizes rare admin paths while leaving the daily path rough.
 - Users must stitch several independent modules into one workflow.
+- A “simpler” flow merely moves review, interpretation, exception handling, or data repair to another user or team.
 
 ### 5. Concept model and IA
 
@@ -198,12 +200,14 @@ Strong signals:
 - Pricing or monetization does not break trust.
 - Support, onboarding, moderation, compliance, and operations match product scale.
 - Network effects, integrations, switching costs, or workflow embedding are real, not slogans.
+- Automation and simplification account for the operator, reviewer, system, or support team that inherits the work and failures.
 
 Risk signals:
 
 - The product is useful only after everyone else adopts it.
 - It requires expensive human operations while pretending to be self-serve.
 - The team cannot explain why users switch from alternatives.
+- Local time savings create larger downstream review or correction cost that the proposal does not count.
 
 ### 12. Learning loop
 
@@ -219,6 +223,18 @@ Risk signals:
 - Metrics are vanity metrics or too late to guide design.
 - The team cannot distinguish “not enough traffic” from “wrong value proposition”.
 - No rollback condition exists.
+
+### Causal discrimination when the cause is unknown
+
+Do not rename an evidence gap as a root cause. Start with the observed symptom, then retain only hypotheses that are supported enough to test and that predict different observations. For each one:
+
+1. State the predicted observation if it is true.
+2. State what evidence would disconfirm it.
+3. Name the cheapest check that distinguishes it from the alternatives.
+
+Two useful hypotheses are usually enough; do not invent a second one to fill a quota. If the supplied evidence already favors one explanation, make a bounded judgment and state its sample limit. If no useful hypothesis can be formed, ask for the smallest missing evidence.
+
+Example: users leave an expense flow at the attachment step. “They dislike uploading” is not established. One hypothesis predicts exits before the upload request because the requirement is unclear; another predicts a started request followed by timeout because upload reliability is poor. Align step-view, upload-request, error, and exit events for the same sessions before choosing the fix.
 
 ## Good product criteria
 

@@ -1,6 +1,6 @@
 ---
 name: dbx-design-judgment
-description: Use when the user asks to judge, audit, critique, review, shape, redesign, or produce a design plan for a UI, flow, PRD, screenshot, prototype, live product, component, design system, or code-backed interface. Grounds design judgment in target user, task path, information architecture, visual hierarchy, interaction states, visual language, design system consistency, accessibility, responsive behavior, and evidence. May read PRDs, code, screenshots, and live products. May inspect read-only surfaces. Must not edit files, write implementation code, apply patches, install packages, or commit changes.
+description: Use when the user asks to judge, audit, critique, review, shape, redesign, or produce a design plan for a UI, flow, PRD, screenshot, prototype, live product, component, design system, or code-backed interface, including concrete interaction feedback, control, interruption, and recovery. Grounds design judgment in target user, task path, information architecture, visual hierarchy, interaction states, visual language, design system consistency, accessibility, responsive behavior, and evidence. May read PRDs, code, screenshots, and live products and inspect read-only surfaces. Route aggregate product-outcome causes across unknown layers to dbx-product-judgment, and route technical incident diagnosis without a design decision to technical debugging. Must not edit files, write implementation code, apply patches, install packages, or commit changes.
 ---
 
 # DBX Design Judgment / 设计判断
@@ -55,9 +55,12 @@ Use this skill for:
 - PRD/spec/feature idea to design brief, IA, flow, state model, visual direction, component needs, and implementation handoff.
 - Questions like "这个页面为什么很丑", "这个交互合理吗", "这个 PRD 应该怎么设计", "这个 UI 信息层级是不是有问题", "帮我做设计评审", "读代码看看为什么风格不一致".
 - Evidence-based design judgment using PRD, screenshot, live behavior, code, docs, user feedback, analytics descriptions, or user-supplied references.
+- Concrete feedback, asynchronous state, interruption, recovery, and user-control diagnosis when the product intent is known.
 
 Do not use this skill for:
 - Pure product viability judgment without a design surface or design decision. Route to `dbx-product-judgment`.
+- Cross-layer diagnosis of an aggregate user outcome or product decision. Route to `dbx-product-judgment`.
+- Technical malfunction or incident diagnosis without a design decision. Route to a technical debugging workflow.
 - Direct frontend implementation, styling fixes, patches, or build tasks.
 - Ordinary backend/code review unrelated to design impact.
 - Logo-only, brand identity-only, illustration-only, or generic moodboard tasks unless tied to a product/interface surface.
@@ -180,6 +183,14 @@ Judge only dimensions relevant to the task. Every finding must connect evidence,
 5. **Trust, accessibility, and handoff readiness**: Does the design avoid unsafe simplification, ambiguous state, dark patterns, readability failures, responsive breakage, and missing decisions that force implementers to invent design?
 
 A design can be visually plain and still design-correct. A design can be beautiful and still wrong if the task path, state model, or hierarchy is broken.
+
+## Conditional interaction checks
+
+Use these only when feedback, asynchronous work, interruption, or recovery is material.
+
+- Trace the relevant path as intention -> available action -> acknowledgement -> state change -> visible result -> next or correction action. Report the actual break, not the whole timeline. External notes, copied IDs, refreshes, and lost context are clues, not automatic defects.
+- Any progress, cancel, retry, resume, or rollback recommendation must match a known current capability. Otherwise label it as a proposed upstream dependency or future assumption. Do not invent percentages, treat closing a page as cancellation, or call a fresh run a resume.
+- A future design may propose new capabilities when it states the dependency and how the design changes if it becomes available. Before a high-blast-radius or irreversible action, show the affected scope and require confirmation. If rollback is unavailable, use stopping future steps, compensation, or explicit manual handling instead of pretending every action can roll back.
 
 ## Register rule
 

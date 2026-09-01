@@ -82,7 +82,7 @@ def emit_agent_pack(root: Path, output: Path) -> None:
     chunks: list[str] = [
         "# DBX Trigger Eval Pack",
         "",
-        "Use each case to check whether the target skill should trigger. Record actual_trigger, evidence, and notes.",
+        "Use each case to check whether the target skill should trigger. Do not preload a skill body for collection routing tests; record the visible candidates, actual selection, and loaded skills.",
         "",
     ]
     for skill_name, path in discover(root):
@@ -107,6 +107,10 @@ def emit_agent_pack(root: Path, output: Path) -> None:
             chunks.append("Result:")
             chunks.append("")
             chunks.append("```yaml")
+            chunks.append("candidate_skill_descriptions_visible: []")
+            chunks.append("preloaded_skill_bodies: []")
+            chunks.append("actual_selected_skill: null")
+            chunks.append("loaded_skills: []")
             chunks.append("actual_trigger: true | false")
             chunks.append("evidence: \"\"")
             chunks.append("notes: \"\"")
