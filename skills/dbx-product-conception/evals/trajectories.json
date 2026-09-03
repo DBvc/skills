@@ -1,0 +1,111 @@
+{
+  "skill_name": "dbx-product-conception",
+  "version": "0.1.0",
+  "trajectories": [
+    {
+      "id": "enabling-change-to-thesis",
+      "initial": {
+        "seed": "new capability",
+        "product_direction": null,
+        "evidence": "partial"
+      },
+      "expected_steps": [
+        "Separate enabling capability from a product claim.",
+        "Reconstruct human situations, constraints, and inherited category assumptions.",
+        "Form structural insights with labeled evidence and inference.",
+        "Generate at least three structurally distinct product logics.",
+        "Make serious candidates experiential through 30–90 second specimens.",
+        "Run comparative creative selection and attack the leading concept.",
+        "State thesis, kill list, proof plan, unknowns, and unvalidated handoff."
+      ],
+      "failure_signals": [
+        "Starts with a feature list.",
+        "Treats technical ability as demand proof.",
+        "Candidates differ only in branding or UI.",
+        "Claims correctness before proof."
+      ]
+    },
+    {
+      "id": "category-reframe",
+      "initial": {
+        "seed": "conventional existing concept",
+        "symptom": "feature pile",
+        "direction_fixed": false
+      },
+      "expected_steps": [
+        "Name the old category object, default interaction, and hidden assumptions.",
+        "Separate constraints from conventions.",
+        "Generate alternative core objects, actors, boundaries, or rituals.",
+        "Build short experience specimens for the strongest reframes.",
+        "Select, recombine, or remain unresolved with explicit reasons."
+      ],
+      "failure_signals": [
+        "Only removes features.",
+        "Renames the same workflow as a new category.",
+        "Uses novelty language without behavioral discontinuity."
+      ]
+    },
+    {
+      "id": "prototype-selection",
+      "initial": {
+        "seed": "three prototypes",
+        "direction_fixed": false,
+        "decision_needed": true
+      },
+      "expected_steps": [
+        "Normalize candidates into comparable concept cards.",
+        "Use or simulate each candidate in a concrete situation.",
+        "Compare pairwise on decisive product-logic differences.",
+        "Attack the winner and inspect uncertainty.",
+        "Record rejected concepts, reusable elements, and kill decisions.",
+        "Choose the next specimen rather than claiming market success."
+      ],
+      "failure_signals": [
+        "Produces a decorative weighted score.",
+        "Avoids eliminating options.",
+        "Selects pitch quality rather than experience.",
+        "Fails to state the next falsifiable proof."
+      ]
+    },
+    {
+      "id": "jobs-myth-resistant-conception",
+      "initial": {
+        "seed": "user requests Steve Jobs role-play",
+        "research_basis": true
+      },
+      "expected_steps": [
+        "Refuse invented attribution and genius guarantees.",
+        "Translate source-supported mechanisms into operational controls.",
+        "Correct lone-genius, anti-user-research, integration, minimalism, perfection, and aggression myths when relevant.",
+        "Proceed with the actual product seed through the normal conception workflow."
+      ],
+      "failure_signals": [
+        "Writes in an impersonated Jobs voice.",
+        "Says what Jobs would choose without evidence.",
+        "Uses intimidation or arbitrary certainty as a method.",
+        "Turns slogans into universal rules."
+      ]
+    },
+    {
+      "id": "taste-calibration-loop",
+      "initial": {
+        "seed": "explicit taste training",
+        "historical_ledger": "optional"
+      },
+      "expected_steps": [
+        "Choose comparable products or concept specimens and hide outcome information when possible.",
+        "Require a pre-outcome prediction with rationale and confidence.",
+        "Compare concrete details and whole-product coherence.",
+        "Reveal or later collect outcome and user evidence.",
+        "Identify missed variables and update a judgment-ledger entry.",
+        "Choose the next exercise from the observed calibration error."
+      ],
+      "failure_signals": [
+        "Provides only principles or reading material.",
+        "Lets hindsight rewrite the original prediction.",
+        "Treats popularity as proof of design quality.",
+        "Stores personal taste as universal truth."
+      ]
+    }
+  ]
+}

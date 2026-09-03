@@ -29,6 +29,7 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-architecture-health`](skills/dbx-architecture-health/) | 仓库/模块架构健康体检：识别长期腐化、状态 owner 混乱、验证拓扑缺口和 AI coding 可操作性风险，并给出只读防腐路线图。Read-only architecture health audits for repo decay and AI-coding operability. |
 | [`dbx-skill-architect`](skills/dbx-skill-architect/) | 场景优先的 skill 创建、评审、改进与评测。Scenario-first skill architecture, critique, improvement, and eval design. |
 | [`dbx-skill-portfolio-auditor`](skills/dbx-skill-portfolio-auditor/) | 已安装技能组合审计与全局/项目/显式触发/禁用/卸载范围决策。Audit installed skill portfolios and recommend global, project, explicit-only, disable, or uninstall placement. |
+| [`dbx-product-conception`](skills/dbx-product-conception/) | 从技术/行为变化、弱信号、人类张力或竞争构想中发现、重构并选择产品方向，通过结构化分歧、体验样本和 creative selection 形成产品 thesis、kill list 与验证交接。Discover and select not-yet-defined product directions before product judgment. |
 | [`dbx-product-judgment`](skills/dbx-product-judgment/) | 证据边界内判断产品、功能、PRD、交互、信息架构、实现对齐、路线图或竞品定位是否产品正确。Evidence-bounded product judgment across artifacts and decisions. |
 | [`dbx-design-judgment`](skills/dbx-design-judgment/) | 证据边界内评审 UI、流程、截图、PRD、原型、设计系统或代码支撑的界面设计；只做设计判断和实现交接，不改代码。Evidence-bounded design judgment and handoff without implementation. |
 | [`dbx-attention-routing`](skills/dbx-attention-routing/) | 混合输入的注意力分流内核：把收藏、想法、任务、课程、工具、消息等路由为行动、构建、实验、追踪、存档、孵化、丢弃、风险保护或澄清，并支持个人配置和外部系统 dry-run 映射。Product-agnostic attention router for mixed inputs with profile and adapter layers. |

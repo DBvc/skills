@@ -1,0 +1,55 @@
+version: "0.1"
+entry_id: ""
+date: ""
+creator: ""
+
+arena: ""
+conception_mode: opportunity_synthesis | category_reframe | concept_generation | creative_selection | product_thesis | taste_calibration
+
+triggering_changes: []
+human_situations: []
+structural_tension: ""
+obsolete_assumption: ""
+
+insight:
+  statement: ""
+  expected_human_state_change: ""
+  evidence: []
+  inference: []
+  analogy: []
+  conviction: []
+  unknowns: []
+
+candidates:
+  - name: ""
+    product_logic: ""
+    core_object: ""
+    default_interaction: ""
+    system_boundary: ""
+    adoption_wedge: ""
+    specimen: ""
+    likely_break_point: ""
+
+selection:
+  selected: ""
+  rejected: []
+  recombined_elements: []
+  kill_list: []
+  deliberate_non_goals: []
+  rationale: ""
+  confidence: low | medium | high
+
+prediction:
+  magic_moment: ""
+  decisive_assumptions: []
+  expected_observations: []
+  disconfirming_signals: []
+  review_date: ""
+
+outcome:
+  status: not_tested | supported | weakened | falsified | reframed
+  observed: []
+  surprises: []
+  missed_factors: []
+  taste_update: ""
+  next_action: ""

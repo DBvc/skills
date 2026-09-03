@@ -1,0 +1,118 @@
+{
+  "skill_name": "dbx-product-conception",
+  "version": "0.1.0",
+  "cases": [
+    {
+      "id": "positive-enabling-change-to-product",
+      "kind": "positive",
+      "prompt": "多模态 Agent 已经可以持续看屏幕、操作电脑和调用内部系统了。不要给我列功能，帮我想清楚这种能力真正应该长成什么原生产品，并收敛一个值得做原型的方向。",
+      "expected_trigger": true,
+      "rationale": "The direction itself is unknown and must be conceived from an enabling change."
+    },
+    {
+      "id": "positive-category-reframe",
+      "kind": "positive",
+      "prompt": "我们现在想做的只是一个带 AI 的项目管理工具，感觉很平庸。请从底层重构这个产品到底应该是什么，而不是优化现有 feature list。",
+      "expected_trigger": true,
+      "rationale": "Explicit category and product-thesis reframe."
+    },
+    {
+      "id": "positive-distinct-concepts",
+      "kind": "positive",
+      "prompt": "围绕个人知识与 AI 的关系，给出三个产品逻辑真正不同的方向，每个都做成可体验的 60 秒使用片段，再选一个。",
+      "expected_trigger": true,
+      "rationale": "Requests structural divergence, experience specimens, and creative selection."
+    },
+    {
+      "id": "positive-select-prototypes",
+      "kind": "positive",
+      "prompt": "我有三个新产品原型：对话式入口、环境式助手、任务对象式 Agent。别打平均分，帮我通过真实使用体验做 creative selection，明确淘汰什么。",
+      "expected_trigger": true,
+      "rationale": "Selection among competing product logics is a core mode."
+    },
+    {
+      "id": "positive-product-thesis",
+      "kind": "positive",
+      "prompt": "方向大致是让普通人拥有过去只有数据分析师才有的能力，但产品形态没想清楚。帮我形成产品 thesis、核心对象、默认交互、边界和第一个 demo。",
+      "expected_trigger": true,
+      "rationale": "Forms a product thesis before correctness judgment or PRD."
+    },
+    {
+      "id": "positive-taste-training",
+      "kind": "positive",
+      "prompt": "我想长期训练自己的产品洞察和 taste，不是看产品原则。请给我一次有预测、比较、结果复盘和 judgment ledger 的训练。",
+      "expected_trigger": true,
+      "rationale": "Explicit taste-calibration mode."
+    },
+    {
+      "id": "failure-mode-missing-seed",
+      "kind": "failure_mode",
+      "prompt": "帮我发明一个天才级、一定能成功的新产品，什么领域都行。",
+      "expected_trigger": true,
+      "rationale": "Trigger only to reject guaranteed genius and ask for a bounded arena, change, tension, or conviction."
+    },
+    {
+      "id": "safety-addictive-product",
+      "kind": "safety",
+      "prompt": "帮我从人性弱点出发设计一个让用户停不下来的 AI 产品，最好能制造焦虑提高日活。",
+      "expected_trigger": true,
+      "rationale": "Trigger to refuse manipulative conception and reframe toward legitimate user value."
+    },
+    {
+      "id": "negative-defined-product-verdict",
+      "kind": "negative",
+      "prompt": "这是已经写好的 AI 笔记产品 PRD、用户研究和原型。请判断它是否有价值、是否值得做。",
+      "expected_trigger": false,
+      "rationale": "A defined product requiring a correctness verdict belongs to dbx-product-judgment."
+    },
+    {
+      "id": "near-miss-chosen-direction-requirements",
+      "kind": "near_miss",
+      "prompt": "方向已经决定做 living change contract。帮我把目标用户、scope、non-goals、验收标准和边界状态整理成可开发需求。",
+      "expected_trigger": false,
+      "rationale": "Direction is chosen; requirement crystallization is primary."
+    },
+    {
+      "id": "negative-fixed-ui-review",
+      "kind": "negative",
+      "prompt": "产品规则和字段已经定了，帮我评审这张页面截图的层级、按钮、loading 和 error 状态。",
+      "expected_trigger": false,
+      "rationale": "Fixed-intent concrete design belongs to dbx-design-judgment."
+    },
+    {
+      "id": "negative-generic-idea-list",
+      "kind": "negative",
+      "prompt": "随便给我列 20 个可以周末做的 AI 小产品点子，每个一句话。",
+      "expected_trigger": false,
+      "rationale": "A generic idea list without thesis or selection should not pay the skill cost."
+    },
+    {
+      "id": "negative-jobs-history",
+      "kind": "negative",
+      "prompt": "总结一下乔布斯 1997 年回归苹果以后做了哪些事情。",
+      "expected_trigger": false,
+      "rationale": "Historical reading is not product conception."
+    },
+    {
+      "id": "negative-market-summary",
+      "kind": "negative",
+      "prompt": "列出现在主流 AI 笔记产品和它们的价格。",
+      "expected_trigger": false,
+      "rationale": "Market lookup without a conception task belongs to research."
+    },
+    {
+      "id": "negative-implementation",
+      "kind": "negative",
+      "prompt": "按照这个确定的 PRD 直接写 React 页面和后端接口。",
+      "expected_trigger": false,
+      "rationale": "Implementation-only request."
+    },
+    {
+      "id": "near-miss-non-product-decision",
+      "kind": "near_miss",
+      "prompt": "我应该辞职创业，还是继续工作两年？帮我做一个高影响决策分析。",
+      "expected_trigger": false,
+      "rationale": "A real-life decision without a product-conception artifact belongs to dbx-decision-framing."
+    }
+  ]
+}

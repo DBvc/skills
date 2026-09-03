@@ -1,0 +1,4 @@
+interface:
+  display_name: "dbx-product-conception"
+  short_description: "Create and select non-obvious product concepts"
+  default_prompt: "Use $dbx-product-conception to turn these weak signals, enabling changes, human tensions, or competing concepts into distinct product logics, concrete experience specimens, and a selected but unvalidated product thesis."
