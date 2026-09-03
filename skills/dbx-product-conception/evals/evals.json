@@ -19,7 +19,7 @@
           },
           {
             "type": "regex",
-            "value": "(概念 A|Concept A).*(概念 B|Concept B).*(概念 C|Concept C)",
+            "value": "((概念|Concept)[ :：]?A|^#{1,6}\\s*A[.．、:：]).*((概念|Concept)[ :：]?B|^#{1,6}\\s*B[.．、:：]).*((概念|Concept)[ :：]?C|^#{1,6}\\s*C[.．、:：])",
             "required": true,
             "quality": "behavior"
           },
@@ -171,7 +171,7 @@
           },
           {
             "type": "regex",
-            "value": "(原型|prototype|demo)",
+            "value": "(原型|体验样本|样机|prototype|experience specimen|demo)",
             "required": true,
             "quality": "behavior"
           },
@@ -422,7 +422,7 @@
         "process": [
           {
             "type": "regex",
-            "value": "(方向已.*定义|已经.*定义|defined).*(判断|评估|verdict|worth building)",
+            "value": "((方向|产品).*(已|已经).*(定义|成形)|(已|已经).*(定义|成形).*(方向|产品)|defined).*(判断|评估|verdict|worth building)",
             "required": true,
             "quality": "behavior"
           }
