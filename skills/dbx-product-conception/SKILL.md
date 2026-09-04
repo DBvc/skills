@@ -361,13 +361,13 @@ Default compact shape:
 - Next：...
 ```
 
-Use a shorter answer for a small reframe or selection. Use `references/output-contracts.md` for formal reports and blocked states. A saved Markdown report may be checked with:
+Use the matching contract in `references/output-contracts.md`, including for shorter modes and blocked states. Only a saved Markdown file using the **Standard conception report** contract may be checked with:
 
 ```bash
 python3 skills/dbx-product-conception/scripts/validate-conception-report.py path/to/report.md
 ```
 
-The script checks handoff shape and epistemic labels only. It cannot prove originality, taste, or product quality.
+The script checks the standard report's handoff shape and epistemic labels only. It cannot prove originality, taste, or product quality. Do not use it to validate the smaller mode contracts.
 
 ## Conditional references
 
@@ -396,7 +396,9 @@ Stop or narrow when:
 
 ## Completion proof
 
-Do not claim conception is complete unless the output includes:
+Completion is mode-relative. A response is complete when it satisfies the selected mode's contract in `references/output-contracts.md`. For narrower modes, claim only that the requested mode is complete, not that the full product-conception cycle is complete.
+
+Do not claim the full product-conception cycle is complete unless a **Standard conception report** includes:
 
 1. an explicit opportunity or structural insight;
 2. distinct concepts or a justified reason not to generate alternatives;

@@ -22,10 +22,10 @@ Use `dbx-crystallize` after the direction is selected and the work becomes requi
 
 The skill is informed by source-grounded study of Steve Jobs and Apple product creation, but it does not impersonate Jobs or promise his tacit taste. Its transferable unit is the process: broad inputs, structural insight, concrete making, creative selection, focus, and consequence-based feedback.
 
-## Report validation
+## Standard report validation
 
 ```bash
 python3 skills/dbx-product-conception/scripts/validate-conception-report.py path/to/report.md
 ```
 
-This checks report structure and epistemic labels. It does not prove originality or product quality.
+This checks the **Standard conception report** structure and epistemic labels. Smaller mode outputs use their own contracts and are not accepted by this checker. It does not prove originality or product quality.

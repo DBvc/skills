@@ -210,11 +210,11 @@ Do not fabricate concepts when no useful seed exists or the decisive facts are u
 
 ## 8. Validation
 
-For saved Markdown reports:
+Only use this checker for saved Markdown files that follow **2. Standard conception report**:
 
 ```bash
 python3 skills/dbx-product-conception/scripts/validate-conception-report.py report.md
 python3 skills/dbx-product-conception/scripts/validate-conception-report.py report.md --strict
 ```
 
-The checker validates visible structure, epistemic labels, kill/non-goal signals, and handoff state. It cannot judge originality, experience quality, or whether the selection is correct.
+The checker validates that contract's visible structure, epistemic labels, kill/non-goal signals, and handoff state. It does not validate Quick reframe, Creative selection only, Opportunity synthesis, Blocked state, or Taste calibration outputs. It cannot judge originality, experience quality, or whether the selection is correct.

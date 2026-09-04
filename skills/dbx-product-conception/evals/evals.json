@@ -443,6 +443,48 @@
       }
     },
     {
+      "id": "opportunity-synthesis-stays-narrow",
+      "kind": "positive",
+      "prompt": "先只把桌面 Agent 持续观察和跨应用操作这个变化梳理成机会地图。暂时不要生成或选择产品概念，也不要写完整构想报告。",
+      "expected_behavior": "Use only the opportunity_synthesis contract: map the arena, state candidate structural insights and product consequences, and name the next conception step without forcing concepts, selection, a product thesis, or a full-report handoff.",
+      "checks": {
+        "trigger": [],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(Arena map|场景地图|机会地图)",
+            "required": true,
+            "quality": "domain"
+          },
+          {
+            "type": "regex",
+            "value": "(Candidate insights|候选洞察|候选.*结构性洞察)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "(Next conception step|下一步构想|下一步.*构想)",
+            "required": true,
+            "quality": "state"
+          }
+        ],
+        "output": [],
+        "safety": [
+          {
+            "type": "regex",
+            "value": "\\A(?![\\s\\S]*(?:选中构想|product thesis|concept_selected_unvalidated|Kill list))[\\s\\S]*\\Z",
+            "required": true,
+            "quality": "validation"
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
       "id": "taste-calibration-not-principles",
       "kind": "positive",
       "prompt": "我想训练产品 taste。不要给我读书清单或十条原则，给我一个能留下预测和结果反馈的训练。",
