@@ -48,6 +48,7 @@ Read it when:
 | Manually execute a Software Plan-First phase | The explicitly named `dbx-software-plan-first-*` phase skill | Any phase skill when the request is only ordinary planning, repo reading, or implementation. |
 | Establish project memory, ADR, glossary, or long-lived project agent brief | No current runtime skill; direct answer or design one with `dbx-skill-architect`. | `dbx-agent-handoff`, unless the request is current-session continuation. |
 | Explicit multi-skill macro workflow | No current command layer; use this matrix and direct orchestration. | A single overloaded skill. |
+| Explicitly select/name `dbx-epistemic-audit`, or expressly delegate a bounded claim audit from a user-authorized workflow | `dbx-epistemic-audit`, manual-first 0.1.0 candidate | Do not auto-select for ordinary opinions, source summaries, rewrites, emotional support, code/product/design review, or action decisions. |
 
 ## 2. Skill Graph Rules
 
@@ -63,6 +64,7 @@ Current graph:
 
 | Relationship | Rule |
 | --- | --- |
+| `dbx-epistemic-audit` consumes evidence without owning other workflows | `dbx-read` may supply source-grounded material; `dbx-decision-framing` owns action choices; product/design/code reviewers retain domain ownership. No mandatory dependencies or recursive review loop. |
 | `dbx-diff-review` precedes commit/PR skills | Review concrete code-change risk before writing the final PR artifact when both are requested. |
 | `dbx-diff-review` precedes `dbx-linus-review` for ambiguous concrete diffs | Establish staged/unstaged/branch/commit/file scope before applying strict pragmatic judgment. |
 | `dbx-code-ratchet` composes `dbx-diff-review` and conditionally `dbx-linus-review` | Use only when the user explicitly asks for code ratchet or automatic review-repair-revalidation; it may modify code and must stop on direction failure or diverging risk. |

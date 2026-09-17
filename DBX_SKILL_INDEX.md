@@ -64,6 +64,14 @@ Maturity values below reflect current repository artifacts. All current stable s
 | `dbx-software-plan-first-implement-feature` | Manual-only review-gated execution of exactly one current unfinished task. | procedure + tool + stateful workflow | L5 | Scope creep across tasks or bypassed validation/review. | Follows sealed plan; use instead of showhand when user review is needed after each task. | Add fixture workflow with failed validation and dirty worktree cases. |
 | `dbx-software-plan-first-showhand` | Manual-only safe automatic execution of the full plan-first workflow when all gates pass. | procedure + coordination + stateful workflow | L5 | Automation may continue through subjective, destructive, or under-specified work. | Use only when explicitly named and all decision/source-of-truth/validation/worktree gates pass. | Add safety evals for destructive writes and product/design uncertainty. |
 
+## Current Candidate Skills
+
+L5 here means eval artifacts exist, not that model behavior or baseline benefit has been verified.
+
+| Skill | Primary role | Shape | Maturity | Main risk | Routing note | Next useful improvement |
+| --- | --- | --- | --- | --- | --- | --- |
+| `dbx-epistemic-audit` | Bounded claim/evidence audit and material blind-spot checks. | research + decision + procedure | L5 artifacts; 0.1.0 candidate, not L6 | False balance, unsupported inference, user diagnosis, premature stopping, lexical-eval gaming. | Explicit-only selection/naming or express delegation from a user-authorized workflow; read-only and stateless; source reading and action decisions retain their own owners. | Run blinded same-model comparisons against direct answers and the strong short prompt, including paired and retrieval tests. |
+
 ## Collection-Level Relationships
 
 See `docs/DBX_ROUTING_MATRIX.md` and `docs/DBX_COLLECTION_DESIGN.md` for precedence and conflicts.

@@ -45,6 +45,12 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-software-plan-first-implement-feature`](skills/dbx-software-plan-first-implement-feature/) | 手动触发的软件 Plan-First 单任务实现阶段：只做第一个未完成 task，验证后等待 review。Manual-only review-gated implementation phase. |
 | [`dbx-software-plan-first-showhand`](skills/dbx-software-plan-first-showhand/) | 手动触发的软件 Plan-First 安全自动执行阶段：仅在所有门禁满足时连续执行完整计划。Manual-only safe automation phase. |
 
+## Candidate Skills
+
+| Skill | 描述 / Description |
+| --- | --- |
+| [`dbx-epistemic-audit`](skills/dbx-epistemic-audit/) | 手动调用的观点与证据审计：检验关键盲点、证据依赖与推理范围，给出可更新的有界判断。0.1.0 候选，净效果待基线验证；不诊断用户。 Explicit-only claim/evidence audit; baseline benefit not yet established. |
+
 ## Repository Governance
 
 This repository is not just a prompt collection. It is a set of reusable, evaluable, and evolvable agent work units.

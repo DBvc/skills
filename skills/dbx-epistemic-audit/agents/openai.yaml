@@ -1,0 +1,6 @@
+interface:
+  display_name: "DBX 观点审计"
+  short_description: "检验观点的关键证据与盲点，不迎合、不抬杠、不诊断用户"
+  default_prompt: "Use $dbx-epistemic-audit to audit the following claim. Check material evidence and blind spots without forced balance; return a bounded judgment and meaningful update conditions."
+policy:
+  allow_implicit_invocation: false
