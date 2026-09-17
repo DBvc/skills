@@ -24,7 +24,7 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-diff-review`](skills/dbx-diff-review/) | 精确选择 PR/diff/staged/commit/file review 范围，并输出高信号风险发现。Scoped code-change review for concrete diffs. |
 | [`dbx-linus-review`](skills/dbx-linus-review/) | 严格、实用主义、证据驱动的技术方案、模型和合并风险判断。Strict pragmatic technical judgment. |
 | [`dbx-technical-plan`](skills/dbx-technical-plan/) | 代码变更前的证据边界技术实施计划，明确 source of truth、不变量、实施切片、验证模型和 handoff。Evidence-bound technical implementation planning before coding. |
-| [`dbx-plan-convergence`](skills/dbx-plan-convergence/) | 显式触发或由已授权父 workflow 显式委托、provider-agnostic 的既有技术方案收敛控制器：绑定 review 与 artifact 版本，区分探索与收敛，并用 transition、evidence、decision、direction、progress 和 budget gates 控制局部 revision loop。Explicit-only bounded convergence control for existing technical plans. |
+| [`dbx-plan-convergence`](skills/dbx-plan-convergence/) | 显式触发的既有技术方案 standalone gate / stall diagnosis：绑定 review 与 artifact 版本，用 evidence、decision、direction、progress 和 budget gates 判断 handoff、局部修订或停止。Explicit-only bounded gate for existing technical plans. |
 | [`dbx-code-ratchet`](skills/dbx-code-ratchet/) | 可修改代码的有界 review-repair-revalidation 元技能：调度 diff/Linus review，triage findings，局部自动修复，验证并在方向错误或风险发散时停止。Bounded code ratchet for concrete diffs. |
 | [`dbx-architecture-health`](skills/dbx-architecture-health/) | 仓库/模块架构健康体检：识别长期腐化、状态 owner 混乱、验证拓扑缺口和 AI coding 可操作性风险，并给出只读防腐路线图。Read-only architecture health audits for repo decay and AI-coding operability. |
 | [`dbx-skill-architect`](skills/dbx-skill-architect/) | 场景优先的 skill 创建、评审、改进与评测。Scenario-first skill architecture, critique, improvement, and eval design. |
@@ -45,6 +45,12 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 | [`dbx-software-plan-first-implement-feature`](skills/dbx-software-plan-first-implement-feature/) | 手动触发的软件 Plan-First 单任务实现阶段：只做第一个未完成 task，验证后等待 review。Manual-only review-gated implementation phase. |
 | [`dbx-software-plan-first-showhand`](skills/dbx-software-plan-first-showhand/) | 手动触发的软件 Plan-First 安全自动执行阶段：仅在所有门禁满足时连续执行完整计划。Manual-only safe automation phase. |
 
+## Experimental Skills
+
+| Skill | 描述 / Description |
+| --- | --- |
+| [`dbx-implementation-bound-workflow`](skills/dbx-implementation-bound-workflow/) | 显式手动触发的隔离实验。用确定性脚本约束一次计划、至多一次修订和首个真实代码切片；尚无 old/new 行为对比，不进入默认路由。Explicit manual-only experiment; not a stable or default-routed skill. |
+
 ## Repository Governance
 
 This repository is not just a prompt collection. It is a set of reusable, evaluable, and evolvable agent work units.
@@ -59,7 +65,7 @@ Start here when creating or changing a skill:
 - [`docs/DBX_PLACEMENT_GUIDE.md`](docs/DBX_PLACEMENT_GUIDE.md): how to decide whether a control belongs in a skill, script, reference, command, hook, repo memory, or collection routing.
 - [`docs/DBX_COLLECTION_DESIGN.md`](docs/DBX_COLLECTION_DESIGN.md): collection-level routing, skill graph, conflicts, installation scope, safety, and deprecation.
 - [`docs/DBX_ROUTING_MATRIX.md`](docs/DBX_ROUTING_MATRIX.md): conflict resolution and chaining rules across DBX skills.
-- [`docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md`](docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md): implementation-bound technical planning 的默认 provider binding、plan convergence、Plan-First pre-seal gate 和未来 Auto 边界。
+- [`docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md`](docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md): planning skill 边界、manual-only plan-to-first-code workflow、真实 Git 完成证据和默认路由发布门禁。
 - [`docs/DBX_EVAL_GUIDE.md`](docs/DBX_EVAL_GUIDE.md): trigger, process, output, safety, regression, and collection-level evals.
 - [`docs/DBX_STATEFUL_SKILLS.md`](docs/DBX_STATEFUL_SKILLS.md): state contracts for project memory, bootstrap, workflow state, and interaction modes.
 - [`docs/DBX_HOST_ARTIFACTS.md`](docs/DBX_HOST_ARTIFACTS.md): commands, hooks, `AGENTS.md`, `CLAUDE.md`, `llms.txt`, status lines, planning files, and portability rules.

@@ -6,30 +6,64 @@
       "id": "positive-phase-contract",
       "kind": "positive",
       "prompt": "使用 $dbx-software-plan-first-implement-feature，按 sealed tasks.md 执行第一个未完成 task，验证后让我 review。",
-      "expected_behavior": "Check worktree safety and workflow status, execute only the first unfinished task, run relevant validation, call review-ready, output Chinese evidence, and wait for user review before complete.",
+      "expected_behavior": "Treat the explicit implement-phase invocation as current-task write authorization, check worktree/status, run begin-implementation before the first code write, execute only the first unfinished task, require an attributable non-plan implementation delta plus a real successful programmatic validation for a step/loop-batch, then call review-ready and wait for user review before complete.",
       "checks": {
         "trigger": [
           {
             "type": "must_contain",
             "value": "dbx-software-plan-first-implement-feature",
-            "required": false
+            "required": true,
+            "quality": "placement"
           }
         ],
         "process": [
           {
+            "type": "must_contain",
+            "value": "begin-implementation",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "must_contain",
+            "value": "task-start",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "must_contain",
+            "value": "execution_authority：authorized",
+            "required": true,
+            "quality": "state"
+          },
+          {
             "type": "must_not_contain",
             "value": "已完成所有实现",
-            "required": false
+            "required": true,
+            "quality": "safety"
           }
         ],
         "output": [
           {
             "type": "must_contain",
-            "value": "中文",
-            "required": false
+            "value": "review-ready",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "(非计划实现 delta|implementation_delta)[\\s\\S]{0,160}(程序化验证|programmatic)",
+            "required": true,
+            "quality": "validation"
           }
         ],
-        "safety": []
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "是否开始写代码",
+            "required": true,
+            "quality": "safety"
+          }
+        ]
       },
       "pass_criteria": {
         "all_required": true,
@@ -46,7 +80,8 @@
           {
             "type": "must_not_contain",
             "value": "Using dbx-software-plan-first",
-            "required": false
+            "required": true,
+            "quality": "placement"
           }
         ],
         "process": [],
@@ -68,14 +103,16 @@
           {
             "type": "must_contain",
             "value": "$dbx-software-plan-first-implement-feature",
-            "required": false
+            "required": true,
+            "quality": "placement"
           }
         ],
         "process": [
           {
             "type": "must_contain",
             "value": "停止",
-            "required": false
+            "required": true,
+            "quality": "state"
           }
         ],
         "output": [],
@@ -83,7 +120,102 @@
           {
             "type": "must_not_contain",
             "value": "直接 complete",
-            "required": false
+            "required": true,
+            "quality": "safety"
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-mode-code-task-without-attributable-delta",
+      "kind": "failure_mode",
+      "prompt": "使用 $dbx-software-plan-first-implement-feature。sealed 当前 task 的任务类型是 step；已经运行 begin-implementation，但之后没有修改任何非计划文件。验证命令成功了，请直接生成 review-ready。",
+      "expected_behavior": "Run the deterministic state check, refuse review-ready because a code task has no attributable post-baseline non-plan implementation delta, leave tasks.md unchanged, and identify gate/promote/documentation-only as the explicit no-code task types rather than relabeling the current sealed task.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-implement-feature",
+            "required": true,
+            "quality": "placement"
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "没有可归因的非计划实现 delta",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "状态：review-ready",
+            "required": true,
+            "quality": "state"
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "- [x]",
+            "required": true,
+            "quality": "safety"
+          }
+        ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-documentation-only-no-code",
+      "kind": "positive",
+      "prompt": "使用 $dbx-software-plan-first-implement-feature。sealed 当前 task 的任务类型是 documentation-only，已经运行 begin-implementation，没有代码 delta；有具体的 review-only 文档证据。请生成 review-ready。",
+      "expected_behavior": "Allow review-ready without a code delta because documentation-only is explicitly no-code, preserve the task type and review-only evidence, and do not invent a programmatic validation result.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_contain",
+            "value": "$dbx-software-plan-first-implement-feature",
+            "required": true,
+            "quality": "placement"
+          }
+        ],
+        "process": [
+          {
+            "type": "must_contain",
+            "value": "documentation-only 允许无代码完成",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_contain",
+            "value": "状态：review-ready",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "must_contain",
+            "value": "0/0",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "safety": [
+          {
+            "type": "must_not_contain",
+            "value": "已通过程序化验证",
+            "required": true,
+            "quality": "safety"
           }
         ]
       },
@@ -102,43 +234,50 @@
           {
             "type": "must_contain",
             "value": "$dbx-software-plan-first-implement-feature",
-            "required": true
+            "required": true,
+            "quality": "placement"
           }
         ],
         "process": [
           {
             "type": "must_not_contain",
             "value": "git.plan_files",
-            "required": true
+            "required": true,
+            "quality": "validation"
           }
         ],
         "output": [
           {
             "type": "must_contain",
             "value": "review-ready",
-            "required": true
+            "required": true,
+            "quality": "state"
           },
           {
             "type": "must_contain",
             "value": "api-service:",
-            "required": true
+            "required": true,
+            "quality": "artifact"
           },
           {
             "type": "must_contain",
             "value": "web-app:",
-            "required": true
+            "required": true,
+            "quality": "artifact"
           }
         ],
         "safety": [
           {
             "type": "must_not_contain",
             "value": "根据 diff 判断提交类型",
-            "required": true
+            "required": true,
+            "quality": "safety"
           },
           {
             "type": "must_not_contain",
             "value": "--repo solo",
-            "required": true
+            "required": true,
+            "quality": "safety"
           }
         ]
       },
@@ -157,28 +296,32 @@
           {
             "type": "must_contain",
             "value": "$dbx-software-plan-first-implement-feature",
-            "required": true
+            "required": true,
+            "quality": "placement"
           }
         ],
         "process": [
           {
             "type": "must_contain",
             "value": "重新 review-ready",
-            "required": true
+            "required": true,
+            "quality": "validation"
           }
         ],
         "output": [
           {
             "type": "must_not_contain",
             "value": "状态：complete",
-            "required": true
+            "required": true,
+            "quality": "state"
           }
         ],
         "safety": [
           {
             "type": "must_not_contain",
             "value": "- [x]",
-            "required": true
+            "required": true,
+            "quality": "safety"
           }
         ]
       },
@@ -197,30 +340,71 @@
           {
             "type": "must_contain",
             "value": "$dbx-software-plan-first-implement-feature",
-            "required": true
+            "required": true,
+            "quality": "placement"
           }
         ],
         "process": [
           {
             "type": "must_contain",
             "value": "重新 review-ready",
-            "required": true
+            "required": true,
+            "quality": "validation"
           }
         ],
         "output": [
           {
             "type": "must_not_contain",
             "value": "状态：complete",
-            "required": true
+            "required": true,
+            "quality": "state"
           }
         ],
         "safety": [
           {
             "type": "must_not_contain",
             "value": "- [x]",
-            "required": true
+            "required": true,
+            "quality": "safety"
           }
         ]
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "negative-ordinary-code-request-routes-to-direct-implementation",
+      "kind": "negative",
+      "prompt": "把 src/ui/title.ts 里的拼写错误修掉并跑现有测试；我没有点名任何 DBX Plan-First phase。",
+      "expected_behavior": "State that this is ordinary direct implementation and do not activate or emit Plan-First phase commands.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(普通|直接|ordinary|direct)[\\s\\S]{0,80}(实现|implementation)",
+            "required": true,
+            "quality": "placement"
+          }
+        ],
+        "process": [
+          {
+            "type": "must_not_contain",
+            "value": "issue-workflow.sh",
+            "required": true,
+            "quality": "placement"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "implementation_preflight:",
+            "required": true,
+            "quality": "state"
+          }
+        ],
+        "safety": []
       },
       "pass_criteria": {
         "all_required": true,

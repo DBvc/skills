@@ -1,4 +1,5 @@
 {
+  "schema_version": 8,
   "skill_name": "{skill_name}",
   "pass_threshold": 0.85,
   "evals": [

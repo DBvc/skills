@@ -3,7 +3,8 @@
 
 Standard library only. The validator checks more than JSON shape: each case must
 include at least one required non-marker quality assertion so heading-only evals
-do not pass as real regressions.
+do not pass as real regressions. Schema v8 additionally requires positive
+evidence in every machine-scored case; unversioned files keep v7 compatibility.
 """
 
 from __future__ import annotations
@@ -31,6 +32,9 @@ CHECK_QUALITIES = {
     "collection",
 }
 STRONG_QUALITIES = CHECK_QUALITIES - {"structural"}
+LATEST_SCHEMA_VERSION = 8
+LEGACY_SCHEMA_VERSION = 7
+POSITIVE_CHECK_TYPES = {"must_contain", "must_start_with", "regex"}
 MIN_KIND_COUNTS = {"positive": 2, "negative": 1, "near_miss": 1}
 
 PLACEHOLDER_PATTERNS = [
@@ -106,13 +110,13 @@ def is_weak_marker_value(value: str) -> bool:
     return any(pattern.search(value.strip()) for pattern in WEAK_VALUE_PATTERNS)
 
 
-def validate_check(check: Any, prefix: str) -> tuple[list[str], list[str], bool, bool, bool]:
-    """Return errors, warnings, required?, strong_required?, weak_marker?."""
+def validate_check(check: Any, prefix: str) -> tuple[list[str], list[str], bool, bool, bool, bool]:
+    """Return errors, warnings, required?, strong?, positive-strong?, weak?."""
     errors: list[str] = []
     warnings: list[str] = []
 
     if not isinstance(check, dict):
-        return [f"{prefix}: check must be an object"], warnings, False, False, False
+        return [f"{prefix}: check must be an object"], warnings, False, False, False, False
 
     check_type = check.get("type")
     if check_type not in CHECK_TYPES:
@@ -149,7 +153,8 @@ def validate_check(check: Any, prefix: str) -> tuple[list[str], list[str], bool,
         errors.append(f"{prefix}: quality={quality!r} cannot be used with marker-only value {value!r}")
 
     strong_required = bool(required) and quality in STRONG_QUALITIES and not weak and not has_placeholder(value)
-    return errors, warnings, bool(required), strong_required, weak
+    positive_strong_required = strong_required and check_type in POSITIVE_CHECK_TYPES
+    return errors, warnings, bool(required), strong_required, positive_strong_required, weak
 
 
 def validate_eval_file(path: Path, expected_skill_name: str | None = None) -> ValidationResult:
@@ -171,6 +176,16 @@ def validate_eval_file(path: Path, expected_skill_name: str | None = None) -> Va
     threshold = data.get("pass_threshold", 0.85)
     if not isinstance(threshold, (int, float)) or not 0 < float(threshold) <= 1:
         errors.append(f"{path}: pass_threshold must be a number in (0, 1]")
+
+    schema_version = data.get("schema_version", LEGACY_SCHEMA_VERSION)
+    if not isinstance(schema_version, int) or isinstance(schema_version, bool):
+        errors.append(f"{path}: schema_version must be an integer when present")
+        schema_version = LEGACY_SCHEMA_VERSION
+    elif schema_version not in {LEGACY_SCHEMA_VERSION, LATEST_SCHEMA_VERSION}:
+        errors.append(
+            f"{path}: schema_version must be {LEGACY_SCHEMA_VERSION} or {LATEST_SCHEMA_VERSION}, "
+            f"found {schema_version!r}"
+        )
 
     evals = data.get("evals")
     if not isinstance(evals, list) or not evals:
@@ -213,6 +228,7 @@ def validate_eval_file(path: Path, expected_skill_name: str | None = None) -> Va
         total_checks = 0
         required_checks = 0
         strong_required_checks = 0
+        positive_strong_required_checks = 0
         weak_checks = 0
         if not isinstance(checks, dict):
             errors.append(f"{prefix}: checks must be an object")
@@ -224,13 +240,14 @@ def validate_eval_file(path: Path, expected_skill_name: str | None = None) -> Va
                     continue
                 for check_index, check in enumerate(bucket_checks):
                     total_checks += 1
-                    e, w, is_required, is_strong_required, weak = validate_check(
+                    e, w, is_required, is_strong_required, is_positive_strong_required, weak = validate_check(
                         check, f"{prefix}.checks.{bucket}[{check_index}]"
                     )
                     errors.extend(e)
                     warnings.extend(w)
                     required_checks += 1 if is_required else 0
                     strong_required_checks += 1 if is_strong_required else 0
+                    positive_strong_required_checks += 1 if is_positive_strong_required else 0
                     weak_checks += 1 if weak else 0
 
         if total_checks == 0:
@@ -241,6 +258,12 @@ def validate_eval_file(path: Path, expected_skill_name: str | None = None) -> Va
             errors.append(
                 f"{prefix}: at least one required non-marker quality check is required "
                 "(quality must be behavior, artifact, specificity, domain, safety, validation, placement, state, or collection)"
+            )
+        if schema_version >= 8 and positive_strong_required_checks == 0:
+            errors.append(
+                f"{prefix}: schema v8 requires at least one required positive-evidence check; "
+                "use must_contain, must_start_with, or regex with a non-structural quality. "
+                "must_not_contain assertions cannot prove that the expected behavior occurred"
             )
         if total_checks and weak_checks / total_checks > 0.60:
             warnings.append(f"{prefix}: more than 60% of checks are structural markers; consider stronger assertions")

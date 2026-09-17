@@ -47,7 +47,38 @@ fallback: use B if A cannot proceed.
 handoff: A produces a contract for B.
 ```
 
+<<<<<<< Updated upstream
 The current DBX graph is maintained only in [`DBX_ROUTING_MATRIX.md`](./DBX_ROUTING_MATRIX.md). Keep relationship rules there so routing changes have one source of truth.
+=======
+Current DBX graph:
+
+| Relationship | Meaning |
+| --- | --- |
+| `dbx-diff-review` precedes commit/PR skills | If user asks to review concrete code changes and then write PR text, review the selected change set first. |
+| `dbx-diff-review` precedes `dbx-linus-review` for concrete diffs | If strict pragmatic judgment is requested on a diff with staged/branch/file ambiguity, establish the target first. |
+| `dbx-code-ratchet` composes review skills for bounded repair | Only for explicit code ratchet / review-repair-revalidation requests; may modify code, but must stop on direction failure, unsafe scope, or diverging risk. |
+| `dbx-architecture-health` diagnoses architecture decay read-only | Use for repository/module architecture health, anti-decay roadmaps, and AI-coding operability; hand off implementation planning, concrete diffs, strict proposal critique, or bounded repair to the matching skill. |
+| `dbx-linus-review` handles explicit strict critique | Use for Linus-style, harsh, over-engineering, model, plan, or merge/readiness judgment. |
+| `dbx-technical-plan` is a stateless planning provider | Ordinary plan requests end at the plan; it does not default into convergence or own run/review state. |
+| `dbx-plan-convergence` is a standalone existing-plan gate/diagnostic | Use only when explicitly selected directly or by a user-authorized parent for that same standalone operation; it is not a feature-level plan-to-code owner. |
+| `dbx-linus-review` is a read-only strict reviewer | Standalone critique remains directly usable; delegated review returns one canonical result and no transition state. |
+| `dbx-crystallize` precedes judgment/planning/implementation when requirements are fuzzy | Use for pre-development requirement contracts; hand off product-worth verdicts, design correctness, technical implementation planning, or direct implementation to the matching downstream skill. |
+| `dbx-product-judgment` handles product correctness judgment | Use when product artifacts, target users/jobs, evidence boundaries, or product decisions dominate; route ordinary concrete diff review to `dbx-diff-review`. |
+| `dbx-design-judgment` handles design correctness and design shaping | Use when UI surfaces, screenshots, prototypes, PRDs-to-design, design systems, or code-backed interface consistency dominate; it may read evidence but must not edit files. |
+| `dbx-decision-framing` precedes `dbx-goal-writer` | If user has not decided whether to do the work, decide before writing a Codex goal. |
+| `dbx-skill-architect` precedes new skill creation | If request is one-off, triage before full skill creation. |
+| `dbx-skill-portfolio-auditor` supports collection placement decisions | Explicit/manual-only portfolio audit for installed or repository skills; routes single-skill design, critique, or improvement to `dbx-skill-architect`. |
+| `dbx-attention-routing` precedes product-specific tagging/write workflows | Route mixed inputs through the stable attention kernel before mapping to external task, note, or metadata systems. |
+| `dbx-read` handles explicit source-bound reading | Use for source ingestion, summary, extraction, deep-read, comparison, and optional local capture; hand off durable learning, public writing, judgment, review, or planning to the matching DBX skill. |
+| `dbx-feishu-workflow` delegates to Feishu domain skills | Use only for cross-system project/doc workflows, optionally with chat evidence. Project item operations follow `dbx-feishu-project`; document operations follow `dbx-feishu-doc`; IM evidence/writes/events follow `dbx-feishu-im`; writes require previews, exact targets, and approval. |
+| `dbx-feishu-feedback-triage` composes IM evidence and domain docs | Use for bounded business-feedback classification, unresolved scans, requirement/product-gap intake, and memory candidates. Generic chat summaries stay in `dbx-feishu-im`; project mutations stay out of v0.1. |
+| `dbx-learn` handles durable learning | Use for capability-building study, source-grounded learning research, practice reps, review, and optional learning records; do not use for ordinary summaries, direct implementation, or mixed inbox routing. |
+| `dbx-subagent-context` supports `dbx-goal-writer` | Goal contracts may include subagent context strategy when Codex subagents are involved. |
+| `dbx-agent-handoff` produces restart packets | Use for AI agent/session continuation and context-compaction handoffs; do not use for human workplace handoff documents. |
+| `dbx-conversation-align` competes with `dbx-decision-framing` | Use conversation-align for wording/boundaries; decision-framing for real action trade-offs. |
+| `dbx-open-source-commit-pr` competes with `dbx-work-commit-pr` | Choose based on public/open-source vs work/internal context. |
+| `dbx-software-plan-first-*` forms a manual-only phase chain | Proposal shaping -> grounding -> optional external plan-convergence gate -> finalize/seal -> implement feature; the gate is not a phase and showhand is unchanged. |
+>>>>>>> Stashed changes
 
 ## 4. Conflict Resolution
 
@@ -67,7 +98,6 @@ Examples:
 | “Run L2 code ratchet on staged changes and auto-fix clear findings, but do not commit.” | `dbx-code-ratchet`. |
 | “Audit this repo's architecture health and AI-coding decay risks, but do not change code.” | `dbx-architecture-health`. |
 | “Use Linus-style review on this staged diff before the PR description.” | `dbx-diff-review` to lock target, then `dbx-linus-review`, then appropriate commit/PR skill. |
-| “先给技术计划，并在开始实现前自动做一次 Linus 方案棘轮。” | `dbx-technical-plan` -> `dbx-plan-convergence`, with `dbx-linus-review` as the default read-only reviewer provider. |
 | “Turn this fuzzy feature idea into scope, non-goals, and acceptance criteria before anyone codes.” | `dbx-crystallize`. |
 | “Is this feature product-correct for the target user?” | `dbx-product-judgment`. |
 | “Audit this screenshot/prototype design and give a handoff, but do not implement.” | `dbx-design-judgment`. |

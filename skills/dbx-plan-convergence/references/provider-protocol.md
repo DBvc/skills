@@ -200,9 +200,9 @@ Common dimensions:
 
 A single reviewer may cover multiple dimensions. Multiple reviewers repeating the same lens still count as one dimension.
 
-## 8. Scoped re-review
+## 8. Post-revision review scopes
 
-A scoped review must bind to the revised artifact and reference the revision contract. `scope.contract_id` is required when `kind: scoped`. For a full review it may be omitted or `null`; the blank template serializes it as `null`:
+A scoped review must bind to the revised artifact and reference the revision contract. `scope.contract_id` is required when `kind: scoped`. An initial full review may omit it or use `null`; a strict final full review after revision must carry the revision contract id and accepted finding ids so the same pass can prove closure as well as full-scope acceptance:
 
 ```yaml
 review_pass:
@@ -229,7 +229,7 @@ review_pass:
 
 A re-review of v1 is not evidence that v2 closed the finding.
 
-A scoped re-review can close accepted findings, but cannot issue strict acceptance. It must preserve the current structured content ref; bundle re-review cannot collapse two file refs into a directory or scalar path.
+A scoped re-review can close accepted findings for ordinary `handoff_ready`, but cannot issue strict acceptance. It must preserve the current structured content ref; bundle re-review cannot collapse two file refs into a directory or scalar path. After a strict-path revision, skip this pass and use one fresh final full review for both closure and full-scope acceptance.
 
 ## 9. Final strict acceptance review
 
@@ -246,7 +246,7 @@ A qualifying acceptance review must:
 - report `judgment: accept` or `accept_with_advisories` with no open `blocker` or `high` findings;
 - either close each `medium` finding or have the reviewer explicitly retain it as a non-blocking residual finding. If it involves product, architecture, compatibility, or risk acceptance, the decision owner must also resolve it. The controller cannot downgrade severity or accept risk itself.
 
-If the initial full review meets these rules and the artifact never changes, it may qualify without a duplicate review. Any artifact content change invalidates the prior acceptance basis and receipt. After a revision, scoped closure is followed by a fresh independent full review only when the artifact is again a completion candidate.
+If the initial full review meets these rules and the artifact never changes, it may qualify without a duplicate review. A current matching passed receipt also short-circuits review unless artifact identity, contradictory evidence, a frozen decision, declared scope, or acceptance policy materially changed. Any artifact content change invalidates the prior acceptance basis and receipt. After a strict-path revision, exactly one fresh independent final full review covers both accepted-finding closure and full-scope acceptance; no separate scoped pass precedes it.
 
 On success, issue:
 
@@ -272,7 +272,7 @@ strict_acceptance_receipt:
   residual_findings: []
 ```
 
-If the review finds new material problems, send them through normal triage. If the final-acceptance review budget is exhausted before success, choose `stop + stopped-budget`; never preserve an earlier PASS.
+If the post-revision final review finds a material blocker, the correction round is finished. A finding with `decision_owner_required: true` returns `request-decision + needs-decision`; every other blocker returns `stop + blocked-final-review`. The controller must not emit `revise-local`, issue another revision contract, or request another review in the same session. Never preserve an earlier PASS after artifact change.
 
 ## 10. Provider bindings and delegated activation
 

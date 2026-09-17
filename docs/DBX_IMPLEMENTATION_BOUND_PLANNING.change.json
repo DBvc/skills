@@ -1,0 +1,459 @@
+{
+  "schema_version": 2,
+  "change_units": [
+    {
+      "id": "skill-architect-enforcement",
+      "kind": "standard_change",
+      "net_value": "positive",
+      "path_patterns": [
+        "skills/dbx-skill-architect/**",
+        "docs/DBX_IMPLEMENTATION_BOUND_PLANNING.change.json"
+      ],
+      "surfaces": {
+        "cross_skill_protocol": [
+          "skills/dbx-skill-architect/SKILL.md",
+          "skills/dbx-skill-architect/references/improvement-validation.md",
+          "skills/dbx-skill-architect/scripts/validate_change_manifest.py",
+          "skills/dbx-skill-architect/assets/change-manifest.schema.json"
+        ],
+        "cross_skill_state": [
+          "docs/DBX_IMPLEMENTATION_BOUND_PLANNING.change.json"
+        ],
+        "execution_authority": [],
+        "routing": []
+      },
+      "release": {
+        "mode": "candidate",
+        "changes_default_routing": false,
+        "removes_existing_path": false,
+        "registers_stable": false,
+        "claims_improvement": true,
+        "manual_entry_point": null,
+        "removal_without_migration": null,
+        "replacement_unit_id": null
+      },
+      "evidence": [
+        {
+          "kind": "regression",
+          "ref": "skills/dbx-skill-architect/tests/test_validate_change_manifest.py#broad-positive-proof-gate",
+          "summary": "Adversarial cases reject narrative-only evidence, missing refs, prose rollback, and accept complete before/after or operational contracts."
+        }
+      ],
+      "validation": {
+        "baseline": {
+          "ref": "skills/dbx-skill-architect/tests/test_validate_change_manifest.py#test_broad_positive_rejects_narrative_evidence_and_prose_rollback",
+          "summary": "The baseline fixture reproduces the old broad-positive shape with only a narrative evidence ref and prose rollback.",
+          "check": {
+            "argv": [
+              "python3",
+              "skills/dbx-skill-architect/tests/test_validate_change_manifest.py",
+              "ChangeManifestGateTests.test_broad_positive_rejects_narrative_evidence_and_prose_rollback"
+            ],
+            "expected_exit": 0
+          }
+        },
+        "outcomes": [
+          {
+            "kind": "before_after",
+            "ref": "skills/dbx-skill-architect/tests/test_validate_change_manifest.py#test_broad_positive_accepts_before_after_proof_cost_and_rollback",
+            "summary": "The candidate validator accepts only the complete baseline, comparison, cost, and rollback command contract.",
+            "baseline_ref": "skills/dbx-skill-architect/tests/test_validate_change_manifest.py#test_broad_positive_rejects_narrative_evidence_and_prose_rollback",
+            "candidate_ref": "skills/dbx-skill-architect/tests/test_validate_change_manifest.py#test_broad_positive_accepts_before_after_proof_cost_and_rollback",
+            "check": {
+              "argv": [
+                "python3",
+                "skills/dbx-skill-architect/tests/test_validate_change_manifest.py",
+                "ChangeManifestGateTests.test_broad_positive_accepts_before_after_proof_cost_and_rollback"
+              ],
+              "expected_exit": 0
+            }
+          }
+        ],
+        "costs": [
+          {
+            "metric": "publication-gate regression cases",
+            "value": 15,
+            "unit": "test cases",
+            "ref": "skills/dbx-skill-architect/tests/test_validate_change_manifest.py#ChangeManifestGateTests",
+            "check": {
+              "argv": [
+                "python3",
+                "skills/dbx-skill-architect/tests/test_validate_change_manifest.py"
+              ],
+              "expected_exit": 0
+            }
+          }
+        ]
+      },
+      "rollback": {
+        "trigger": "A valid independently releasable change cannot express its baseline, outcome, cost, or rollback without weakening the gate.",
+        "steps": [
+          "Restore the tracked skill-architect package to the pre-publication baseline.",
+          "Remove the new manifest validator artifacts and this change manifest."
+        ],
+        "commands": [
+          {
+            "argv": ["git", "restore", "--source=HEAD", "--", "skills/dbx-skill-architect"],
+            "expected_exit": 0
+          },
+          {
+            "argv": [
+              "git",
+              "clean",
+              "-fd",
+              "--",
+              "skills/dbx-skill-architect/assets/change-manifest.schema.json",
+              "skills/dbx-skill-architect/assets/templates/change-manifest.example.json",
+              "skills/dbx-skill-architect/scripts/validate_change_manifest.py",
+              "skills/dbx-skill-architect/tests",
+              "docs/DBX_IMPLEMENTATION_BOUND_PLANNING.change.json"
+            ],
+            "expected_exit": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "remove-implicit-plan-loop",
+      "kind": "known_bad_default_removal",
+      "net_value": "positive",
+      "path_patterns": [
+        "skills/dbx-technical-plan/**",
+        "skills/dbx-linus-review/**",
+        "skills/dbx-plan-convergence/**",
+        "docs/DBX_COLLECTION_DESIGN.md",
+        "docs/DBX_ROUTING_MATRIX.md"
+      ],
+      "surfaces": {
+        "cross_skill_protocol": [
+          "skills/dbx-technical-plan/SKILL.md",
+          "skills/dbx-technical-plan/references/handoff-contracts.md",
+          "skills/dbx-linus-review/SKILL.md",
+          "skills/dbx-plan-convergence/SKILL.md",
+          "skills/dbx-plan-convergence/references/provider-protocol.md"
+        ],
+        "cross_skill_state": [
+          "skills/dbx-plan-convergence/assets/convergence-state-template.json",
+          "skills/dbx-plan-convergence/references/default-policy.yaml"
+        ],
+        "execution_authority": [
+          "skills/dbx-technical-plan/SKILL.md",
+          "skills/dbx-linus-review/SKILL.md",
+          "skills/dbx-plan-convergence/SKILL.md"
+        ],
+        "routing": [
+          "skills/dbx-plan-convergence/agents/openai.yaml",
+          "docs/DBX_COLLECTION_DESIGN.md",
+          "docs/DBX_ROUTING_MATRIX.md"
+        ]
+      },
+      "release": {
+        "mode": "candidate",
+        "changes_default_routing": true,
+        "removes_existing_path": true,
+        "registers_stable": false,
+        "claims_improvement": true,
+        "manual_entry_point": null,
+        "removal_without_migration": null,
+        "replacement_unit_id": null
+      },
+      "evidence": [
+        {
+          "kind": "before_after",
+          "ref": "skills/dbx-technical-plan/evals/evals.json#implementation-bound-plan-does-not-start-an-automatic-loop",
+          "summary": "The stable planner now ends ordinary plan requests at the plan and does not silently enter convergence or another workflow."
+        },
+        {
+          "kind": "regression",
+          "ref": "skills/dbx-plan-convergence/evals/evals.json#failure-strict-final-full-high-terminates-correction",
+          "summary": "The sole post-correction full review terminally blocks or hands off decisions and cannot open a second revision."
+        }
+      ],
+      "validation": {
+        "baseline": {
+          "ref": "skills/dbx-technical-plan/SKILL.md#head-implicit-convergence-default",
+          "summary": "HEAD contains the old default instruction that an implementation-bound plan enters a review-revision loop before implementation.",
+          "check": {
+            "argv": [
+              "git",
+              "grep",
+              "-n",
+              "implementation-bound technical plan should undergo",
+              "HEAD",
+              "--",
+              "skills/dbx-technical-plan/SKILL.md"
+            ],
+            "expected_exit": 0
+          }
+        },
+      "outcomes": [
+        {
+          "kind": "before_after",
+          "ref": "skills/dbx-technical-plan/SKILL.md#candidate-no-implicit-convergence-default",
+          "summary": "The exact stable-planner instruction that made the review-revision loop the default is absent from the candidate working tree.",
+          "baseline_ref": "skills/dbx-technical-plan/SKILL.md#head-implicit-convergence-default",
+          "candidate_ref": "skills/dbx-technical-plan/SKILL.md#candidate-no-implicit-convergence-default",
+          "check": {
+            "argv": [
+              "git",
+              "grep",
+              "-n",
+              "implementation-bound technical plan should undergo",
+              "--",
+              "skills/dbx-technical-plan/SKILL.md"
+            ],
+            "expected_exit": 1
+          }
+        }
+      ],
+        "costs": [
+          {
+            "metric": "default correction round ceiling",
+            "value": 1,
+            "unit": "revision round",
+            "ref": "skills/dbx-plan-convergence/references/default-policy.yaml#profiles",
+            "check": {
+              "argv": [
+                "rg",
+                "-n",
+                "hard_total_revision_rounds: 1",
+                "skills/dbx-plan-convergence/references/default-policy.yaml"
+              ],
+              "expected_exit": 0
+            }
+          }
+        ]
+      },
+      "rollback": {
+        "trigger": "A recorded stable-routing regression shows that removing the implicit loop loses a required explicit review or permits unsafe implementation entry.",
+        "steps": [
+          "Restore only the stable planner, reviewer, convergence, and collection-routing paths from the pre-publication baseline.",
+          "Keep the failing request as a regression before attempting a smaller removal."
+        ],
+        "commands": [
+          {
+            "argv": [
+              "git",
+              "restore",
+              "--source=HEAD",
+              "--",
+              "skills/dbx-technical-plan",
+              "skills/dbx-linus-review",
+              "skills/dbx-plan-convergence",
+              "docs/DBX_COLLECTION_DESIGN.md",
+              "docs/DBX_ROUTING_MATRIX.md"
+            ],
+            "expected_exit": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "plan-first-real-code-gate",
+      "kind": "standard_change",
+      "net_value": "positive",
+      "path_patterns": [
+        "skills/dbx-software-plan-first-*/**"
+      ],
+      "surfaces": {
+        "cross_skill_protocol": [
+          "skills/dbx-software-plan-first-finalize-plan/SKILL.md",
+          "skills/dbx-software-plan-first-finalize-plan/references/workflow-rules.md",
+          "skills/dbx-software-plan-first-ground-plan/references/workflow-rules.md",
+          "skills/dbx-software-plan-first-implement-feature/SKILL.md",
+          "skills/dbx-software-plan-first-implement-feature/references/workflow-rules.md",
+          "skills/dbx-software-plan-first-plan-issue/references/workflow-rules.md",
+          "skills/dbx-software-plan-first-showhand/SKILL.md",
+          "skills/dbx-software-plan-first-showhand/references/workflow-rules.md"
+        ],
+        "cross_skill_state": [
+          "skills/dbx-software-plan-first-finalize-plan/scripts/issue_workflow.py",
+          "skills/dbx-software-plan-first-ground-plan/scripts/issue_workflow.py",
+          "skills/dbx-software-plan-first-implement-feature/scripts/issue_workflow.py",
+          "skills/dbx-software-plan-first-plan-issue/scripts/issue_workflow.py",
+          "skills/dbx-software-plan-first-showhand/scripts/issue_workflow.py"
+        ],
+        "execution_authority": [
+          "skills/dbx-software-plan-first-implement-feature/SKILL.md",
+          "skills/dbx-software-plan-first-implement-feature/scripts/issue_workflow.py",
+          "skills/dbx-software-plan-first-showhand/SKILL.md",
+          "skills/dbx-software-plan-first-showhand/scripts/issue_workflow.py"
+        ],
+        "routing": []
+      },
+      "release": {
+        "mode": "candidate",
+        "changes_default_routing": false,
+        "removes_existing_path": false,
+        "registers_stable": false,
+        "claims_improvement": true,
+        "manual_entry_point": null,
+        "removal_without_migration": null,
+        "replacement_unit_id": null
+      },
+      "evidence": [
+        {
+          "kind": "regression",
+          "ref": "skills/dbx-software-plan-first-implement-feature/scripts/test_implementation_gate.py#ImplementationGateTest",
+          "summary": "Executable fixtures cover real code delta attribution, validation integrity, scope, HEAD/index drift, timeout/output bounds, and explicit no-code tasks."
+        }
+      ],
+      "validation": {
+        "baseline": {
+          "ref": "skills/dbx-software-plan-first-implement-feature/scripts/issue_workflow.py#head-missing-task-start-baseline",
+          "summary": "HEAD lacks the non-resettable task-start baseline required to attribute a real implementation delta.",
+          "check": {
+            "argv": [
+              "git",
+              "grep",
+              "-n",
+              "task_start_baseline",
+              "HEAD",
+              "--",
+              "skills/dbx-software-plan-first-implement-feature/scripts/issue_workflow.py"
+            ],
+            "expected_exit": 1
+          }
+        },
+        "outcomes": [
+          {
+            "kind": "operational",
+            "ref": "skills/dbx-software-plan-first-implement-feature/scripts/test_implementation_gate.py#ImplementationGateTest",
+            "summary": "The candidate helper passes executable end-to-end Git-delta and validation-integrity fixtures.",
+            "baseline_ref": null,
+            "candidate_ref": null,
+            "check": {
+              "argv": [
+                "python3",
+                "skills/dbx-software-plan-first-implement-feature/scripts/test_implementation_gate.py"
+              ],
+              "expected_exit": 0
+            }
+          }
+        ],
+        "costs": [
+          {
+            "metric": "implementation-gate regression cases",
+            "value": 14,
+            "unit": "test cases",
+            "ref": "skills/dbx-software-plan-first-implement-feature/scripts/test_implementation_gate.py#ImplementationGateTest",
+            "check": {
+              "argv": [
+                "python3",
+                "skills/dbx-software-plan-first-implement-feature/scripts/test_implementation_gate.py"
+              ],
+              "expected_exit": 0
+            }
+          }
+        ]
+      },
+      "rollback": {
+        "trigger": "A compatible sealed code task cannot record or verify an attributable baseline despite a real in-scope implementation delta.",
+        "steps": [
+          "Restore the synchronized Plan-First packages to the pre-publication baseline.",
+          "Remove the candidate implementation-gate test file while retaining the failing case externally for redesign."
+        ],
+        "commands": [
+          {
+            "argv": [
+              "git",
+              "restore",
+              "--source=HEAD",
+              "--",
+              "skills/dbx-software-plan-first-finalize-plan",
+              "skills/dbx-software-plan-first-ground-plan",
+              "skills/dbx-software-plan-first-implement-feature",
+              "skills/dbx-software-plan-first-plan-issue",
+              "skills/dbx-software-plan-first-showhand"
+            ],
+            "expected_exit": 0
+          },
+          {
+            "argv": [
+              "git",
+              "clean",
+              "-f",
+              "--",
+              "skills/dbx-software-plan-first-implement-feature/scripts/test_implementation_gate.py"
+            ],
+            "expected_exit": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "manual-implementation-bound-prototype",
+      "kind": "prototype",
+      "net_value": "uncertain",
+      "path_patterns": [
+        "skills/dbx-implementation-bound-workflow/**",
+        "README.md",
+        "DBX_SKILL_INDEX.md",
+        "docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md"
+      ],
+      "surfaces": {
+        "cross_skill_protocol": [
+          "skills/dbx-implementation-bound-workflow/SKILL.md",
+          "docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md"
+        ],
+        "cross_skill_state": [
+          "skills/dbx-implementation-bound-workflow/scripts/planning_workflow.py",
+          "docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md"
+        ],
+        "execution_authority": [
+          "skills/dbx-implementation-bound-workflow/scripts/planning_workflow.py",
+          "skills/dbx-implementation-bound-workflow/scripts/git_evidence.py",
+          "docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md"
+        ],
+        "routing": [
+          "skills/dbx-implementation-bound-workflow/agents/openai.yaml",
+          "README.md",
+          "DBX_SKILL_INDEX.md"
+        ]
+      },
+      "release": {
+        "mode": "isolated_manual_prototype",
+        "changes_default_routing": false,
+        "removes_existing_path": false,
+        "registers_stable": false,
+        "claims_improvement": false,
+        "manual_entry_point": "Only the exact user invocation $dbx-implementation-bound-workflow may start the prototype.",
+        "removal_without_migration": "Delete the experimental package and its owner-only runtime directory; no stable route, provider, convergence state, or Plan-First state depends on it.",
+        "replacement_unit_id": null
+      },
+      "evidence": [],
+      "validation": null,
+      "rollback": {
+        "trigger": "Same-task old/new comparison does not show lower first-code latency without higher missed-blocker or maintenance cost.",
+        "steps": [
+          "Restore the stable catalogs and remove the experiment-only design document change.",
+          "Remove the isolated prototype package and delete task-local runtime state."
+        ],
+        "commands": [
+          {
+            "argv": [
+              "git",
+              "restore",
+              "--source=HEAD",
+              "--",
+              "README.md",
+              "DBX_SKILL_INDEX.md",
+              "docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md"
+            ],
+            "expected_exit": 0
+          },
+          {
+            "argv": [
+              "git",
+              "clean",
+              "-fd",
+              "--",
+              "skills/dbx-implementation-bound-workflow"
+            ],
+            "expected_exit": 0
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -21,14 +21,16 @@ dbx-software-plan-first-plan-issue（仅当决策未收敛）
 | `plan-issue` | Goal、Scope、Approach、Validation、Plan Strategy、Impact Profile 或 Impact Boundary 尚未收敛，需要先在对话中定边界 | 用户要求读仓库、写文件、seal 或实现；本阶段只能输出 `clarifying`、`blocked` 或 `proposal-ready` |
 | `ground-plan` | 计划或用户输入需要仓库事实来确认路径、项目规则、source of truth、契约、验证命令、ownership 或 protected/generated 区域 | 用户要求在 grounding 阶段写计划文件或实现代码；只输出 `grounding-handoff` |
 | `finalize-plan` | Mandatory Decision Gate 已完整，且所有会影响计划的仓库事实已由 grounding、当前上下文或用户确认支持；selected profile 可先物化未 seal 的文件，seal 前必须有匹配 exact `plan.md/tasks.md` bundle 的 `ready-for-handoff` 与 qualifying `strict_acceptance_receipt` | 缺少验证、source of truth、artifact/evidence boundary、产物归属或项目事实时回到 `plan-issue` / `ground-plan`；selected bundle receipt 缺失、stale、identity mismatch、fingerprint 无法重算或 qualification 不满足时保持未 seal 并回 external `dbx-plan-convergence` |
-| `implement-feature` | 已有 sealed `plan.md` / `tasks.md`，workflow status/next 指向第一个未完成 task，工作区安全 | 没有 seal、seal hash 不一致、计划假设错误、验证模型不适用、scope 需要扩大或用户改动不明 |
+| `implement-feature` | 已有 sealed `plan.md` / `tasks.md`，workflow status/next 指向第一个未完成 task，工作区安全；bounded preflight 检查 current task、seal、scope、验证和权限后把 implementation status 设为 ready | 没有 seal、seal hash 不一致、计划假设错误、验证模型不适用、scope 需要扩大或用户改动不明；以具体证据 blocked，不无条件重开 full plan review |
 | `showhand` | `implement-feature` 的所有前提成立，且 showhand 条件全部满足 | 需要主观判断、高风险写入、外部副作用、source of truth 缺失或工作区不安全 |
 
 入口可以跳过已经满足的上游阶段，但不能跳过对应证据门：决策未完整不能物化 final bundle；需要仓库事实但未确认不能 seal；selected profile 没有 current bundle receipt 不能 seal；没有 sealed task 不能 implement。
 
 Direct/manual `finalize-plan` 保持兼容：用户显式确认当前计划已经收敛，且所有现有证据门都满足时，可以不提供外部 convergence receipt。
 
-Selected profile 的 acceptance artifact 是最终 `plan.md/tasks.md` bundle，不是其上游 proposal。Receipt qualification 固定为：`status: passed`、当前 bundle type/scheme/version/fingerprint 和同一 structured plan/tasks refs、`reviewer_capability` 与 handoff 的 provider binding 相同、`scope: full`、`independence: independent`、`reviewed_after_last_revision: true`、`open_blocker_high: 0`，且 judgment 为 `accept` 或 `accept_with_advisories`。Bundle fingerprint 使用固定 key 顺序、无空白的 UTF-8 JSON `{"plan.md":"<plan_hash>","tasks.md":"<task_hash>"}` 的 SHA-256；两个 file hash 也是 exact bytes 的小写 SHA-256。Finalize 不接受 proposal receipt 或普通 `handoff_ready` 代替严格回执，receipt 通过后也不得再改文件。
+Selected profile 的 acceptance artifact 是最终 `plan.md/tasks.md` bundle，不是其上游 proposal。Receipt qualification 固定为：`status: passed`、当前 bundle type/scheme/version/fingerprint 和同一 structured plan/tasks refs、`reviewer_capability` 与 handoff 的 provider binding 相同、`scope: full`、`independence: independent`、`reviewed_after_last_revision: true`、`open_blocker_high: 0`，且 judgment 为 `accept` 或 `accept_with_advisories`。Bundle fingerprint 使用固定 key 顺序、无空白的 UTF-8 JSON `{"plan.md":"<plan_hash>","tasks.md":"<task_hash>"}` 的 SHA-256；两个 file hash 也是 exact bytes 的小写 SHA-256。Receipt 证明文档 bundle acceptance，不替代 implementation preflight。Finalize 不接受 proposal receipt 或普通 `handoff_ready` 代替严格回执；current identity-matching receipt 必须复用，不得再次 full review，receipt 通过后也不得再改文件。
+
+Selected strict handoff 的预算固定为：一次 initial full review；若存在 blocker，把所有已接受 finding 合并成一次 atomic correction；然后只做一次 final full review。不得插入 scoped re-review，也不得把新意见自动变成第二轮 correction。
 
 ## 脚本命令
 
@@ -40,6 +42,7 @@ scripts/issue-workflow.sh bundle-fingerprint <issue-id>
 scripts/issue-workflow.sh seal <issue-id>
 scripts/issue-workflow.sh status <issue-id>
 scripts/issue-workflow.sh next <issue-id>
+scripts/issue-workflow.sh begin-implementation <issue-id>
 scripts/issue-workflow.sh notes-template <issue-id>
 scripts/issue-workflow.sh review-ready <issue-id>
 scripts/issue-workflow.sh complete <issue-id>
@@ -50,6 +53,7 @@ scripts/issue-workflow.sh complete <issue-id>
 ```sh
 scripts/issue-workflow.sh --root <workspace-root> status <issue-id>
 scripts/issue-workflow.sh --repo <repo-name> review-ready <issue-id>
+scripts/issue-workflow.sh --validation-timeout-seconds <1..3600> --validation-output-bytes <1..16777216> review-ready <issue-id>
 scripts/issue-workflow.sh --expected-bundle-scheme <scheme> --expected-bundle-fingerprint <fingerprint> seal <issue-id>
 ```
 
@@ -68,10 +72,12 @@ scripts/issue-workflow.sh --expected-bundle-scheme <scheme> --expected-bundle-fi
 ## implement-feature 阶段
 
 1. 运行 `status` 或 `next` 确认当前任务。
-2. 只实现第一个未完成 task。
-3. 运行 `review-ready` 执行 task 验证、shared check、必要时 final validation，并生成完整 review snapshot。
-4. 等用户 review 通过后运行 `complete`。
-5. `complete` 先确认 review 后 diff 边界、提交模式、提交模板和 staged 文件仍一致，再写中文证据文件、更新本地 `tasks.md`；tracked 模式会同步项目文档 `tasks.md`。之后根据 `workspace.commit` 自动提交或输出建议提交信息。`auto` 模式若提交中断，会保留本地 `complete-pending.json`，下次 `complete` 会优先恢复。
+2. 用户显式进入 `implement-feature` 就是当前 task 的代码写入授权；不再重复索权。路径和写入边界仍受当前 task 的 scope/约束限制。
+3. 在修改实现文件前运行 `begin-implementation`。脚本只在第一次调用时封存 repo HEAD、task-start Git baseline 和当前 task 的机器可读 `allowed-path` / `required-path`；重复调用不会重置这些证据。代码型 task 缺少任一类路径时失败关闭。
+4. 立即只实现第一个未完成 task。
+5. 运行 `review-ready`。脚本先冻结验证前实现证据，拒绝 HEAD 漂移、scope 外 delta、未命中 required target 或无代码 task 的 Git 可见 delta；再在默认 300 秒总超时和 1 MiB 总输出上限内执行 task 验证、shared check 与必要的 final validation。验证后 HEAD、index、Git 可见 workspace 必须与冻结状态完全一致。代码型 `step` / `loop-batch` 还必须至少有一次真实程序化验证成功；review-only marker 不能替代。
+6. 等用户 review 通过后运行 `complete`。
+7. `complete` 先确认 review 后 diff 边界、implementation-start evidence、提交模式、提交模板和 staged 文件仍一致，再写中文证据文件、更新本地 `tasks.md`；tracked 模式会同步项目文档 `tasks.md`。之后根据 `workspace.commit` 自动提交或输出建议提交信息。`auto` 模式若提交中断，会保留本地 `complete-pending.json`，下次 `complete` 会优先恢复。
 
 多仓 workspace 下，验证命令必须显式写 cwd，例如 `cd web-app && yarn lint`。workflow 不猜验证命令归属。
 
@@ -89,6 +95,7 @@ showhand 只能在下列条件全部成立时使用：
 - Impact Boundary 已完整。
 - 所有 source of truth 已明确。
 - 验证命令或 review-only 证据明确。
+- 每个代码型 task 已封存机器可读 `allowed-path` / `required-path`；无代码 task 不承担 Git 可见实现 delta。
 - 工作区安全。
 - 风险不需要用户在每个任务之间做主观判断。
 
@@ -106,4 +113,4 @@ showhand 只能在下列条件全部成立时使用：
 
 `complete` 是唯一允许把当前 task 从 `[ ]` 改为 `[x]` 的流程动作。完成后脚本会更新 seal。
 
-`review-ready` 后、`complete` 前不能新增 dirty 文件、改动已 review 文件、改变提交模式或切换 repo 边界。`manual` / `none` 模式下，新增、删除、重命名或移动 discovered repo 也会导致 `complete` 失败；发生任何一种变化都必须重新 `review-ready`。
+`review-ready` 后、`complete` 前不能改变 HEAD/index、新增 dirty 文件、改动已 review 文件、改变提交模式或切换 repo 边界。`manual` / `none` 模式下，新增、删除、重命名或移动 discovered repo 也会导致 `complete` 失败；发生任何一种变化都必须重新 `review-ready`。

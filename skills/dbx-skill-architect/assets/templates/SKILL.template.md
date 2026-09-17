@@ -71,4 +71,4 @@ skill_shape:
 
 ## Eval plan
 
-Maintain `evals/triggers.json` for trigger precision/recall and `evals/evals.json` for output behavior. Each eval case should include at least one non-marker quality assertion.
+Maintain `evals/triggers.json` for trigger precision/recall and schema-v8 `evals/evals.json` for output behavior. Each machine-scored case must include at least one required positive-evidence assertion with a non-structural quality. Absence-only checks do not prove behavior.

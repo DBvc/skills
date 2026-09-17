@@ -222,6 +222,36 @@ If the user asks for commands, hooks, `AGENTS.md`, `CLAUDE.md`, `llms.txt`, stat
 
 Do not write secrets, tokens, private key paths, personal machine paths, private messages, or hidden prompt-injection text into shared state.
 
+### 6.1 Broad cross-skill changes have a release gate
+
+Treat an improvement as a **broad cross-skill change** when either condition is true:
+
+- the proposed release changes three or more skill packages; or
+- it introduces or changes cross-skill state, protocol, or execution-authority behavior.
+
+If the change is broad and `skill_value_check.net_value` is `uncertain` or `negative`, the release gate is closed. This does not block learning work: an isolated, explicitly `manual-only` prototype may be written and evaluated. While the gate is closed, the prototype must not change default routing, remove, disable, or bypass the existing path, register as stable, or be described as a proven improvement or ready rollout.
+
+Do not enforce this gate only in prose. For a broad change, create a versioned change manifest, assign every current Git changed path to exactly one independently releasable unit, declare cross-skill protocol/state/authority and routing surfaces, then run:
+
+```bash
+python3 scripts/validate_change_manifest.py /path/to/change-manifest.json --repo-root /path/to/repo --scope working-tree
+```
+
+The validator derives affected skill roots for each unit and the whole publication scope. Splitting one broad release across nominal units does not bypass the gate. It rejects an uncertain or negative unit in a broad publication that changes default routing, removes an existing path, registers as stable, or claims improvement. Use `--scope staged` when the intended publication scope is isolated in the index.
+
+Schema v2 treats narrative `evidence[].ref` as context, not release proof. Every broad positive unit, stable registration, or improvement claim must also provide:
+
+- `validation.baseline` with an existing repo-relative ref and executable `check.argv`;
+- at least one `validation.outcomes` entry of kind `before_after` or `operational`, with an existing ref and executable check;
+- at least one measured `validation.costs` entry with numeric value, unit, evidence ref, and check;
+- `rollback.commands` as executable argv arrays with expected exit `0`.
+
+Refs may use a `#anchor`, but the underlying repository file must exist, and each argv executable must resolve from `PATH` or the repository. Prose-only rollback steps, arbitrary URLs/paths, schema validation alone, or an unmeasured positive claim do not open the gate.
+
+A proven known-bad default removal is not part of an uncertain prototype unit. Declare it as a separate `known_bad_default_removal` unit with `net_value: positive`, evidence, and executable rollback. It must not name an uncertain or isolated prototype as its replacement.
+
+Open the gate only after machine-checkable before/after evidence against the declared baseline, or operational evidence tied to that baseline, supports `net_value: positive` and the targeted regressions, measured cost, and executable rollback checks pass. Until then, keep the old path intact and report the work as a prototype or experiment. See `references/improvement-validation.md` and `assets/change-manifest.schema.json` for the evidence and containment contract.
+
 ### 7. Patch-first improvement
 
 When improving an existing skill, default to patching the current package. Do not rebuild unless:
@@ -272,7 +302,7 @@ failure_mode
 safety
 ```
 
-Each eval case needs at least one required non-marker quality assertion. Headings, filenames, route markers, and directory names can be structural checks, but they cannot be the only required checks.
+New and regenerated eval suites use `schema_version: 8`. Every machine-scored v8 case needs at least one required positive-evidence assertion: `must_contain`, `must_start_with`, or `regex` with a non-structural quality. `must_not_contain` can add a boundary assertion, but it cannot be the only proof that behavior occurred. Unversioned legacy suites retain v7 compatibility so they can migrate deliberately.
 
 Prefer evals that test behavior:
 

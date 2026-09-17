@@ -26,7 +26,14 @@ from typing import Any
 sys.dont_write_bytecode = True
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
-from eval_schema import CHECK_BUCKETS, load_json, validate_eval_file  # noqa: E402
+from eval_schema import (  # noqa: E402
+    CHECK_BUCKETS,
+    LEGACY_SCHEMA_VERSION,
+    POSITIVE_CHECK_TYPES,
+    STRONG_QUALITIES,
+    load_json,
+    validate_eval_file,
+)
 
 OUTPUT_SUFFIXES = (".md", ".txt", ".out")
 
@@ -62,7 +69,67 @@ def run_check(text: str, check: dict[str, Any]) -> tuple[bool, str]:
     return False, f"unsupported check type {check_type!r}"
 
 
-def score_case(case: dict[str, Any], text: str) -> dict[str, Any]:
+def has_required_positive_evidence(case: dict[str, Any]) -> bool:
+    for bucket in CHECK_BUCKETS:
+        for check in case.get("checks", {}).get(bucket, []):
+            if (
+                check.get("required") is True
+                and check.get("type") in POSITIVE_CHECK_TYPES
+                and check.get("quality", "structural") in STRONG_QUALITIES
+            ):
+                return True
+    return False
+
+
+def score_case(case: dict[str, Any], text: str, schema_version: int = LEGACY_SCHEMA_VERSION) -> dict[str, Any]:
+    # A saved output is evidence that the evaluated agent produced a response.
+    # Negative cases made only of must_not checks still remain valid, but an
+    # absent response must never satisfy them vacuously.
+    if not text.lstrip("\ufeff").strip():
+        return {
+            "id": case.get("id"),
+            "kind": case.get("kind"),
+            "score": 0.0,
+            "passed_required": False,
+            "passed": False,
+            "details": [
+                {
+                    "bucket": "output",
+                    "index": -1,
+                    "type": "non_empty_output",
+                    "value": "captured output must contain a response",
+                    "quality": "validation",
+                    "required": True,
+                    "passed": False,
+                    "evidence": "captured output is empty or whitespace-only",
+                }
+            ],
+        }
+
+    # Schema validation normally catches this before scoring. Keep the runner
+    # fail-closed as well so direct library callers cannot make arbitrary text
+    # pass a v8 case whose only claim is that forbidden words are absent.
+    if schema_version >= 8 and not has_required_positive_evidence(case):
+        return {
+            "id": case.get("id"),
+            "kind": case.get("kind"),
+            "score": 0.0,
+            "passed_required": False,
+            "passed": False,
+            "details": [
+                {
+                    "bucket": "output",
+                    "index": -1,
+                    "type": "positive_evidence_required",
+                    "value": "schema v8 case must assert required positive behavior or evidence",
+                    "quality": "validation",
+                    "required": True,
+                    "passed": False,
+                    "evidence": "case has only absence or structural assertions",
+                }
+            ],
+        }
+
     required_results: list[bool] = []
     all_results: list[bool] = []
     details: list[dict[str, Any]] = []
@@ -120,7 +187,8 @@ def score_single_case(data: dict[str, Any], case_id: str, output_path: Path) -> 
             "results": [],
         }
     text = output_path.read_text(encoding="utf-8")
-    scored = score_case(case, text)
+    schema_version = data.get("schema_version", LEGACY_SCHEMA_VERSION)
+    scored = score_case(case, text, schema_version)
     scored["output_path"] = str(output_path)
     return {
         "ok": bool(scored.get("passed")),
@@ -155,7 +223,8 @@ def score_outputs_dir(data: dict[str, Any], outputs_dir: Path, only_case_id: str
             case_results.append({"id": case_id, "passed": False, "score": 0.0, "missing_output": True})
             continue
         text = output_path.read_text(encoding="utf-8")
-        scored = score_case(case, text)
+        schema_version = data.get("schema_version", LEGACY_SCHEMA_VERSION)
+        scored = score_case(case, text, schema_version)
         scored["output_path"] = str(output_path)
         case_results.append(scored)
 

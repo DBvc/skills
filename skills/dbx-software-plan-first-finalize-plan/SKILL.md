@@ -23,6 +23,7 @@ description: Manual trigger only. Use only when the user explicitly names `dbx-s
 - 只能在 Goal、Scope、Approach、Validation、Plan Strategy、Impact Profile、Impact Boundary 已完整时使用。
 - 如果需要仓库事实但尚未 grounding，先交给 `dbx-software-plan-first-ground-plan`。
 - 如果当前调用来自已选择 DBX implementation-bound planning profile 的父 workflow，`plan.md` 与 `tasks.md` 的精确文件 bundle 是最终 acceptance artifact：现有决策与 grounding 门满足后可以先物化文件，但只有 current `ready-for-handoff` 与 qualifying `strict_acceptance_receipt` 都绑定该 bundle identity 时才可 seal。
+- Selected strict handoff 只允许一次 initial full review；若有 blocker，把所有已接受 finding 合并成一次 atomic correction；随后只做一次 final full review。不得插入 scoped re-review，也不得自动开启第二轮 correction。
 - 如果用户直接显式调用本 skill，且明确确认当前计划已经收敛，现有 Mandatory Decision Gate、grounding、ownership、validation 和 artifact boundary 全部满足，则不强制制造新的 convergence run。
 - 如果计划会新增、移动或固定 source/config/test/doc 产物，产物归属必须已经由项目事实或用户确认支持；归属未定时不要 seal，先返回 grounding 或澄清。
 - 写入中文 `plan.md` 和 `tasks.md`。
@@ -49,7 +50,7 @@ scripts/issue-workflow.sh init <issue-id>
 ```
 
 3. 用中文填写 `plan.md` 和 `tasks.md`。
-4. 确认 `tasks.md` 每个任务包含：`验收:`、`验证:`，以及必要的 `使用检查:`、`依赖:`、`约束:`。会新增或迁移产物的任务，必须在 `约束:` 中写明产物归属、依据和禁止误放的边界。
+4. 确认 `tasks.md` 每个任务包含：`验收:`、`验证:`，以及必要的 `使用检查:`、`依赖:`、`约束:`。每个代码型 `step` / `loop-batch` 必须用可重复的 `约束: allowed-path=<workspace 相对路径>` 和 `约束: required-path=<workspace 相对路径>` 封存允许范围与必达目标；会新增或迁移产物的任务还必须写明产物归属、依据和禁止误放的边界。`gate` / `promote` / `documentation-only` 不得承担项目文件 delta。
 5. 运行 `scripts/issue-workflow.sh bundle-fingerprint <issue-id>`，以只读方式取得 `scheme: plan-first-bundle-sha256-v1`、两个 exact file hash 和 bundle fingerprint。Bundle version 固定为 `plan-first-<issue-id>-bundle-<fingerprint 前 12 位 hex>`。
 6. 对 selected profile 校验 `completion_profile: strict_acceptance`、`ready-for-handoff` 和 receipt 是否绑定第 5 步的同一 bundle type/scheme/version/fingerprint 及同一 plan/tasks refs，且 receipt 为 `passed`、`reviewer_capability` 与 handoff 的 provider binding 相同、`scope: full`、`independence: independent`、`reviewed_after_last_revision: true`、`open_blocker_high: 0`、judgment 为 `accept` 或 `accept_with_advisories`。没有 qualifying receipt 时保持文件未 seal，输出下列**完整 delegated activation envelope**给 external `dbx-plan-convergence`；parent 必须转发该 envelope，不能把旧 proposal artifact identity 合并回来。
 
@@ -90,9 +91,9 @@ plan_bundle_handoff:
       id: ""
   budget:
     initial_full_review_passes: 1
-    local_revision_rounds: 2
-    scoped_re_review_passes: 2
-    final_acceptance_full_review_passes: 2
+    local_revision_rounds: 1
+    scoped_re_review_passes: 0
+    final_acceptance_full_review_passes: 1
   modification_authority: plan_text_only
   may_modify_code: false
 ```

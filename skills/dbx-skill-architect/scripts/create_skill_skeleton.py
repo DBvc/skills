@@ -69,6 +69,7 @@ A good output is specific to the user's actual input, avoids generic filler, and
 
 def evals_json(name: str) -> str:
     data = {
+        "schema_version": 8,
         "skill_name": name,
         "pass_threshold": 0.85,
         "evals": [

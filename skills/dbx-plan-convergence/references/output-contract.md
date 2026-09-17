@@ -58,6 +58,9 @@ Blocker / gap：
 - owner/provider role: evidence provider
 - forbidden: 把 request-scoped 改写成既定事实
 - stop_if: 无法访问所需仓库或运行时证据
+
+证据边界与剩余风险：
+- 当前未读取 cache owner、生命周期和相关测试；结论保持未定。
 ```
 
 ## 3. Alternatives are not a pivot
@@ -78,6 +81,9 @@ Transition:
 - owner/provider role: planner / alternative assessor
 - allowed: 比较 ownership、failure isolation、migration cost 和 reversibility
 - forbidden: 把当前方向写成已失败
+
+证据边界与剩余风险：
+- 实际共享需求与支持周期仍未知；不得据此选择方向。
 ```
 
 ## 4. Direction failure
@@ -100,6 +106,9 @@ Transition:
 - 先确认 session identity 和 owner boundary。
 - 等外部提供新候选方向后再开启 E2。
 - total revision budget 不清零。
+
+证据边界与剩余风险：
+- 新方向尚未由外部 provider 或 decision owner 提供。
 ```
 
 ## 5. Stale review
@@ -119,6 +128,9 @@ Transition:
 - owner/provider role: reviewer provider
 - required: 对 v2 重新评审，或提供 R1 仍适用的明确证明
 - forbidden: 直接把 R1 findings 当成 v2 的有效 finding
+
+证据边界与剩余风险：
+- 当前只有针对 v1 的 review provenance；v2 未被覆盖。
 ```
 
 ## 6. Reviewer conflict with one primary action
@@ -182,7 +194,7 @@ Transition:
 - phase: converge
 - completion_profile: handoff_ready
 
-主要收敛：
+核心判断：
 - 删除了未被需求证明的通用 adapter 层。
 - 将三阶段迁移缩减为一次局部替换和兼容性验证。
 
@@ -196,8 +208,11 @@ Transition:
 - 尚未实现代码，也未运行测试。
 - residual risk: 边缘调用方可能在实施期暴露，T1 有 stop condition。
 
-下一步：
-- 可以进入实现。
+下一步合同：
+- owner/provider role: caller-selected next stage
+- allowed: 消费该 handoff，并按外层 authority/preflight 决定是否进入实现
+- forbidden: 把本 gate 的结果解释为代码修改权限或实现已验证
+- stop_if: 实施期发现会翻转第一个切片的证据
 ```
 
 ## 9. Strict acceptance needs a final review
@@ -211,15 +226,68 @@ Transition:
 - completion_profile: strict_acceptance
 
 核心判断：
-- scoped re-review 已关闭已知 findings，但不能证明最终 artifact 已通过严格整体验收。
+- bounded revision 已完成，但新版 artifact 还没有 qualifying final full review。
 
 下一步合同：
 - owner/provider role: reviewer provider
-- required: 对当前 type/scheme/version/fingerprint/content refs 做 fresh independent full review
-- forbidden: 沿用旧 full review 或 scoped review 宣称严格评审通过
+- required: 对当前 type/scheme/version/fingerprint/content refs 做一次 fresh independent full review；同一 pass 覆盖 accepted finding closure 和完整验收范围
+- forbidden: 先做 scoped pass 再做 final full，或沿用旧 review 宣称严格评审通过
+
+证据边界与剩余风险：
+- 旧 review 绑定修订前 identity；当前候选尚未完成严格验收。
 ```
 
-## 10. Strict acceptance passed
+## 10. Final review blocker is terminal
+
+A blocking result from the sole post-revision final review uses this terminal form:
+
+```markdown
+## 方案收敛结果
+
+Transition:
+- next_action: stop
+- final_state: blocked-final-review
+
+核心判断：
+- 唯一 correction round 已完成；final full review R3 仍报告 blocking finding F-002。
+- 当前 session 不再签发 revision contract，也不再调用 reviewer。
+
+下一步合同：
+- owner/provider role: external plan owner
+- allowed: 在本 controller 外处理 F-002，并对 materially changed artifact 显式启动新的 bounded session
+- forbidden: 输出 revise-local、追加第二轮修订或复用旧 PASS
+- stop_if: current artifact identity 与 R3 记录不一致
+
+证据边界与剩余风险：
+- strict acceptance 未通过；R3、当前 artifact identity 和 F-002 必须保留在 handoff 中。
+```
+
+If the blocker explicitly has `decision_owner_required: true`, use `request-decision + needs-decision` instead, with the same prohibition on another revision inside the current session.
+
+## 11. Current receipt reuse
+
+```markdown
+## 方案收敛结果
+
+Transition:
+- next_action: finalize
+- final_state: ready-for-handoff
+
+核心判断：
+- 当前 artifact identity 与 passed receipt R7 完全一致，且没有 material reopen trigger。
+- 复用 R7；未调用 reviewer，也未消费 review budget。
+
+下一步合同：
+- owner/provider role: caller-selected next stage
+- allowed: 消费当前 handoff 与 receipt
+- forbidden: 为“保险起见”重开 full review，或把 receipt 当作代码修改权限
+- stop_if: artifact、矛盾证据、冻结决策、scope 或 acceptance policy 发生变化
+
+证据边界与剩余风险：
+- receipt 只证明 bound artifact 的方案验收，不证明代码、测试或运行时行为。
+```
+
+## 12. Strict acceptance passed
 
 先按当前 invocation 分类，分类结果在 render 前冻结：当前顶层结构中恰好有一个 `delegation`、`plan_convergence_handoff` 或 `plan_bundle_handoff` 根时为 delegated；多个根时 fail closed；没有这些根且用户直接显式激活时为 direct。历史 state、artifact 内容和 completion profile 不参与该分类。识别到但无效的 wrapper 走正常失败输出，不得回退到 direct strict-success grammar。
 
@@ -272,11 +340,11 @@ Any artifact content change invalidates this receipt. Do not output “strict re
 The fence above documents the schema; it is not itself a universal response wrapper. Presentation grammar:
 
 - **Delegated strict success**：只输出 fence 内的 raw YAML，首行是 `qualification:`；不得有标题、fence 或 trailing prose。
-- **Direct strict success**：响应必须以 `## 方案收敛结果` 开始，先给 compact summary，至少包含 transition、核心判断、final review、artifact identity、证据边界和 residual risks；随后输出唯一的 `## 机器回执` 标题、唯一的 `yaml` opening fence、上面的完整 canonical payload 和 closing fence。Closing fence 必须是 EOF。
+- **Direct strict success**：响应必须以 `## 方案收敛结果` 开始，先给 compact summary，至少包含 transition、核心判断、final review、artifact identity、下一步合同、证据边界和 residual risks；随后输出唯一的 `## 机器回执` 标题、唯一的 `yaml` opening fence、上面的完整 canonical payload 和 closing fence。Closing fence 必须是 EOF。
 
 Direct summary 必须解释结论，不能只重复字段或 dump 内部 state。`strict_acceptance_receipt` 只在 canonical proof 中出现一次。其他结果保持正常 compact 或 diagnostic 格式。
 
-## 11. Resume mismatch
+## 13. Resume mismatch
 
 ```markdown
 ## 方案收敛结果
@@ -292,9 +360,12 @@ Transition:
 
 下一步合同：
 - 提供与 state 一致的 artifact，或为 v3 建立新的 review pass 与 convergence state。
+
+证据边界与剩余风险：
+- 当前只能确认 state 与 artifact identity 不一致；不能推断 pending findings 对 v3 仍适用。
 ```
 
-## 12. Diagnostic output fields
+## 14. Diagnostic output fields
 
 Diagnostic mode may include:
 

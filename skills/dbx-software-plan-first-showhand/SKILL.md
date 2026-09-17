@@ -43,6 +43,7 @@ description: Manual trigger only. Use only when the user explicitly names `dbx-s
 - 验证命令或 review-only 证据明确。
 - 工作区安全，没有不明用户改动。
 - 每个 task 的完成条件可程序化或明确 review-only。
+- 每个代码型 task 已声明机器可读 `allowed-path` / `required-path`；无代码 task 不产生 Git 可见实现 delta。
 - 不涉及用户主观判断、设计方向未定、contract 未定、生产数据、destructive/formal write 或外部系统危险副作用。
 
 ## 自动执行流程
@@ -53,6 +54,7 @@ description: Manual trigger only. Use only when the user explicitly names `dbx-s
 
 ```sh
 scripts/issue-workflow.sh next <issue-id>
+scripts/issue-workflow.sh begin-implementation <issue-id>
 # 实现当前 task
 scripts/issue-workflow.sh review-ready <issue-id>
 scripts/issue-workflow.sh complete <issue-id>

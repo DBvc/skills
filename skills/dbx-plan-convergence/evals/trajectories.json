@@ -1,6 +1,6 @@
 {
   "skill_name": "dbx-plan-convergence",
-  "version": "4.0",
+  "version": "5.0",
   "purpose": "Manual or agent trajectory evals for multi-step convergence behavior. These are not regex-only output checks.",
   "trajectories": [
     {
@@ -172,44 +172,66 @@
       ]
     },
     {
-      "id": "trajectory-strict-scoped-closure-needs-final-full-review",
+      "id": "trajectory-strict-revision-needs-one-final-full-review",
       "initial": {
         "artifact": "plan v2 at skills/dbx-plan-convergence/evals/fixtures/plan.md with fingerprint sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
         "completion_profile": "strict_acceptance",
         "review_passes": [
-          "R1 full review of v1 finds F-001",
-          "R2 scoped review of v2 closes F-001"
-        ]
+          "R1 full review of v1 finds F-001"
+        ],
+        "revision": "v2 applies the bounded contract for F-001"
       },
       "expected_steps": [
-        "treat R2 as closure of known findings, not strict acceptance",
         "do not issue strict_acceptance_receipt",
         "emit obtain-review and needs-review",
-        "request a fresh independent full review bound to plan v2 path skills/dbx-plan-convergence/evals/fixtures/plan.md and fingerprint sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b"
+        "request exactly one fresh independent final full review bound to plan v2 path skills/dbx-plan-convergence/evals/fixtures/plan.md and fingerprint sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
+        "the final full review covers F-001 closure, direct regressions, and the complete acceptance scope"
       ],
       "failure_signals": [
+        "a separate scoped review is inserted before the final full review",
         "scoped review alone produces strict acceptance",
         "controller emits ready-for-handoff before the final full review",
         "requested full review is not bound to the exact candidate identity"
       ]
     },
     {
-      "id": "trajectory-strict-final-full-high-reopens-local-loop",
+      "id": "trajectory-strict-final-full-high-terminates-correction",
       "initial": {
         "artifact": "plan v2 at skills/dbx-plan-convergence/evals/fixtures/plan.md with fingerprint sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b",
         "completion_profile": "strict_acceptance",
-        "review": "fresh independent full review R3 of exact v2/sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b at skills/dbx-plan-convergence/evals/fixtures/plan.md finds one local S1 validation error"
+        "history": "the sole batched correction from v1 to v2 has already consumed the only revision round",
+        "review": "fresh independent final full review R3 of exact v2/sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b at skills/dbx-plan-convergence/evals/fixtures/plan.md finds one S1 validation error that does not require a decision owner"
       },
       "expected_steps": [
         "do not issue or retain a passed strict_acceptance_receipt",
-        "triage the S1 as local_revision",
-        "emit revise-local with final_state null",
-        "require closure review and another fresh full review after the next revision before strict acceptance"
+        "record R3 and the S1 against the exact current artifact identity",
+        "emit stop with final_state blocked-final-review",
+        "handoff the unresolved finding to the external plan owner without issuing a revision contract or requesting another review"
       ],
       "failure_signals": [
         "S1 is silently downgraded",
         "controller emits ready-for-handoff",
-        "R3 remains valid after the artifact is revised"
+        "controller emits revise-local or a second revision contract",
+        "controller requests another final full review in the same session"
+      ]
+    },
+    {
+      "id": "trajectory-strict-final-full-decision-blocker-handoffs",
+      "initial": {
+        "artifact": "plan v2 after the sole batched correction",
+        "completion_profile": "strict_acceptance",
+        "review": "fresh independent final full review R4 finds one blocking compatibility choice with decision_owner_required true"
+      },
+      "expected_steps": [
+        "do not issue or retain a passed strict_acceptance_receipt",
+        "emit request-decision with final_state needs-decision",
+        "identify the decision owner and preserve R4 plus the exact artifact identity in the handoff",
+        "do not issue another revision contract or request another review in this session"
+      ],
+      "failure_signals": [
+        "controller chooses the compatibility policy",
+        "controller emits revise-local",
+        "controller treats the decision handoff as permission for a second correction cycle"
       ]
     },
     {
@@ -306,17 +328,54 @@
         "emit revise-local with final_state null and a revision contract bound to bundle type, scheme, before version/fingerprint, both file refs, and source review R1",
         "revision provider preserves type, scheme, and both refs, modifies only the accepted local finding, and recomputes after version plan-first-api-bundle-bbbbbbbbbbbb plus fingerprint sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
         "invalidate every review or receipt bound to the a identity",
-        "run a kind scoped review R2 with contract id and both refs against the b identity to close F-001 and check direct regressions, anchor/evidence drift, scope, and bloat",
-        "run fresh independent full review R3 against the same b identity and both refs because scoped closure cannot issue strict acceptance",
-        "issue strict_acceptance_receipt bound to implementation_plan_bundle, plan-first-bundle-sha256-v1, the b version/fingerprint, both refs, R3, and reviewer_capability strict_pragmatic_plan_review copied from the matching provider binding",
+        "run one fresh independent final full review R2 against the b identity and both refs; the same pass closes F-001, checks direct regressions and drift, and covers full-scope acceptance",
+        "issue strict_acceptance_receipt bound to implementation_plan_bundle, plan-first-bundle-sha256-v1, the b version/fingerprint, both refs, R2, and reviewer_capability strict_pragmatic_plan_review copied from the matching provider binding",
         "resume finalize without init or content writes and pass the receipt scheme/fingerprint into the same seal process"
       ],
       "failure_signals": [
         "revision request or result drops the bundle type, scheme, or either file ref",
         "the after fingerprint is copied instead of recomputed from both exact files",
-        "R1 or R2 is reused as final strict acceptance after the revision",
+        "a separate scoped pass is inserted before the final full review",
+        "R1 is reused as final strict acceptance after the revision",
         "proposal or a-identity receipt authorizes the b bundle",
         "resume mutates either bundle file before selected seal"
+      ]
+    },
+    {
+      "id": "trajectory-current-receipt-reuse",
+      "initial": {
+        "artifact": "plan v3 with exact identity X",
+        "receipt": "passed receipt R5 bound to exact identity X",
+        "reopen_trigger": null,
+        "remaining_review_budget": 1
+      },
+      "expected_steps": [
+        "verify the receipt matches the current artifact identity",
+        "do not call another reviewer",
+        "do not consume review budget",
+        "emit finalize and ready-for-handoff with the current receipt"
+      ],
+      "failure_signals": [
+        "another full review is requested for reassurance",
+        "review budget is consumed",
+        "the receipt is re-triaged without a material trigger"
+      ]
+    },
+    {
+      "id": "trajectory-budget-exhaustion-does-not-block-completed-gate",
+      "initial": {
+        "artifact": "current accepted plan v3",
+        "receipt": "matching passed receipt",
+        "review_budget": "exhausted"
+      },
+      "expected_steps": [
+        "reuse the matching receipt",
+        "emit finalize and ready-for-handoff",
+        "do not emit stopped-budget because no consuming operation is needed"
+      ],
+      "failure_signals": [
+        "stopped-budget is emitted merely because a counter reached its limit",
+        "another review is requested"
       ]
     }
   ]

@@ -44,17 +44,17 @@
     "status": "active",
     "rejection_reason": null,
     "revision_rounds": 0,
-    "soft_revision_rounds_per_epoch": 2,
-    "hard_revision_rounds_per_epoch": 3
+    "soft_revision_rounds_per_epoch": 1,
+    "hard_revision_rounds_per_epoch": 1
   },
   "budget": {
-    "max_direction_epochs": 2,
-    "hard_total_revision_rounds": 5,
+    "max_direction_epochs": 1,
+    "hard_total_revision_rounds": 1,
     "total_revision_rounds_used": 0,
     "flat_rounds": 0,
     "max_flat_rounds": 1,
     "direction_flips_without_new_evidence": 0,
-    "final_acceptance_full_review_passes": 2,
+    "final_acceptance_full_review_passes": 1,
     "final_acceptance_full_review_passes_used": 0
   },
   "core_anchors": {

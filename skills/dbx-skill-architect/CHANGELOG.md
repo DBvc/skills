@@ -1,5 +1,13 @@
 # Changelog
 
+## v8 positive evidence and publication gate
+
+- Requires every schema-v8 machine-scored case to include a required positive-evidence assertion; unversioned v7 suites remain compatible.
+- Makes the saved-output runner fail closed when a v8 case contains only absence or structural assertions.
+- Adds a declarative broad-change manifest, JSON schema, example, deterministic Git-delta validator, and regression tests.
+- Requires a proven known-bad default removal to be a separate positive unit with evidence and rollback, never an uncertain prototype rollout.
+- Upgrades the manifest to schema v2: broad positive claims need an existing machine-checkable baseline, before/after or operational proof, numeric cost evidence, and executable rollback argv.
+
 ## ASCT 0.3 runtime alignment
 
 - Normalizes `SKILL.md`, README, scripts, and eval artifacts into readable multi-line files.

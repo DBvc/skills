@@ -1,0 +1,130 @@
+{
+  "schema_version": 2,
+  "change_units": [
+    {
+      "id": "manual-workflow-prototype",
+      "kind": "prototype",
+      "net_value": "uncertain",
+      "path_patterns": [
+        "skills/example-manual-workflow/**",
+        "skills/example-plan-provider/**",
+        "skills/example-review-provider/**"
+      ],
+      "surfaces": {
+        "cross_skill_protocol": [
+          "skills/example-manual-workflow/SKILL.md"
+        ],
+        "cross_skill_state": [
+          "skills/example-manual-workflow/scripts/workflow.py"
+        ],
+        "execution_authority": [
+          "skills/example-manual-workflow/scripts/workflow.py"
+        ],
+        "routing": [
+          "skills/example-manual-workflow/agents/openai.yaml"
+        ]
+      },
+      "release": {
+        "mode": "isolated_manual_prototype",
+        "changes_default_routing": false,
+        "removes_existing_path": false,
+        "registers_stable": false,
+        "claims_improvement": false,
+        "manual_entry_point": "Explicitly invoke the prototype by its skill name.",
+        "removal_without_migration": "Delete the prototype package; no default path or persistent state points to it.",
+        "replacement_unit_id": null
+      },
+      "evidence": [],
+      "validation": null,
+      "rollback": {
+        "trigger": "The prototype adds cost without improving the targeted task outcomes.",
+        "steps": [
+          "Remove the isolated prototype package."
+        ]
+      }
+    },
+    {
+      "id": "remove-known-bad-default",
+      "kind": "known_bad_default_removal",
+      "net_value": "positive",
+      "path_patterns": [
+        "docs/skill-routing.md",
+        "skills/example-existing-route/**"
+      ],
+      "surfaces": {
+        "cross_skill_protocol": [],
+        "cross_skill_state": [],
+        "execution_authority": [],
+        "routing": [
+          "docs/skill-routing.md",
+          "skills/example-existing-route/agents/openai.yaml"
+        ]
+      },
+      "release": {
+        "mode": "candidate",
+        "changes_default_routing": true,
+        "removes_existing_path": true,
+        "registers_stable": false,
+        "claims_improvement": true,
+        "manual_entry_point": null,
+        "removal_without_migration": null,
+        "replacement_unit_id": null
+      },
+      "evidence": [
+        {
+          "kind": "user_session",
+          "ref": "evidence/session-analysis.md",
+          "summary": "Repeated sessions show that this default path blocks the first implementation slice."
+        }
+      ],
+      "validation": {
+        "baseline": {
+          "ref": "tests/test_routing.py#old-default-reproduction",
+          "summary": "The baseline case reproduces the known-bad automatic route.",
+          "check": {
+            "argv": ["python3", "tests/test_routing.py", "OldDefaultRouteTests.test_reproduction"],
+            "expected_exit": 0
+          }
+        },
+        "outcomes": [
+          {
+            "kind": "before_after",
+            "ref": "tests/test_routing.py#candidate-route",
+            "summary": "The same request now ends at the intended route while adjacent defaults still pass.",
+            "baseline_ref": "tests/test_routing.py#old-default-reproduction",
+            "candidate_ref": "tests/test_routing.py#candidate-route",
+            "check": {
+              "argv": ["python3", "tests/test_routing.py", "CandidateRouteTests.test_target_and_regressions"],
+              "expected_exit": 0
+            }
+          }
+        ],
+        "costs": [
+          {
+            "metric": "routing regression runtime",
+            "value": 0.4,
+            "unit": "seconds",
+            "ref": "tests/test_routing.py#runtime-measurement",
+            "check": {
+              "argv": ["python3", "tests/test_routing.py", "CandidateRouteTests.test_runtime_budget"],
+              "expected_exit": 0
+            }
+          }
+        ]
+      },
+      "rollback": {
+        "trigger": "A regression case shows the removed route was required for an existing default task.",
+        "steps": [
+          "Restore the previous routing entry from version control.",
+          "Run the recorded regression cases before trying another change."
+        ],
+        "commands": [
+          {
+            "argv": ["git", "restore", "--source=HEAD", "--", "docs/skill-routing.md", "skills/example-existing-route"],
+            "expected_exit": 0
+          }
+        ]
+      }
+    }
+  ]
+}

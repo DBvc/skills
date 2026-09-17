@@ -1,0 +1,245 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/dbx-skill-change-manifest.schema.json",
+  "title": "DBX skill broad-change publication manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "change_units"],
+  "properties": {
+    "schema_version": {"const": 2},
+    "change_units": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/change_unit"}
+    }
+  },
+  "$defs": {
+    "path_list": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "repo_ref": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z][A-Za-z0-9+.-]*:)(?!.*(?:^|/)\\.\\.(?:/|#|$))[^\\\\]+$"
+    },
+    "check_command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv", "expected_exit"],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "expected_exit": {"type": "integer", "minimum": 0, "maximum": 255}
+      }
+    },
+    "release_validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline", "outcomes", "costs"],
+      "properties": {
+        "baseline": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ref", "summary", "check"],
+          "properties": {
+            "ref": {"$ref": "#/$defs/repo_ref"},
+            "summary": {"type": "string", "minLength": 1},
+            "check": {"$ref": "#/$defs/check_command"}
+          }
+        },
+        "outcomes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "ref", "summary", "baseline_ref", "candidate_ref", "check"],
+            "properties": {
+              "kind": {"enum": ["before_after", "operational"]},
+              "ref": {"$ref": "#/$defs/repo_ref"},
+              "summary": {"type": "string", "minLength": 1},
+              "baseline_ref": {"anyOf": [{"$ref": "#/$defs/repo_ref"}, {"type": "null"}]},
+              "candidate_ref": {"anyOf": [{"$ref": "#/$defs/repo_ref"}, {"type": "null"}]},
+              "check": {"$ref": "#/$defs/check_command"}
+            },
+            "allOf": [
+              {
+                "if": {"properties": {"kind": {"const": "before_after"}}, "required": ["kind"]},
+                "then": {
+                  "properties": {
+                    "baseline_ref": {"$ref": "#/$defs/repo_ref"},
+                    "candidate_ref": {"$ref": "#/$defs/repo_ref"}
+                  }
+                }
+              },
+              {
+                "if": {"properties": {"kind": {"const": "operational"}}, "required": ["kind"]},
+                "then": {
+                  "properties": {
+                    "baseline_ref": {"type": "null"},
+                    "candidate_ref": {"type": "null"}
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "costs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["metric", "value", "unit", "ref", "check"],
+            "properties": {
+              "metric": {"type": "string", "minLength": 1},
+              "value": {"type": "number", "minimum": 0},
+              "unit": {"type": "string", "minLength": 1},
+              "ref": {"$ref": "#/$defs/repo_ref"},
+              "check": {"$ref": "#/$defs/check_command"}
+            }
+          }
+        }
+      }
+    },
+    "change_unit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "net_value",
+        "path_patterns",
+        "surfaces",
+        "release",
+        "evidence",
+        "rollback"
+      ],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {
+          "enum": ["prototype", "known_bad_default_removal", "standard_change"]
+        },
+        "net_value": {"enum": ["positive", "uncertain", "negative"]},
+        "path_patterns": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "surfaces": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cross_skill_protocol",
+            "cross_skill_state",
+            "execution_authority",
+            "routing"
+          ],
+          "properties": {
+            "cross_skill_protocol": {"$ref": "#/$defs/path_list"},
+            "cross_skill_state": {"$ref": "#/$defs/path_list"},
+            "execution_authority": {"$ref": "#/$defs/path_list"},
+            "routing": {"$ref": "#/$defs/path_list"}
+          }
+        },
+        "release": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "changes_default_routing",
+            "removes_existing_path",
+            "registers_stable",
+            "claims_improvement",
+            "manual_entry_point",
+            "removal_without_migration",
+            "replacement_unit_id"
+          ],
+          "properties": {
+            "mode": {"enum": ["isolated_manual_prototype", "candidate", "stable"]},
+            "changes_default_routing": {"type": "boolean"},
+            "removes_existing_path": {"type": "boolean"},
+            "registers_stable": {"type": "boolean"},
+            "claims_improvement": {"type": "boolean"},
+            "manual_entry_point": {"type": ["string", "null"]},
+            "removal_without_migration": {"type": ["string", "null"]},
+            "replacement_unit_id": {"type": ["string", "null"]}
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "ref", "summary"],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "before_after",
+                  "regression",
+                  "production_incident",
+                  "user_session",
+                  "benchmark",
+                  "other"
+                ]
+              },
+              "ref": {"type": "string", "minLength": 1},
+              "summary": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "validation": {
+          "anyOf": [
+            {"$ref": "#/$defs/release_validation"},
+            {"type": "null"}
+          ]
+        },
+        "rollback": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["trigger", "steps"],
+          "properties": {
+            "trigger": {"type": "string", "minLength": 1},
+            "steps": {
+              "type": "array",
+              "minItems": 1,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "commands": {
+              "type": "array",
+              "minItems": 1,
+              "items": {"$ref": "#/$defs/check_command"}
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "net_value": {"const": "positive"},
+              "release": {
+                "properties": {"claims_improvement": {"const": true}},
+                "required": ["claims_improvement"]
+              }
+            },
+            "required": ["net_value", "release"]
+          },
+          "then": {
+            "required": ["validation"],
+            "properties": {
+              "validation": {"$ref": "#/$defs/release_validation"},
+              "rollback": {"required": ["commands"]}
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -8,7 +8,14 @@ Use when the plan is bounded and ready.
 
 ```yaml
 implementation_handoff:
-  status: ready
+  status: pending_preflight
+  next_action: implementation
+  readiness_target: implementation_ready
+  completion:
+    document_status: accepted
+    implementation_status: pending_preflight
+    first_executable_slice: ""
+    execution_authority: not_assessed | authorized | not_authorized
   goal: ""
   non_goals: []
   allowed_scope: []
@@ -23,9 +30,13 @@ implementation_handoff:
 
 Rules:
 
-- Include only implementation-ready slices.
+- Include only slices that are technically concrete enough for bounded implementation preflight.
 - Do not hand off unresolved architecture decisions as coding tasks.
 - State validation and stop conditions per slice when possible.
+- `pending_preflight` means the plan has an executable first slice but repository/worktree/permission checks still belong to the implementer. Preflight is not another plan-review round.
+- After preflight passes, the implementer may set `implementation_status: ready`; only current user or parent authority may set `execution_authority: authorized`.
+- Preserve an explicit originating request to implement the feature as `execution_authority: authorized`. If preflight passes, the authorized parent/implementer continues with the first slice in the same task; do not ask the user to authorize the same code work again or route back to plan review.
+- A bounded preflight checks only current repository/worktree/permission facts needed to enter the named first slice. It is not a reason to reopen general plan review.
 
 ## Handoff to `dbx-linus-review`
 
@@ -49,86 +60,7 @@ Ask the reviewer to judge whether the plan is real simplification or abstraction
 
 ## Handoff to `dbx-plan-convergence`
 
-Use when a generated technical plan is intended to guide implementation and should receive bounded convergence before coding.
-
-```yaml
-plan_convergence_handoff:
-  status: needs_plan_convergence
-  originating_intent: ""
-  completion_profile: handoff_ready | strict_acceptance
-  artifact:
-    type: technical_plan | architecture_proposal | migration_plan | implementation_proposal
-    version: session-v1
-    fingerprint_scheme: null | exact-bytes-sha256
-    fingerprint: null | "sha256:<64 lowercase hex>"
-    content_ref:
-      kind: inline | path | current_context
-      value: inline | path | current_response
-      plan: null
-      tasks: null
-  scope: []
-  goal: ""
-  non_goals: []
-  success_criteria: []
-  evidence_boundary:
-    repo_facts_read: []
-    user_supplied_facts: []
-    external_docs_or_versions: []
-    assumptions: []
-    unknowns: []
-    not_read_or_not_run: []
-  core_anchors:
-    problem_goal: stable | unknown | conflicted | not_applicable
-    source_of_truth: stable | unknown | conflicted | not_applicable
-    state_or_data_owner: stable | unknown | conflicted | not_applicable
-    public_contract: stable | unknown | conflicted | not_applicable
-    migration_rollout_boundary: stable | unknown | conflicted | not_applicable
-    critical_invariants: stable | unknown | conflicted | not_applicable
-  risk_profile: standard | high_impact | irreversible
-  reviewer_requirements:
-    initial_scope: full
-    final_acceptance_scope: full
-    dimensions: []
-    independence_required: required
-  provider_bindings:
-    reviewers:
-      - id: dbx-linus-review
-        capability: strict_pragmatic_plan_review
-    revision_provider:
-      id: original_plan_author
-  budget:
-    initial_full_review_passes: 1
-    local_revision_rounds: 2
-    scoped_re_review_passes: 2
-    final_acceptance_full_review_passes: 2
-  modification_authority: plan_text_only
-  may_modify_code: false
-  stop_on:
-    - needs-artifact
-    - needs-review
-    - needs-evidence
-    - needs-decision
-    - needs-alternatives
-    - pivot-required
-    - blocked-state-mismatch
-    - blocked-insufficient-history
-    - stopped-flat
-    - stopped-oscillating
-    - stopped-bloat
-    - stopped-budget
-```
-
-Rules:
-
-- `session-v1` is acceptable for same-session inline composition. Resume, persistence, multiple artifact versions, or multiple reviewers require an explicit version and preferably a fingerprint.
-- For `handoff_ready`, an inline or `current_context` plan may be handed off without pretending that its bytes are persistently reproducible. Preserve the structured content ref and use only the identity evidence actually available.
-- For `strict_acceptance`, the parent workflow must materialize the exact single-artifact bytes at a readable `content_ref.kind: path`, compute `sha256:<64 lowercase hex>` under `exact-bytes-sha256`, and fill the identity plus structured content ref. `inline`, `current_context`, blank, placeholder, malformed, unknown-scheme, missing-ref, unreadable, or unverifiable values are not a valid strict handoff. If no readable path exists, stop before delegation and report artifact materialization as the next gate.
-- Generic plan convergence defaults to `completion_profile: handoff_ready`. The implementation-bound profile requests `strict_acceptance` only after the path-backed artifact gate above passes.
-- The handoff binds `dbx-linus-review` for the DBX collection path and declares required dimensions; the generic controller remains provider-agnostic.
-- An unchanged initial independent full review may qualify for strict acceptance. After any local revision and scoped closure, strict acceptance requires a fresh independent full review bound to the final artifact identity.
-- `ready-for-handoff` under `strict_acceptance` requires a current `strict_acceptance_receipt`. A failed final review returns to bounded triage/revision while budget remains; otherwise it stops without claiming acceptance.
-- This handoff does not authorize code modification.
-- Do not populate anchors that are not applicable merely to satisfy the template.
+Use only for an explicit standalone convergence/gate request. Follow that skill's current input contract; do not allocate or preserve its state here.
 
 ## Handoff to `dbx-diff-review`
 

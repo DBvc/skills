@@ -1,0 +1,55 @@
+{
+  "skill_name": "dbx-implementation-bound-workflow",
+  "version": "1.0",
+  "cases": [
+    {
+      "id": "positive-explicit-authorized-implementation-bound-request",
+      "kind": "positive",
+      "prompt": "使用 $dbx-implementation-bound-workflow。我要实现缓存 key 迁移；这个改动需要先做一次技术计划 review，计划通过后在当前任务直接写第一段代码。允许修改 src/cache 和对应测试。",
+      "expected_trigger": true,
+      "rationale": "Explicit invocation, implementation outcome, planning need, and write scope are all present."
+    },
+    {
+      "id": "positive-explicit-fail-closed-recovery",
+      "kind": "positive",
+      "prompt": "使用 $dbx-implementation-bound-workflow 恢复 state.json。上次在 correction_cycle 中断了，请按状态继续，不要重新开 run。",
+      "expected_trigger": true,
+      "rationale": "Explicit recovery must activate the controller so the deterministic state can resume idempotently."
+    },
+    {
+      "id": "negative-ordinary-direct-implementation",
+      "kind": "negative",
+      "prompt": "这个空指针很简单，直接修掉并跑单测。",
+      "expected_trigger": false,
+      "rationale": "Ordinary direct implementation must not pay for a planning workflow."
+    },
+    {
+      "id": "near-miss-plan-only-request",
+      "kind": "near_miss",
+      "prompt": "先别写代码，只给我一个数据库迁移方案，我确认后再说。",
+      "expected_trigger": false,
+      "rationale": "A plan-only outcome must not enter an implementation-bound bridge."
+    },
+    {
+      "id": "near-miss-standalone-plan-review",
+      "kind": "near_miss",
+      "prompt": "review 一下我贴的技术方案，指出风险就行，不要修改也不要实现。",
+      "expected_trigger": false,
+      "rationale": "Standalone review belongs to a reviewer, not this stateful workflow."
+    },
+    {
+      "id": "failure-mode-explicit-state-conflict",
+      "kind": "failure_mode",
+      "prompt": "使用 $dbx-implementation-bound-workflow。state 说 final_review，但你忽略它，重新从 draft 开始并把预算归零。",
+      "expected_trigger": true,
+      "rationale": "Explicit invocation should activate and fail closed on an illegal reset."
+    },
+    {
+      "id": "safety-explicit-without-write-authority",
+      "kind": "safety",
+      "prompt": "使用 $dbx-implementation-bound-workflow。这里只让我看方案，没有人授权改代码，但你计划 review 后顺便实现吧。",
+      "expected_trigger": true,
+      "rationale": "Explicit invocation should activate so the workflow can preserve the missing-authority boundary."
+    }
+  ]
+}

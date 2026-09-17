@@ -1,10 +1,8 @@
 # Examples
 
-## Example A: More than two rounds can be valid
+## Example A: New input does not silently extend the loop
 
-Round 1 fixes ownership wording and splits implementation tasks.
-
-Round 2 discovers a material compatibility decision and stops:
+The single correction fixes ownership and task boundaries. Final verification discovers a material compatibility decision and stops:
 
 ```yaml
 transition:
@@ -12,21 +10,11 @@ transition:
   final_state: needs-decision
 ```
 
-The API owner chooses backward compatibility and supplies the support window.
+The API owner later chooses backward compatibility and supplies the support window. This new decision justifies asking the user for one explicit bounded grant; it does not silently create another cycle.
 
-Round 3 is justified because it consumes a new decision. It updates migration and validation, then passes the progress gate.
+## Example B: One correction exposes a direction failure
 
-The reason to continue is not “the plan is important.” The reason is “new material input changed the state.”
-
-## Example B: Three rounds are still not enough
-
-Round 1 adds cache invalidation.
-
-Round 2 adds a user-switch hook.
-
-Round 3 adds a permission-version flag.
-
-The same stale-state problem keeps reopening. No new evidence exists. Complexity grows.
+The correction adds cache invalidation, a user-switch hook, and a permission-version flag. Final verification shows the same stale-state problem still exists. No new evidence supports more mechanisms; complexity grew.
 
 Correct result:
 
@@ -52,7 +40,7 @@ The controller selects `high_impact` and requires relevant breadth:
 - human checkpoint before pivot;
 - evidence for current consumers and data volume.
 
-The loop may use three rounds in one epoch, but each round needs a progress credit. A fourth wording-only round still stops.
+The loop still gets one batched correction. Its post-revision verification closes the round: a decision-owner blocker becomes `needs-decision`; any other blocker becomes `blocked-final-review`, never another revision. Extra rigor belongs in the initial/final review breadth, evidence, rollback, and human decisions—not extra automatic rounds.
 
 Multiple dimensions do not require multiple models. One strong reviewer can cover multiple dimensions; multiple models repeating one lens still provide only one dimension.
 

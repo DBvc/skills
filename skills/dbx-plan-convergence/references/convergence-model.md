@@ -54,15 +54,15 @@ Do not use a state name as a vague action. In particular:
 - `pivot-required` is the outcome state;
 - `explore-alternatives` does not imply `pivot-required`.
 
-## 3. Why “two rounds” exists
+## 3. Why one atomic correction exists
 
-Two rounds is a default soft checkpoint because repeated review-revision often has diminishing information return:
+The default bounded loop has one correction cycle:
 
-1. The first revision closes obvious structural and evidence issues.
-2. The second reveals whether the direction can absorb critique without growing accidental complexity.
-3. A third pass by the same author and same reviewer often becomes correlated polishing rather than new learning.
+1. one full review gathers all material local findings;
+2. one batched revision addresses the accepted set;
+3. one profile-appropriate verification judges the revised artifact.
 
-This is not a claim that important plans deserve only two reviews. It is a claim that more repetitions of the same loop are weak evidence of quality.
+That verification is the terminal edge of the correction cycle. If it still finds a material blocker, a decision-owner finding becomes `request-decision + needs-decision`; every other blocker becomes `stop + blocked-final-review`. It never produces another `revise-local`, pivot-within-session, or review request. Repeated passes by the same author and reviewer are weak evidence of quality and commonly make the artifact larger without making implementation safer.
 
 When a plan is important, increase rigor through:
 
@@ -82,7 +82,7 @@ A revision round assumes core direction is stable:
 ```text
 same direction
   -> bounded local revision
-  -> scoped review of revised artifact
+  -> one profile-appropriate verification of revised artifact
   -> progress gate
 ```
 
@@ -99,18 +99,20 @@ direction failure
 
 The controller does not generate the new direction itself.
 
-The new epoch may receive a fresh per-epoch soft budget because it is a new candidate. However:
+The default session contains one epoch. A new externally supplied candidate may continue in the same session only after the user explicitly grants another bounded epoch. In every case:
 
 - total revision rounds remain counted;
 - direction epochs remain bounded;
 - rejected directions and reasons remain visible;
 - a return to an old direction requires new evidence or an explicit decision.
 
+The direction change remains in the same standalone convergence session. It opens a new epoch; it does not create a fresh run or reset total budget.
+
 This prevents both premature lock-in and endless zigzagging.
 
-## 5. When a third or later round is justified
+## 5. When another cycle may be granted
 
-Beyond the soft checkpoint, continue only when the new round consumes material input that was not available before.
+Exhausting the default cycle never auto-creates another. A further bounded cycle requires both material input that was not available before and an explicit user grant.
 
 Valid reasons:
 
@@ -134,7 +136,8 @@ Weak reasons:
 A finding is meaningful only relative to the artifact it reviewed.
 
 ```text
-plan v1 -> review R1 of v1 -> revision contract -> plan v2 -> scoped review R2 of v2
+ordinary: plan v1 -> review R1 of v1 -> revision contract -> plan v2 -> scoped review R2 of v2
+strict:   plan v1 -> review R1 of v1 -> revision contract -> plan v2 -> final full review R2 of v2
 ```
 
 The controller must not apply R1 to v2 unless unchanged applicability is demonstrated. Each review pass carries its own provider independence and dimensions because these properties can differ by pass.

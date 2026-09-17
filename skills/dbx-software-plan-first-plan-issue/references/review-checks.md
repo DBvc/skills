@@ -5,10 +5,13 @@ review 时按影响画像选择相关项目，不要机械套用全部检查。
 ## 通用
 
 - Goal、Scope、Approach 和当前 task 是否一致。
-- 是否只改了当前 task 允许的 surface。
+- 是否所有可归因实现 delta 都在 sealed `allowed-path` 内，并命中全部 `required-path`。
 - 是否保护了用户已有 worktree 改动。
 - 是否遵守项目规则文档和 source of truth。
 - 是否有清晰的验证结果或 review-only 原因。
+- 如果是 `step` / `loop-batch`，是否有验证前冻结的 task-start baseline 后实现 delta、未变化的 repo HEAD，以及至少一次真实程序化验证成功。
+- 验证命令执行后，HEAD、index 和 Git 可见 workspace 是否与验证前冻结状态完全一致；是否没有超时或输出超限。
+- 如果是 `gate`、`promote` 或 `documentation-only`，是否确实没有 Git 可见实现 delta。
 - 是否没有静默扩展 scope、发明契约、发明设计或发明数据。
 
 ## frontend 相关

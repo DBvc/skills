@@ -58,8 +58,8 @@ revision_contract:
   facts_to_preserve: []
   assumptions_to_keep_explicit: []
   required_validation_updates: []
-  re_review_scope:
-    kind: scoped
+  post_revision_verification:
+    kind: scoped | final_full
     contract_id: "RC-E1-R1"
     artifact_type: ""
     artifact_version_after: ""
@@ -75,6 +75,7 @@ revision_contract:
     check_anchor_drift: true
     check_evidence_boundary: true
     check_scope_and_bloat: true
+    # final_full is required for strict_acceptance and also covers the full declared review scope.
   stop_if:
     - minimal_local_revision_not_possible
     - direction_change_required
@@ -84,4 +85,4 @@ revision_contract:
     - artifact_identity_cannot_be_established
 ```
 
-Local revision must preserve artifact type, fingerprint scheme, and content ownership. For `implementation_plan_bundle`, `content_ref` must name both exact `plan.md` and `tasks.md` files; after revision the provider recomputes the bundle version/fingerprint from those same refs before scoped re-review.
+Local revision must preserve artifact type, fingerprint scheme, and content ownership. For `implementation_plan_bundle`, `content_ref` must name both exact `plan.md` and `tasks.md` files; after revision the provider recomputes the bundle version/fingerprint from those same refs before verification. Choose exactly one verification kind: `scoped` for ordinary `handoff_ready`, or `final_full` for `strict_acceptance`. Never run both for the same revision. The selected verification closes this correction round; a blocking result is handed off or terminally blocked and cannot create a second revision contract.

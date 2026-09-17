@@ -1,6 +1,6 @@
 ---
 name: dbx-plan-convergence
-description: Explicit-only, provider-agnostic controller for bounded convergence of an existing technical plan, architecture proposal, migration plan, ADR draft, or implementation proposal. Use when the user explicitly asks for 方案收敛, plan convergence, 方案棘轮, or a controlled review-revision loop, or when an already user-authorized parent workflow explicitly delegates that convergence step with artifact, scope, provider bindings, budget, and modification authority. It decides whether to obtain review, revise locally, gather evidence, request a decision, explore alternatives, pivot, finalize, or stop. Do not use for first-draft planning, standalone review, generic brainstorming, code repair, implementation, or open-ended autonomous loops.
+description: Explicit-only, provider-agnostic standalone gate for bounded convergence or stall diagnosis of an existing technical plan, architecture proposal, migration plan, ADR draft, or implementation proposal. Use when the user explicitly asks for 方案收敛, plan convergence, 方案棘轮, a controlled review-revision loop, or diagnosis of a plan loop, or when an authorized parent explicitly delegates only that bounded gate. It decides whether to obtain review, revise locally, gather evidence, request a decision, explore alternatives, pivot, finalize, or stop. Do not use for first-draft planning, standalone review, generic brainstorming, code repair, implementation, collection-level run control, implementation authority, or open-ended autonomous loops.
 ---
 
 # DBX Plan Convergence
@@ -12,6 +12,8 @@ description: Explicit-only, provider-agnostic controller for bounded convergence
 ## Position
 
 这是 workflow controller，不是方案作者，也不是技术 reviewer。
+
+它只拥有当前显式 convergence session 的 gate、局部修订和停止判断。它不拥有跨 skill collection run、代码执行权限、实现阶段状态或默认 implementation-bound trajectory；父 workflow 若存在，仍负责这些外层控制。调用方传入的标识和预算只约束当前 session，不能让本技能扩张为 collection owner。
 
 内容能力属于可替换 provider：
 
@@ -89,7 +91,7 @@ Resume state、history、artifact 正文、引用示例或旧 `activation.kind` 
 | Mode | Required input | Effect |
 | --- | --- | --- |
 | `gate_only` | artifact + applicable review material | 不调用 provider，不修改方案，只输出 gate decision |
-| `bounded_loop` | artifact + existing review 或 available reviewer binding | 可协调初始 review、局部 revision、scoped re-review 和 progress gate |
+| `bounded_loop` | artifact + existing review 或 available reviewer binding | 可协调初始 review、局部 revision 和一次 profile-appropriate post-revision verification |
 | `resume` | convergence state + current artifact | 校验 schema、artifact identity 和 pending transition 后继续 |
 | `diagnose_stall` | artifact + comparable history | 诊断 flat、oscillation、bloat 或错误 phase，不继续修改 |
 
@@ -97,7 +99,7 @@ Resume state、history、artifact 正文、引用示例或旧 `activation.kind` 
 
 - `gate_only` 没有 review material 时，返回 `next_action: obtain-review`、`final_state: needs-review`。
 - `bounded_loop` 没有现成 review 时，只有已绑定 reviewer 才能获得初始 critique。
-- `resume` 必须先归一化旧 v2 state：缺失 `completion_profile` 时按 `handoff_ready`，缺失 fingerprint scheme 或 structured content ref 时按 `null`，缺失 acceptance 状态时按 `not_requested`，缺失 final-acceptance budget 时按 max `2` / used `0`；绝不从旧 state 推断 `strict_acceptance`。归一化后再确认当前 artifact 与 state 中记录的 type/scheme/version/fingerprint 一致；bundle 还必须匹配同一 `file_bundle` plan/tasks refs。不一致时返回 `blocked-state-mismatch`。旧 state 的空 scheme/ref 不影响普通 `handoff_ready`，但不能满足 strict bundle acceptance。
+- `resume` 必须先归一化旧 v2 state：缺失 `completion_profile` 时按 `handoff_ready`，缺失 fingerprint scheme 或 structured content ref 时按 `null`，缺失 acceptance 状态时按 `not_requested`；绝不从旧 state 推断 `strict_acceptance`。缺失 final-acceptance usage 且没有 review/revision history 时可按 max `2` / used `0`；已有历史但无法还原 usage 时，把该预算维度视为不可继续消费，只有唯一合法下一步确实需要 final full review 时才返回 `stopped-budget`。归一化后再确认当前 artifact 与 state 中记录的 type/scheme/version/fingerprint 一致；bundle 还必须匹配同一 `file_bundle` plan/tasks refs。不一致时返回 `blocked-state-mismatch`。旧 state 的空 scheme/ref 不影响普通 `handoff_ready`，但不能满足 strict bundle acceptance。
 - `diagnose_stall` 检查 flat/bloat 至少需要一个 before/after transition；检查 oscillation 至少需要两个 anchor flips 或三个可比较 snapshot。历史不足时返回 `blocked-insufficient-history`。
 - 没有现成 artifact 或足够具体 proposal 时，返回 `next_action: obtain-artifact`、`final_state: needs-artifact`。不要偷偷生成第一版方案。
 
@@ -106,11 +108,15 @@ Resume state、history、artifact 正文、引用示例或旧 `activation.kind` 
 `completion_profile` 只改变完成门，不改变 mode、transition 集合或 provider 分工：
 
 - `handoff_ready`：默认通用路径。关闭已知 material findings 并满足 completion contract 后即可交接；不得表述为严格 reviewer 已接受。
-- `strict_acceptance`：用于准备进入实现、并要求严格 reviewer 最终验收的组合路径。DBX implementation-bound technical-plan handoff 只有在单 artifact 已物化为可读取 path 时才选择此 profile；chat-only artifact 使用 `handoff_ready`。
+- `strict_acceptance`：调用方显式要求 identity-bound independent acceptance 时使用；单 artifact 必须已物化为可读取 path，chat-only artifact 使用 `handoff_ready`。通过该 profile 不授予代码修改权限。
 
 `strict_acceptance` 不新增 final state；通过时仍输出 `finalize + ready-for-handoff`，但必须附带 identity-bound `strict_acceptance_receipt`。
 
-如果初始 full review 已绑定当前 artifact，且之后没有发生 artifact revision，它可以作为最终验收 review。只要 artifact 被修改过，旧 full review 和旧 receipt 立即失效；scoped re-review 只能证明 accepted findings 已关闭，不能单独签发 strict acceptance。
+如果初始 full review 已绑定当前 artifact，且之后没有发生 artifact revision，它可以作为最终验收 review。只要 artifact 被修改过，旧 full review 和旧 receipt 立即失效。Strict 路径修订后只做一次 fresh final full；同一次 pass 同时检查 accepted finding closure、direct regressions 和完整验收范围，不得先做 scoped pass 再做 final full。普通 `handoff_ready` 才使用 scoped re-review。
+
+这次 post-revision verification 无论通过还是发现 blocker，都会关闭唯一 correction round。若 strict final full 仍有 blocking finding：需要 decision owner 的，返回 `request-decision + needs-decision`；其余返回 `stop + blocked-final-review`。不得再输出 `revise-local`、签发第二份 revision contract 或安排另一轮 review。
+
+当前 passed receipt 与 artifact identity 完全一致且没有 material reopen trigger 时，直接复用 receipt 并 `finalize`，不得再次调用 reviewer。Reopen trigger 仅限 bound artifact identity 变化、新的矛盾证据、已冻结 decision 变化、声明 scope 变化或 acceptance policy 变化；换 invocation、reviewer、模型、时间经过或“保险起见”都不是 trigger。
 
 ## Core definitions
 
@@ -127,7 +133,7 @@ Resume state、history、artifact 正文、引用示例或旧 `activation.kind` 
 - full 或 scoped review 范围；
 - findings。
 
-Finding 必须记录 `source_review_id`。Scoped re-review 还必须绑定产生该修订的 revision contract id；full review 不需要 contract id，序列化模板使用 `null`。详见 `references/provider-protocol.md`。
+Finding 必须记录 `source_review_id`。Scoped re-review 与修订后的 strict final full 必须绑定 revision contract id；初始 full review 可使用 `null`。详见 `references/provider-protocol.md`。
 
 如果 review 明确针对旧版本，且无法证明相关内容未变，不得把 finding 自动应用到新版本。应返回 `needs-review`。
 
@@ -139,10 +145,11 @@ Finding 必须记录 `source_review_id`。Scoped re-review 还必须绑定产生
 
 1. 一个被接受的 revision contract；
 2. 一次受约束的 artifact revision；
-3. 对新版 artifact 的 scoped re-review；
+3. 对新版 artifact 的一次 post-revision verification：`strict_acceptance` 使用 fresh final full，普通 `handoff_ready` 使用 scoped re-review；
 4. 一次 progress gate。
 
 初始 review 不计入 revision round。只有改了文字但没有重新判断，不算有效 round。
+Post-revision verification 是该 round 的终止边：通过则进入完成门；阻塞则交给 decision owner 或以 `blocked-final-review` 结束当前 session，不能回到另一次 revision round。
 
 ### Direction epoch
 
@@ -168,6 +175,8 @@ Anchor status：
 不要为了填表让普通小方案虚构 public contract、migration 或 rollout 散文。
 
 局部修订留在当前 epoch。方向性 failure 关闭旧 epoch；只有外部提供新候选方向后，才能开启新 epoch。新 epoch 获得新的 per-epoch 软预算，但总轮次、总 epoch 数和历史失败不清零。
+
+方向变化永远是同一 convergence session 中的新 epoch，不是新 run，也不得重置总预算。只有用户针对 materially different goal/scope 显式启动另一场 standalone convergence session，才是独立 session。
 
 ## Transition model
 
@@ -236,6 +245,8 @@ convergence_target:
 10. `strict_acceptance` 没有可用 reviewer 时返回 `obtain-review + needs-review`；不得降级为 `handoff_ready`。
 11. 没有有效 `strict_acceptance_receipt` 时，不得输出“严格 reviewer 已接受”“strict PASS”或同义声明。
 12. `strict_acceptance` 必须在 review 前由 controller 或 artifact provider 用已声明、可识别的确定性 scheme 计算 `sha256:<64 lowercase hex>`：单文件必须使用可读取的 `content_ref.kind: path` 并直接 hash 该文件的 exact bytes；`implementation_plan_bundle` 必须使用带完整 plan/tasks refs 的 `file_bundle` 和 `plan-first-bundle-sha256-v1`。`inline`、`current_context`、placeholder、未知 scheme、格式错误、不可读取或无法重算均返回 `obtain-artifact + needs-artifact`，不得调用 final review 或签发 receipt。普通 `handoff_ready` 仍可使用 inline/current-context artifact。
+13. 当前 matching passed receipt 优先于 reviewer binding；没有 material reopen trigger 时必须复用，不能因预算仍有余额而重开 review。
+14. 已消费唯一 correction round 后的 post-revision verification 是终局判断。它发现 blocker 时不得选择 `revise-local`；只有 decision-owner blocker 使用 `request-decision + needs-decision`，其余使用 `stop + blocked-final-review`。
 
 ## Phase gate
 
@@ -284,19 +295,23 @@ Converge 阶段只允许按 revision contract 修改，不得顺手换方向或�
 
 Finding 是信号，不是命令。Controller 负责合并同根因 finding 并选择一个主 transition。
 
+上表只适用于初始 review 或尚未消费 correction round 的 gate。唯一 post-revision verification 具有更高优先级：其中的 blocking finding 不再触发局部修订；decision-owner finding 交接为 `needs-decision`，其余终止为 `blocked-final-review`。
+
 ## Round budget
 
 默认策略位于 `references/default-policy.yaml`。
 
 核心原则：
 
-- “两轮”是同一方向的 soft checkpoint，不是普遍质量上限。
-- `strict_acceptance` 的 final full review 使用独立预算；预算耗尽仍未通过时必须 `stop + stopped-budget`。
+- 默认只有一个原子 revision round：一次批量修订，加一次 profile-appropriate verification。它是停止边界，不是让 reviewer 把所有可想象细节写完的目标。
+- `strict_acceptance` 的 final full review 使用独立预算；仅当当前尚未完成且唯一合法下一步必须消费已耗尽的 review/revision 额度时，才 `stop + stopped-budget`。
 - 方案重要性提高时，优先增加证据、review dimensions、independence 和 human checkpoint，而不是只增加相同循环次数。
 - 超过 soft budget 必须有 progress credit。
-- 达到 hard budget 必须停止；用户只能显式增加一个新的有界预算。
+- 达到某个 hard budget 后禁止新的对应 review/revision；它不阻止复用 current receipt、已满足完成门时 `finalize`，或返回不消费该额度的 evidence/decision/pivot handoff。用户只能显式增加一个新的有界预算。
+- 开始 revision 前必须同时预留该 revision 和 profile 要求的唯一 verification 额度；不能接受只够改文档、却不够验证的半个 round。
+- 唯一 post-revision verification 发现 blocker 后，新增预算也不能在同一 session 中重开第二次 correction。外部 owner 可根据 handoff 修正 artifact 或作出决定，再针对 materially new artifact 显式启动新的 bounded session。
 - 同一 finding 默认只允许一次失败的局部修订；再次失败通常说明分类错了。
-- Pivot 不重置 total budget。
+- Pivot 不重置 total budget。默认单 epoch 已用完时只返回 `pivot-required`；要在同一 session 接受新方向，用户必须显式追加一个新的有界 grant。
 
 高影响方案至少覆盖两个相关的 review dimensions。多个 reviewer 重复同一 lens 仍只算一个维度；多个模型也不自动等于独立信息。
 
@@ -308,8 +323,7 @@ Controller 可以协调已绑定 provider 完成：
 - normalize findings；
 - issue revision contract；
 - bounded local revision；
-- scoped re-review；
-- strict profile 的 final full acceptance review；
+- 一次 profile-appropriate post-revision verification：普通 handoff 的 scoped re-review，或 strict profile 的 final full acceptance review；
 - progress gate。
 
 Controller 必须暂停或 handoff：
@@ -328,6 +342,7 @@ Controller 必须暂停或 handoff：
 ```text
 next_action == revise-local
 and final_state == null
+and post_revision_verification_not_consumed
 and budget_allows
 and modification_authority_allows
 and revision_provider_available
@@ -362,18 +377,19 @@ and revision_provider_available
 
 ## Workflow
 
-1. **Validate activation and mode inputs**：检查 direct/delegated authority、artifact、review、history 和 modification authority。
+1. **Validate activation and mode inputs**：检查 direct/delegated activation、artifact、review、history、session-local budget 和 modification authority；不接管外层 implementation authority 或 collection state。
 2. **Bind artifact identity**：记录 type/scheme/version/fingerprint 和 structured content ref；bundle 必须保留两个 exact file refs。拒绝 stale review 或 stale resume state。
-3. **Establish state**：选择 risk profile，识别 epoch、phase、applicable anchors 和预算。
-4. **Obtain or consume critique**：`gate_only` 只消费；`bounded_loop` 可调用已绑定 reviewer。
-5. **Normalize and triage**：归类 finding、合并根因、记录 review provenance。
-6. **Choose one transition**：输出 `next_action`、`final_state` 和 optional `follow_up_if`。
-7. **Issue revision contract**：仅在 `revise-local` 时生成，冻结 anchors、artifact type/scheme/content refs 和禁止项；bundle 必须同时绑定 `plan.md` 与 `tasks.md`。
-8. **Revise through provider**：只在 bounded execution gates 全部通过时执行。
-9. **Scoped re-review**：绑定到新版 artifact，只检查 accepted findings、direct regressions、anchor drift、evidence drift、scope 和 bloat。
-10. **Apply progress gate**：继续当前 epoch、等待外部输入、关闭旧 epoch、进入候选完成态或停止。
-11. **Apply completion profile**：`handoff_ready` 使用通用完成门；`strict_acceptance` 先检查当前 artifact 是否已有 qualifying independent full review，发生过 revision 时必须运行 fresh full review。新 finding 回到 triage；通过后签发 receipt。
-12. **Render output**：先按当前 invocation 分类，再按 mode 使用 compact 或 diagnostic 输出；完整 state 只在 resume、诊断或用户要求时展示。
+3. **Reuse current acceptance before review**：若 matching passed receipt 存在且无 material reopen trigger，跳过 review 并进入完成门。
+4. **Establish state**：选择 risk profile，识别 epoch、phase、applicable anchors 和预算。
+5. **Obtain or consume critique**：`gate_only` 只消费；`bounded_loop` 可调用已绑定 reviewer。
+6. **Normalize and triage**：归类 finding、合并根因、记录 review provenance。
+7. **Choose one transition**：输出 `next_action`、`final_state` 和 optional `follow_up_if`。
+8. **Issue revision contract**：仅在 `revise-local` 时生成，冻结 anchors、artifact type/scheme/content refs 和禁止项；bundle 必须同时绑定 `plan.md` 与 `tasks.md`。
+9. **Revise through provider**：只在 bounded execution gates 全部通过时执行。
+10. **Run exactly one post-revision verification**：绑定新版 artifact；strict 使用一次 final full 同时检查 finding closure 与完整 scope，普通 handoff 才使用 scoped re-review。不得串行运行两者。
+11. **Apply progress gate**：若第 10 步通过，进入候选完成态；若发现 blocker，关闭 correction round，按 decision-owner 或 terminal-blocked 规则交接，不得继续 revision。
+12. **Apply completion profile**：`handoff_ready` 使用通用完成门；`strict_acceptance` 使用初始未修改 artifact 的 qualifying full review，或第 10 步唯一的 fresh final full。通过后签发 receipt；阻塞后不得回到 `revise-local`。
+13. **Render output**：先按当前 invocation 分类，再按 mode 使用 compact 或 diagnostic 输出；完整 state 只在 resume、诊断或用户要求时展示。
 
 ## Final states
 
@@ -388,6 +404,7 @@ and revision_provider_available
 - `ready-for-handoff`
 - `blocked-state-mismatch`
 - `blocked-insufficient-history`
+- `blocked-final-review`
 - `stopped-flat`
 - `stopped-oscillating`
 - `stopped-bloat`
@@ -403,10 +420,10 @@ and revision_provider_available
 2. 会改变实施方向的 `decision_gap` 已关闭。
 3. 会翻转方案的 `evidence_gap` 已关闭；仅非方向性实施未知可以作为明确 stop condition 留下。
 4. 所有 applicable core anchors 为 `stable`；非适用项明确为 `not_applicable`。
-5. implementation path 和 validation 与主要风险有映射。
+5. implementation path 和 validation 与主要风险有映射；涉及实现交接时，第一个可执行切片已具体到 scope、关键 invariant、验证路径和 stop condition。
 6. 仅当任务涉及兼容性、迁移、发布或不可逆风险时，要求 rollout、rollback 或 containment 达到 profile 要求。
 7. review pass 与当前 artifact identity 一致，review breadth 满足 profile。
-8. 剩余 advisory、assumption、unknown 和 residual risk 已显式列出。
+8. 剩余 advisory、assumption、unknown 和 residual risk 已显式列出。只影响后续切片、且被真实 stop condition 隔离的 bounded unknown 不阻塞当前 handoff；任何会翻转第一个切片的 unknown 仍然阻塞。
 9. 没有 flat、oscillation 或 bloat 信号。
 10. 高影响或不可逆方案满足 human checkpoint policy。
 11. 没有把“文档更完整”误报为“方案已验证”。
@@ -419,64 +436,17 @@ and revision_provider_available
 15. `medium` finding 已修复，或被 reviewer 明确判为非阻塞并作为 residual risk 记录；涉及产品、架构、兼容性或风险接受时还必须由 decision owner 解决。Controller 不得自行降级或接受风险。
 16. 输出 `strict_acceptance_receipt`，绑定 artifact identity、structured content ref、final full review id、由匹配 provider binding 证明的 reviewer capability、independence、judgment 和 residual findings。
 
-任一内容修改都会使 receipt 失效。Final full review 发现新 finding 时，按正常 triage 选择 `revise-local`、`gather-evidence`、`request-decision`、`initiate-pivot` 或 `stop`；不得保留旧 PASS。
+任一内容修改都会使 receipt 失效。唯一 correction 后的 final full review 发现 blocking finding 时，不得保留旧 PASS，也不得再进入 revision：`decision_owner_required: true` 使用 `request-decision + needs-decision`，其余使用 `stop + blocked-final-review`。输出必须保留 review id、artifact identity、finding 与外部 owner，供新的显式工作继续处理。
 
 ## Output contract
 
-默认输出模式：
+渲染前读取 `references/output-contract.md`，不要在主技能里维护第二份 schema。
 
-```yaml
-output_mode:
-  gate_only: diagnostic
-  bounded_loop: compact
-  resume: compact
-  diagnose_stall: diagnostic
-```
-
-`strict_acceptance` 成功使用同一个 canonical YAML proof，但 presentation 取决于当前 invocation：
-
-- **delegated**：只输出 raw YAML，从 `qualification` 开始，以 `strict_acceptance_receipt` 结束；不得添加 Markdown fence、标题或周边说明。
-- **direct**：先输出有实际判断的中文 compact summary，再输出唯一的 `## 机器回执` 标题和唯一一个 `yaml` fenced canonical proof；closing fence 必须是响应结尾，不得添加尾注。Summary 至少说明 transition、核心判断、final review、artifact identity、证据边界和 residual risks。
-
-Canonical proof 的字段、顺序和内容不因 presentation 改变。Direct 输出不得把内部 state dump 当作 summary，也不得在 fence 外复制 `strict_acceptance_receipt`。
-
-其他 Compact 输出必须包含：
-
-```markdown
-## 方案收敛结果
-
-Transition:
-- next_action: <required action>
-- final_state: <state or null>
-- phase: <current phase>
-
-核心判断：
-- <current judgment>
-
-下一步合同：
-- owner/provider role: <role>
-- allowed: <allowed work>
-- forbidden: <forbidden work>
-- stop_if: <stop condition>
-
-证据边界与剩余风险：
-- <evidence limits and residual risks>
-```
-
-`strict_acceptance` 通过时还必须包含 `strict_acceptance_receipt`。未请求该 profile 时，普通 `ready-for-handoff` 不得伪装成严格验收结果。Receipt schema 和示例见 `references/provider-protocol.md` 与 `references/output-contract.md`。
-
-存在 blocker 或 gap 时增加：
-
-```markdown
-Blocker / gap：
-- <material blocker or gap>
-```
-
-Diagnostic 输出额外包含：review provenance、完整 triage、epoch/budget、progress credits/disqualifiers、anchor status 和 history evidence。
-
-不要输出空分类。异常停止、人类决策、stale review 或 direction failure 即使在 compact mode 下也必须显示原因。
-
-`gate_only` 输出 transition 后停止。`bounded_loop` 只按 execution boundary 继续。
+- `gate_only` / `diagnose_stall` 默认 diagnostic；`bounded_loop` / `resume` 默认 compact。
+- Compact 始终包含 transition、核心判断、下一步合同、证据边界和剩余风险；blocker/gap 仅在非空时增加。
+- `strict_acceptance` delegated 成功只输出 canonical raw YAML；direct 成功输出中文 summary 加唯一 fenced proof。Canonical proof 不因 presentation 改变。
+- 未请求 strict profile 时不得签发或暗示 strict receipt；异常停止、决策、stale review 和 direction failure 不得隐藏。
+- `gate_only` 输出后停止；`bounded_loop` 只按 execution boundary 继续。
 
 ## References
 

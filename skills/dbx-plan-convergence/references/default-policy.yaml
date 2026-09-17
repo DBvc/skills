@@ -1,4 +1,10 @@
-version: 4
+version: 5
+
+ownership:
+  scope: standalone_convergence_session
+  owns_collection_run: false
+  owns_implementation_authority: false
+  owns_default_implementation_trajectory: false
 
 activation:
   allow_direct_explicit: true
@@ -88,6 +94,7 @@ transition_model:
     - ready-for-handoff
     - blocked-state-mismatch
     - blocked-insufficient-history
+    - blocked-final-review
     - stopped-flat
     - stopped-oscillating
     - stopped-bloat
@@ -105,6 +112,9 @@ execution_policy:
     - scoped_re_review
     - final_acceptance_full_review
     - progress_gate
+  post_revision_verification_is_exactly_one_per_revision: true
+  post_revision_verification_closes_correction_round: true
+  revision_after_post_revision_verification: forbidden
   controller_must_pause_or_handoff:
     - gather-evidence
     - request-decision
@@ -135,18 +145,31 @@ round_definition:
   revision_round_requires:
     - accepted_revision_contract
     - bounded_artifact_revision
-    - scoped_re_review_bound_to_revised_artifact
+    - one_profile_appropriate_verification_bound_to_revised_artifact
     - progress_gate
+  post_revision_verification:
+    handoff_ready: scoped_re_review
+    strict_acceptance: fresh_final_full_covering_closure_and_full_scope
+    both_for_same_revision: forbidden
+    blocking_result:
+      decision_owner_required:
+        next_action: request-decision
+        final_state: needs-decision
+      otherwise:
+        next_action: stop
+        final_state: blocked-final-review
+      second_revision_contract: forbidden
   direction_failure_closes_epoch: true
   new_direction_must_be_supplied_externally: true
   pivot_resets_total_budget: false
+  pivot_starts_new_run: false
 
 profiles:
   standard:
-    soft_revision_rounds_per_epoch: 2
-    hard_revision_rounds_per_epoch: 3
-    max_direction_epochs: 2
-    hard_total_revision_rounds: 5
+    soft_revision_rounds_per_epoch: 1
+    hard_revision_rounds_per_epoch: 1
+    max_direction_epochs: 1
+    hard_total_revision_rounds: 1
     max_flat_rounds: 1
     max_same_finding_failed_revisions: 1
     review_dimensions_min: 1
@@ -154,10 +177,10 @@ profiles:
     human_approval_before_finalize: false
 
   high_impact:
-    soft_revision_rounds_per_epoch: 3
-    hard_revision_rounds_per_epoch: 4
-    max_direction_epochs: 2
-    hard_total_revision_rounds: 6
+    soft_revision_rounds_per_epoch: 1
+    hard_revision_rounds_per_epoch: 1
+    max_direction_epochs: 1
+    hard_total_revision_rounds: 1
     max_flat_rounds: 1
     max_same_finding_failed_revisions: 1
     review_dimensions_min: 2
@@ -165,10 +188,10 @@ profiles:
     human_approval_before_finalize: false
 
   irreversible:
-    soft_revision_rounds_per_epoch: 3
-    hard_revision_rounds_per_epoch: 4
-    max_direction_epochs: 2
-    hard_total_revision_rounds: 6
+    soft_revision_rounds_per_epoch: 1
+    hard_revision_rounds_per_epoch: 1
+    max_direction_epochs: 1
+    hard_total_revision_rounds: 1
     max_flat_rounds: 1
     max_same_finding_failed_revisions: 1
     review_dimensions_min: 2
@@ -207,7 +230,7 @@ completion_profiles:
       max_open_blocker_high: 0
       medium_policy: fixed_or_reviewer_non_blocking_residual_with_decision_owner_when_required
     budget:
-      final_acceptance_full_review_passes: 2
+      final_acceptance_full_review_passes: 1
     receipt_required: true
     artifact_change_invalidates_receipt: true
 
@@ -217,8 +240,13 @@ state_compatibility:
   missing_artifact_fingerprint_scheme: null
   missing_artifact_content_ref: null
   missing_acceptance_status: not_requested
-  missing_final_acceptance_full_review_passes: 2
-  missing_final_acceptance_full_review_passes_used: 0
+  missing_final_acceptance_usage:
+    no_review_or_revision_history:
+      max: 2
+      used: 0
+    history_exists_but_usage_unknown:
+      mark_dimension_unavailable: true
+      stop_only_if_unique_next_action_consumes_dimension: true
   never_infer_strict_acceptance: true
 
 continuation_gate:
@@ -247,11 +275,20 @@ soft_budget_policy:
 
 hard_budget_policy:
   final_state: stopped-budget
+  applies_only_when_unique_legal_next_action_consumes_exhausted_dimension: true
+  revision_requires_atomic_reservation:
+    - one_revision
+    - one_profile_appropriate_verification
+  does_not_block:
+    - matching_receipt_reuse
+    - finalize_when_completion_gate_passes
+    - evidence_decision_or_pivot_handoff
   override_requires:
     - explicit_user_request
     - new_bounded_budget
     - previous_round_progress_gate_passed
     - no_oscillation_or_bloat
+  override_cannot_reopen_terminal_post_revision_blocker: true
   unlimited_override_allowed: false
 
 re_review:
@@ -265,7 +302,22 @@ re_review:
   must_bind_to_revised_artifact: true
   scoped_contract_id_required: true
   scoped_review_can_issue_strict_acceptance: false
-  final_full_review_when: strict_acceptance_candidate_completion
+  scoped_review_after_revision_when: handoff_ready
+  final_full_review_after_revision_when: strict_acceptance
+  final_full_includes_accepted_finding_closure: true
+  scoped_then_final_full_for_same_revision: forbidden
+  final_full_blocker_after_correction:
+    decision_owner_required: needs-decision
+    otherwise: blocked-final-review
+    revise_local: forbidden
+    another_review_in_same_session: forbidden
+  matching_receipt_short_circuits_review: true
+  receipt_reopen_requires_any:
+    - artifact_identity_changed
+    - material_contradictory_evidence
+    - frozen_decision_changed
+    - declared_scope_changed
+    - acceptance_policy_changed
 
 output_policy:
   default_mode:
@@ -303,6 +355,9 @@ completion:
   rollout_rollback_or_containment_required_only_when_applicable: true
   current_artifact_reviewed: true
   residual_risks_explicit: true
+  first_executable_slice_concrete: true
+  later_slice_unknown_may_remain_when_contained: true
+  first_slice_flipping_unknowns_open: 0
   profile_specific:
     handoff_ready:
       strict_acceptance_receipt_required: false

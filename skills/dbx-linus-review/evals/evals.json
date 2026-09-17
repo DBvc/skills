@@ -189,7 +189,7 @@
     {
       "id": "delegated-full-plan-review-binds-target-and-stays-read-only",
       "kind": "positive",
-      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=收敛 API implementation-bound plan，completion_profile=strict_acceptance，review_id=R5，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact=plan-v2，type=technical_plan，fingerprint_scheme=exact-bytes-sha256，fingerprint=sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b，content_ref={kind:path,value:skills/dbx-linus-review/evals/fixtures/plan.md,plan:null,tasks:null}，scope=full，dimensions=[direction_model_ownership, complexity_proportionality]，evidence_boundary={repo_facts_read:[API ownership], assumptions:[], unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请读取真实 fixture，复算 exact-bytes-sha256 后做严格 review。",
+      "prompt": "授权 envelope：parent=authorized-parent-controller，originating_intent=收敛 API implementation-bound plan，completion_profile=strict_acceptance，review_id=R5，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact=plan-v2，type=technical_plan，fingerprint_scheme=exact-bytes-sha256，fingerprint=sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b，content_ref={kind:path,value:skills/dbx-linus-review/evals/fixtures/plan.md,plan:null,tasks:null}，scope=full，dimensions=[direction_model_ownership, complexity_proportionality]，evidence_boundary={repo_facts_read:[API ownership], assumptions:[], unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请读取真实 fixture，复算 exact-bytes-sha256 后做严格 review。",
       "expected_behavior": "Read the path-backed artifact, recompute and match its exact SHA-256, echo the review/artifact identity and full scope, perform the strict review, and append a structured delegated_review_result. Do not revise the plan or choose a convergence transition.",
       "checks": {
         "trigger": [
@@ -232,6 +232,12 @@
             "value": "review_id[\\\"\\s:]+R5",
             "required": true,
             "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "review_id[\\\"\\s:]+R5[\\s\\S]{0,220}scope[\\\"\\s:]+full",
+            "required": true,
+            "quality": "state"
           },
           {
             "type": "regex",
@@ -316,7 +322,7 @@
     {
       "id": "delegated-strict-current-response-fails-qualification",
       "kind": "failure_mode",
-      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=严格验收聊天中的计划，completion_profile=strict_acceptance，review_id=R-CONTEXT，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact={type:technical_plan,version:v1,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,content_ref:{kind:current_context,value:current_response,plan:null,tasks:null}}，scope=full，evidence_boundary={repo_facts_read:[],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请签发严格验收结果。",
+      "prompt": "授权 envelope：parent=authorized-parent-controller，originating_intent=严格验收聊天中的计划，completion_profile=strict_acceptance，review_id=R-CONTEXT，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact={type:technical_plan,version:v1,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,content_ref:{kind:current_context,value:current_response,plan:null,tasks:null}}，scope=full，evidence_boundary={repo_facts_read:[],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请签发严格验收结果。",
       "expected_behavior": "Fail strict qualification before substantive acceptance because current_response is not a readable path. Return insufficient_evidence in the provider result and do not claim a verified fingerprint or acceptance.",
       "checks": {
         "trigger": [
@@ -337,7 +343,7 @@
     {
       "id": "delegated-single-file-stale-fingerprint-fails-before-review",
       "kind": "failure_mode",
-      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=严格验收路径中的计划，completion_profile=strict_acceptance，review_id=R-STALE，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact={type:technical_plan,version:v1,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,content_ref:{kind:path,value:skills/dbx-linus-review/evals/fixtures/plan.md,plan:null,tasks:null}}，scope=full，evidence_boundary={repo_facts_read:[],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请读取 fixture，复算 exact bytes 后评审。",
+      "prompt": "授权 envelope：parent=authorized-parent-controller，originating_intent=严格验收路径中的计划，completion_profile=strict_acceptance，review_id=R-STALE，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact={type:technical_plan,version:v1,fingerprint_scheme:exact-bytes-sha256,fingerprint:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa,content_ref:{kind:path,value:skills/dbx-linus-review/evals/fixtures/plan.md,plan:null,tasks:null}}，scope=full，evidence_boundary={repo_facts_read:[],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请读取 fixture，复算 exact bytes 后评审。",
       "expected_behavior": "Recompute the readable single-file artifact, report the actual SHA-256, detect the mismatch, and fail before substantive review without acceptance or a delegated review result.",
       "checks": {
         "trigger": [
@@ -357,8 +363,8 @@
     {
       "id": "delegated-full-bundle-review-preserves-both-file-refs",
       "kind": "positive",
-      "prompt": "授权 envelope：parent=dbx-plan-convergence，originating_intent=严格审核最终 api plan bundle，completion_profile=strict_acceptance，review_id=RB1，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact={type:implementation_plan_bundle,version:plan-first-api-bundle-5b6891e696db,fingerprint_scheme:plan-first-bundle-sha256-v1,fingerprint:sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b,content_ref:{kind:file_bundle,value:null,plan:skills/dbx-linus-review/evals/fixtures/plan.md,tasks:skills/dbx-linus-review/evals/fixtures/tasks.md}}，scope=full，evidence_boundary={repo_facts_read:[api ownership],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请读取两个真实 fixture，报告两个 component hash，复算 bundle 后 review。",
-      "expected_behavior": "Read both exact fixture refs, report their component hashes, recompute the declared bundle scheme, perform a full read-only review, emit canonical material_findings: none for this clean fixture, and echo the bound provider capability plus structured refs in delegated_review_result.",
+      "prompt": "授权 envelope：parent=authorized-parent-controller，originating_intent=严格审核最终 api plan bundle，completion_profile=strict_acceptance，review_id=RB1，reviewer_provider_id=dbx-linus-review，reviewer_capability=strict_pragmatic_plan_review，reviewer_independence=independent，artifact={type:implementation_plan_bundle,version:plan-first-api-bundle-5b6891e696db,fingerprint_scheme:plan-first-bundle-sha256-v1,fingerprint:sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b,content_ref:{kind:file_bundle,value:null,plan:skills/dbx-linus-review/evals/fixtures/plan.md,tasks:skills/dbx-linus-review/evals/fixtures/tasks.md}}，scope=full，evidence_boundary={repo_facts_read:[api ownership],assumptions:[],unknowns:[]}，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}。请读取两个真实 fixture，报告两个 component hash，复算 bundle 后 review。",
+      "expected_behavior": "Read both exact fixture refs, report their component hashes, recompute the declared bundle scheme, perform a full read-only review, and use the same canonical delegated_review_result shape as every other delegated review.",
       "checks": {
         "trigger": [
           {"type": "regex", "value": "implementation_plan_bundle[\\s\\S]{0,180}plan-first-bundle-sha256-v1", "required": true, "quality": "artifact"}
@@ -369,7 +375,7 @@
         ],
         "output": [
           {"type": "must_contain", "value": "delegated_review_result", "required": true, "quality": "structural"},
-          {"type": "regex", "value": "(?m)\\Averification:[ \\t]*\\r?\\n  recomputation:[ \\t]*recompute plan\\.md and tasks\\.md[ \\t]*\\r?\\n  fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[ \\t]*\\r?\\n  plan_sha256:[ \\t]*052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b[ \\t]*\\r?\\n  tasks_sha256:[ \\t]*33d7f2007f4a016c944892625ba9bd8248ad4442457765113bdfd9085ce9c41c[ \\t]*\\r?\\n  review_scope:[ \\t]*full[ \\t]*\\r?\\n  human_summary:[ \\t]*未发现 S0/S1 blocker[ \\t]*\\r?\\nmaterial_findings:[ \\t]*none[ \\t]*\\r?\\ndelegated_review_result:[ \\t]*\\r?\\n  review_id:[ \\t]*RB1[ \\t]*\\r?\\n  reviewer_provider_id:[ \\t]*dbx-linus-review[ \\t]*\\r?\\n  reviewer_capability:[ \\t]*strict_pragmatic_plan_review[ \\t]*\\r?\\n  artifact_type:[ \\t]*implementation_plan_bundle[ \\t]*\\r?\\n  artifact_version:[ \\t]*plan-first-api-bundle-5b6891e696db[ \\t]*\\r?\\n  artifact_fingerprint_scheme:[ \\t]*plan-first-bundle-sha256-v1[ \\t]*\\r?\\n  artifact_fingerprint:[ \\t]*sha256:5b6891e696db45d40864d399329f0b2c9ca0150d5a46783dd853da9f8423f63b[ \\t]*\\r?\\n  artifact_content_ref:[ \\t]*\\r?\\n    kind:[ \\t]*file_bundle[ \\t]*\\r?\\n    value:[ \\t]*null[ \\t]*\\r?\\n    plan:[ \\t]*skills/dbx-linus-review/evals/fixtures/plan\\.md[ \\t]*\\r?\\n    tasks:[ \\t]*skills/dbx-linus-review/evals/fixtures/tasks\\.md[ \\t]*\\r?\\n  scope:[ \\t]*full[ \\t]*\\r?\\n  independence:[ \\t]*independent[ \\t]*\\r?\\n  judgment:[ \\t]*accept[ \\t]*\\r?\\n  findings:[ \\t]*\\[\\][ \\t]*\\r?\\n[ \\t\\r\\n]*\\Z", "required": true, "quality": "validation"},
+          {"type": "regex", "value": "review_id[\\\"\\s:]+RB1[\\s\\S]{0,220}scope[\\\"\\s:]+full", "required": true, "quality": "artifact"},
           {"type": "regex", "value": "(?s)\\A(?![\\s\\S]*\\bmaterial_findings\\b[\\s\\S]*\\bmaterial_findings\\b)(?![\\s\\S]*\\bdelegated_review_result\\b[\\s\\S]*\\bdelegated_review_result\\b)[\\s\\S]*\\Z", "required": true, "quality": "validation"},
           {"type": "regex", "value": "(?ims)\\A(?![\\s\\S]*(?:\\[(?:S0[ \\t]+blocker|S1[ \\t]+high)\\]|^[ \\t]*(?:[0-9]+\\.[ \\t]*)?S[01][ \\t]+(?:blocker|high)[ \\t]*:|^(?![^\\r\\n]*(?:no|none|未发现|没有)[^\\r\\n]*S[01])[^\\r\\n]*S[01][^\\r\\n]{0,80}(?:blocker|high|blocking|阻塞|必须修复|需(?:要)?修改|不能接受|拒绝)|blocking[\\\"']?\\s*:\\s*true|judgment[\\\"']?\\s*:\\s*(?:changes_required|reject|insufficient_evidence)))[\\s\\S]*\\Z", "required": true, "quality": "validation"},
           {"type": "regex", "value": "review_id[\\\"\\s:]+RB1", "required": true, "quality": "artifact"},
@@ -639,7 +645,7 @@
     {
       "id": "delegated-review-missing-evidence-boundary-fails-closed",
       "kind": "failure_mode",
-      "prompt": "父 controller 委托只读 full review：originating_intent=复核缓存方案，artifact=plan-v4，scope=full，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}，但没有 evidence_boundary。",
+      "prompt": "父 controller 委托只读 full review：review_id=R-MISSING-EVIDENCE，originating_intent=复核缓存方案，artifact=plan-v4，scope=full，write_prohibition={modify_artifact:false,modify_code:false,commit:false,push:false}，但没有 evidence_boundary。",
       "expected_behavior": "Do not review or invent findings. Ask for the smallest missing evidence_boundary fields. Do not modify the plan or emit convergence transitions.",
       "checks": {
         "trigger": [
@@ -723,7 +729,7 @@
     {
       "id": "delegated-review-missing-write-prohibition-fails-closed",
       "kind": "failure_mode",
-      "prompt": "父 controller 委托 full review：originating_intent=复核缓存方案，artifact=plan-v5，scope=full，evidence_boundary={repo_facts_read:[auth/cache owners], assumptions:[], unknowns:[]}，但没有 write_prohibition。",
+      "prompt": "父 controller 委托 full review：review_id=R-MISSING-WRITE，originating_intent=复核缓存方案，artifact=plan-v5，scope=full，evidence_boundary={repo_facts_read:[auth/cache owners], assumptions:[], unknowns:[]}，但没有 write_prohibition。",
       "expected_behavior": "Do not review or invent findings. Ask for the smallest missing read-only write_prohibition fields. Do not modify the plan or emit convergence transitions.",
       "checks": {
         "trigger": [
@@ -793,6 +799,104 @@
           {
             "type": "must_not_contain",
             "value": "我已经修改",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "standalone-audit-does-not-interpret-external-workflow-state",
+      "kind": "failure_mode",
+      "prompt": "对 plan v9 做一次独立 Linus full review。上下文里还有别的 workflow 的 receipt R9 和预算，但它们不在本 reviewer 的输入合同内。只读评审当前 artifact；不要解释、更新或撤销外部 workflow state。",
+      "expected_behavior": "Review only the supplied artifact, explicitly leave external workflow state untouched, and emit no receipt, budget, reopen, or terminal transition.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(external workflow|外部.*workflow|外部工作流)[\\s\\S]{0,120}(untouched|不修改|不解释|不变更)",
+            "required": true,
+            "quality": "state"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(只读|read-only|artifact|plan v9)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "next_action:",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "final_state:",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "reopen_request",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "standalone-audit-reports-contradictory-evidence-without-transition",
+      "kind": "positive",
+      "prompt": "新的仓库证据显示：首切片计划删除 public method renameLegacy，但 src/extensions/plugin.ts:44 仍调用它，且该插件在 declared scope 内。做只读 standalone audit；指出问题，但不要修改计划、receipt、预算或输出 controller transition。",
+      "expected_behavior": "Report the concrete public-contract problem as a review finding while leaving all workflow decisions to the caller.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "src/extensions/plugin\\.ts:44[\\s\\S]{0,180}renameLegacy",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(public contract|公共契约|兼容)[\\s\\S]{0,180}(改变|冲突|break|风险)",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(Evidence|Impact|Fix|Confidence|证据|影响|修复)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "next_action:",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "reopen_request",
             "required": true,
             "quality": "safety"
           }

@@ -9,9 +9,13 @@ import hashlib
 import json
 import os
 import re
+import selectors
+import signal
+import stat
 import subprocess
 import sys
 import textwrap
+import time
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Optional, Tuple
@@ -57,6 +61,16 @@ TEMPLATE_RE = re.compile(r"{([A-Za-z_][A-Za-z0-9_]*)}")
 LOCAL_STATE_TEMPLATE_VARS = {"evidence_file", "validation_log"}
 TRACKED_DOC_TEMPLATE_VARS = {"plan_file", "tasks_file"}
 PLAN_BUNDLE_FINGERPRINT_SCHEME = "plan-first-bundle-sha256-v1"
+TASK_TYPES = {"step", "loop-batch", "gate", "promote", "documentation-only"}
+CODE_TASK_TYPES = {"step", "loop-batch"}
+TASK_TYPE_RE = re.compile(r"(?:任务类型|Task-Type|Task Type)\s*=\s*([a-z][a-z0-9-]*)", re.IGNORECASE)
+TASK_SCOPE_SCHEME = "workspace-relative-path-v1"
+TASK_SCOPE_RE = re.compile(r"^(allowed-path|required-path)\s*=\s*(.*?)\s*$", re.IGNORECASE)
+TASK_SCOPE_PREFIX_RE = re.compile(r"^(allowed-path|required-path)\b", re.IGNORECASE)
+DEFAULT_VALIDATION_TIMEOUT_SECONDS = 300
+MAX_VALIDATION_TIMEOUT_SECONDS = 3600
+DEFAULT_VALIDATION_OUTPUT_BYTES = 1024 * 1024
+MAX_VALIDATION_OUTPUT_BYTES = 16 * 1024 * 1024
 
 
 def die(message: str, code: int = 1) -> None:
@@ -722,11 +736,14 @@ class Task:
     status: str
     task_id: str
     summary: str
+    task_type: str
     accept: Optional[str]
     validates: List[str]
     use_checks: List[str]
     depends: List[str]
     constraints: List[str]
+    allowed_paths: List[str]
+    required_paths: List[str]
     commit_type: Optional[str]
 
 
@@ -735,6 +752,78 @@ def strip_label(line: str, labels: Tuple[str, ...]) -> Optional[str]:
         if line.startswith(label):
             return line[len(label):].strip()
     return None
+
+
+def normalize_task_scope_path(raw: str, task_id: str, key: str) -> str:
+    value = raw.strip()
+    if not value:
+        die(f"任务 [{task_id}] 的 {key} 不能为空。")
+    if "\\" in value or "\x00" in value or any(char in value for char in "*?[]"):
+        die(f"任务 [{task_id}] 的 {key} 必须使用 POSIX workspace 相对路径：{raw}")
+    is_prefix = value.endswith("/")
+    core = value[:-1] if is_prefix else value
+    parts = core.split("/")
+    if (
+        not core
+        or core.startswith("/")
+        or any(part in {"", ".", ".."} for part in parts)
+        or any(part in {".git", ".plan-first"} for part in parts)
+    ):
+        die(f"任务 [{task_id}] 的 {key} 不是安全的 workspace 相对路径：{raw}")
+    normalized = str(PurePosixPath(core))
+    return normalized + ("/" if is_prefix else "")
+
+
+def scope_path_covers(allowed_path: str, target_path: str) -> bool:
+    if allowed_path.endswith("/"):
+        prefix = allowed_path[:-1]
+        target = target_path[:-1] if target_path.endswith("/") else target_path
+        return target == prefix or target.startswith(prefix + "/")
+    return not target_path.endswith("/") and allowed_path == target_path
+
+
+def task_scope_contract(task: Task) -> Dict[str, Any]:
+    return {
+        "scheme": TASK_SCOPE_SCHEME,
+        "allowed_paths": sorted(set(task.allowed_paths)),
+        "required_paths": sorted(set(task.required_paths)),
+    }
+
+
+def parse_task_scope(task: Task) -> None:
+    allowed: List[str] = []
+    required: List[str] = []
+    for constraint in task.constraints:
+        match = TASK_SCOPE_RE.match(constraint)
+        if match is None:
+            if TASK_SCOPE_PREFIX_RE.match(constraint):
+                die(
+                    f"任务 [{task.task_id}] 的路径约束格式错误：{constraint}。"
+                    "请使用 `约束: allowed-path=<path>` 或 `约束: required-path=<path>`。"
+                )
+            continue
+        key = match.group(1).lower()
+        path = normalize_task_scope_path(match.group(2), task.task_id, key)
+        (allowed if key == "allowed-path" else required).append(path)
+
+    task.allowed_paths = sorted(set(allowed))
+    task.required_paths = sorted(set(required))
+    if task.task_type in CODE_TASK_TYPES:
+        if not task.allowed_paths or not task.required_paths:
+            die(
+                f"代码型任务 [{task.task_id}] 必须声明机器可读的 allowed-path 和 required-path。"
+                "每个路径单独写一行 `约束:`。"
+            )
+        uncovered = [
+            target
+            for target in task.required_paths
+            if not any(scope_path_covers(allowed_path, target) for allowed_path in task.allowed_paths)
+        ]
+        if uncovered:
+            die(
+                f"任务 [{task.task_id}] 的 required-path 不在 allowed-path 范围内："
+                + ", ".join(uncovered)
+            )
 
 
 def parse_tasks(task_file: Path, require_valid: bool = True) -> List[Task]:
@@ -754,11 +843,14 @@ def parse_tasks(task_file: Path, require_valid: bool = True) -> List[Task]:
                 status="done" if m.group(1).lower() == "x" else "todo",
                 task_id=m.group(2).strip(),
                 summary=m.group(3).strip(),
+                task_type="step",
                 accept=None,
                 validates=[],
                 use_checks=[],
                 depends=[],
                 constraints=[],
+                allowed_paths=[],
+                required_paths=[],
                 commit_type=None,
             )
             tasks.append(current)
@@ -804,11 +896,39 @@ def parse_tasks(task_file: Path, require_valid: bool = True) -> List[Task]:
             seen.add(task.task_id)
             if not task.accept:
                 die(f"任务 [{task.task_id}] 缺少 `验收:`。")
+            type_markers = TASK_TYPE_RE.findall(task.accept)
+            if len(type_markers) > 1:
+                die(f"任务 [{task.task_id}] 的 `验收:` 只能声明一个任务类型。")
+            task.task_type = type_markers[0].lower() if type_markers else "step"
+            if task.task_type not in TASK_TYPES:
+                die(
+                    f"任务 [{task.task_id}] 的任务类型不支持：{task.task_type}。"
+                    f"支持：{', '.join(sorted(TASK_TYPES))}。"
+                )
+            parse_task_scope(task)
             if not task.validates:
                 die(f"任务 [{task.task_id}] 至少需要一行 `验证:`。")
             if task.commit_type and not type_re.match(task.commit_type):
                 die(f"任务 [{task.task_id}] 的 `提交类型:` 只能包含字母、数字、下划线或连字符，并以字母开头。")
     return tasks
+
+
+def validate_task_scope_repos(ctx: Context, task: Task) -> Dict[str, Any]:
+    scope = task_scope_contract(task)
+    for key in ("allowed_paths", "required_paths"):
+        for declared_path in scope[key]:
+            target = ctx.root / declared_path.rstrip("/")
+            if repo_for_workspace_path(ctx, target) is None:
+                die(
+                    f"任务 [{task.task_id}] 的 {key[:-1]} 不属于当前已发现的 Git repo："
+                    f"{declared_path}"
+                )
+    return scope
+
+
+def workspace_path_for_repo_file(repo: Repo, name: str) -> str:
+    normalized = name.replace(os.sep, "/")
+    return normalized if repo.rel_path == "." else f"{repo.rel_path}/{normalized}"
 
 
 def first_unchecked(tasks: List[Task]) -> Optional[Task]:
@@ -976,12 +1096,12 @@ def render_task_body(
 
 def git_status_names(repo: Repo, staged_only: bool = False) -> List[str]:
     if staged_only:
-        cp = run(["git", "diff", "--cached", "--name-only"], cwd=repo.root)
+        cp = run(["git", "diff", "--cached", "--name-only", "--no-renames"], cwd=repo.root)
         return [x for x in cp.stdout.splitlines() if x.strip()]
     names: List[str] = []
     for cmd in (
-        ["git", "diff", "--name-only"],
-        ["git", "diff", "--cached", "--name-only"],
+        ["git", "diff", "--name-only", "--no-renames"],
+        ["git", "diff", "--cached", "--name-only", "--no-renames"],
         ["git", "ls-files", "--others", "--exclude-standard"],
     ):
         cp = run(cmd, cwd=repo.root)
@@ -1022,16 +1142,51 @@ def status_files(ctx: Context, repo: Repo) -> List[str]:
     return [n for n in git_status_names(repo) if not should_exclude(ctx, repo, n)]
 
 
+def sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8", errors="surrogateescape")).hexdigest()
+
+
+def repo_head(repo: Repo) -> str:
+    cp = run(["git", "rev-parse", "--verify", "HEAD"], cwd=repo.root, check=False)
+    if cp.returncode == 0 and cp.stdout.strip():
+        return cp.stdout.strip()
+    unborn = run(["git", "symbolic-ref", "-q", "HEAD"], cwd=repo.root, check=False)
+    if unborn.returncode == 0 and unborn.stdout.strip():
+        return "__unborn__"
+    die(f"无法读取 repo HEAD：{repo.name}")
+
+
+def git_index_fingerprint(ctx: Context, repo: Repo) -> str:
+    cp = run(["git", "ls-files", "--stage", "-z"], cwd=repo.root)
+    records: List[str] = []
+    for record in cp.stdout.split("\x00"):
+        if not record:
+            continue
+        _, separator, name = record.partition("\t")
+        if not separator or should_exclude(ctx, repo, name):
+            continue
+        records.append(record)
+    return f"sha256:{sha256_text(chr(0).join(records))}"
+
+
+def git_visible_file_digest(path: Path) -> str:
+    try:
+        file_stat = path.lstat()
+    except FileNotFoundError:
+        return "__deleted__"
+    if stat.S_ISLNK(file_stat.st_mode):
+        target = os.readlink(path)
+        return f"120000:{sha256_text(target)}"
+    if stat.S_ISREG(file_stat.st_mode):
+        git_mode = "100755" if file_stat.st_mode & stat.S_IXUSR else "100644"
+        return f"{git_mode}:{sha256_file(path)}"
+    return f"__not_regular_file__:{stat.S_IFMT(file_stat.st_mode):o}"
+
+
 def hash_changed_files(repo: Repo, names: List[str]) -> Dict[str, str]:
     out: Dict[str, str] = {}
     for name in names:
-        path = repo.root / name
-        if not path.exists():
-            out[name] = "__deleted__"
-        elif path.is_file():
-            out[name] = sha256_file(path)
-        else:
-            out[name] = "__not_regular_file__"
+        out[name] = git_visible_file_digest(repo.root / name)
     return out
 
 
@@ -1041,9 +1196,136 @@ def snapshot_repos(ctx: Context, repos: List[Repo]) -> Dict[str, Dict[str, Any]]
         names = status_files(ctx, repo)
         snapshot[repo.name] = {
             "path": repo.rel_path,
+            "head": repo_head(repo),
+            "index_fingerprint": git_index_fingerprint(ctx, repo),
             "files": hash_changed_files(repo, names),
         }
     return snapshot
+
+
+def attributable_implementation_delta(
+    ctx: Context,
+    paths: Paths,
+    baseline: Dict[str, Dict[str, Any]],
+) -> Dict[str, Dict[str, Any]]:
+    """Return current dirty files whose content differs from the task-start baseline."""
+    return attributable_implementation_delta_from_snapshot(
+        ctx,
+        paths,
+        baseline,
+        snapshot_repos(ctx, ctx.repos),
+    )
+
+
+def attributable_implementation_delta_from_snapshot(
+    ctx: Context,
+    paths: Paths,
+    baseline: Dict[str, Dict[str, Any]],
+    current: Dict[str, Dict[str, Any]],
+) -> Dict[str, Dict[str, Any]]:
+    """Return current dirty files whose content differs from the task-start baseline."""
+    excluded = tracked_doc_repo_files(ctx, paths) if plan_docs_tracked(ctx) else {}
+    delta: Dict[str, Dict[str, Any]] = {}
+    for repo_name, current_payload in current.items():
+        excluded_names = set(excluded.get(repo_name, []))
+        baseline_files = {
+            name: digest
+            for name, digest in baseline.get(repo_name, {}).get("files", {}).items()
+            if name not in excluded_names
+        }
+        current_files = {
+            name: digest
+            for name, digest in current_payload.get("files", {}).items()
+            if name not in excluded_names
+        }
+        disappeared = sorted(set(baseline_files) - set(current_files))
+        if disappeared:
+            die(
+                "task-start baseline 中已有的 Git 可见路径在实现期间消失；"
+                "这可能删除了 untracked 文件或恢复了既有 dirty 内容，不能归为当前 task：\n"
+                + "\n".join(f"- {repo_name}:{name}" for name in disappeared)
+            )
+        changed = {
+            name: digest
+            for name, digest in current_files.items()
+            if baseline_files.get(name) != digest
+        }
+        if changed:
+            delta[repo_name] = {
+                "path": current_payload.get("path"),
+                "files": changed,
+            }
+    return delta
+
+
+def ensure_repo_heads_unchanged(
+    ctx: Context,
+    baseline: Dict[str, Dict[str, Any]],
+    current: Dict[str, Dict[str, Any]],
+) -> None:
+    changed = [
+        repo.name
+        for repo in ctx.repos
+        if baseline.get(repo.name, {}).get("head") != current.get(repo.name, {}).get("head")
+    ]
+    if changed:
+        die(
+            "begin-implementation 后 repo HEAD 已变化；提交会让实现 delta 脱离 task-start 证据。"
+            "请恢复到原 HEAD 后重试：\n"
+            + "\n".join(f"- {name}" for name in changed)
+        )
+
+
+def implementation_delta_paths(
+    ctx: Context,
+    delta: Dict[str, Dict[str, Any]],
+) -> List[str]:
+    repos_by_name = {repo.name: repo for repo in ctx.repos}
+    paths: List[str] = []
+    for repo_name, payload in delta.items():
+        repo = repos_by_name[repo_name]
+        for name in payload.get("files", {}):
+            paths.append(workspace_path_for_repo_file(repo, name))
+    return sorted(paths)
+
+
+def enforce_task_scope(
+    ctx: Context,
+    task: Task,
+    scope: Dict[str, Any],
+    delta: Dict[str, Dict[str, Any]],
+) -> None:
+    delta_paths = implementation_delta_paths(ctx, delta)
+    if task.task_type not in CODE_TASK_TYPES:
+        if delta_paths:
+            die(
+                f"无代码任务 [{task.task_id}] 检测到 Git 可见实现 delta，不能进入 review-ready：\n"
+                + "\n".join(f"- {path}" for path in delta_paths)
+            )
+        return
+
+    if not delta_paths:
+        die(f"代码型任务 [{task.task_id}] 没有验证前可归因实现 delta，不能进入 review-ready。")
+    outside = [
+        path
+        for path in delta_paths
+        if not any(scope_path_covers(allowed, path) for allowed in scope["allowed_paths"])
+    ]
+    if outside:
+        die(
+            f"任务 [{task.task_id}] 的实现 delta 超出 sealed allowed-path：\n"
+            + "\n".join(f"- {path}" for path in outside)
+        )
+    missed = [
+        required
+        for required in scope["required_paths"]
+        if not any(scope_path_covers(required, path) for path in delta_paths)
+    ]
+    if missed:
+        die(
+            f"任务 [{task.task_id}] 没有命中 sealed required-path：\n"
+            + "\n".join(f"- {path}" for path in missed)
+        )
 
 
 def non_empty_snapshot(snapshot: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -1160,25 +1442,137 @@ def is_no_validation_marker(command: str) -> bool:
     return stripped.startswith(CN_NO_VALIDATION) or stripped.startswith(EN_NO_VALIDATION)
 
 
-def run_shell_command(ctx: Context, command: str, log_lines: List[str]) -> bool:
+@dataclasses.dataclass
+class ValidationBudget:
+    deadline: float
+    output_limit_bytes: int
+    output_used_bytes: int = 0
+    timed_out: int = 0
+    output_limited: int = 0
+
+
+def stop_process_group(process: subprocess.Popen[bytes]) -> None:
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    if process.poll() is not None:
+        return
+    try:
+        process.wait(timeout=1)
+        return
+    except subprocess.TimeoutExpired:
+        pass
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
+    process.wait()
+
+
+def run_shell_command(
+    ctx: Context,
+    command: str,
+    log_lines: List[str],
+    budget: ValidationBudget,
+) -> bool:
     log_lines.append(f"$ {command}")
-    cp = subprocess.run(
+    if time.monotonic() >= budget.deadline:
+        budget.timed_out += 1
+        log_lines.append("终止原因：验证总超时预算已耗尽，命令未运行。")
+        return False
+    if budget.output_used_bytes >= budget.output_limit_bytes:
+        budget.output_limited += 1
+        log_lines.append("终止原因：验证总输出预算已耗尽，命令未运行。")
+        return False
+
+    process = subprocess.Popen(
         ["bash", "-lc", command],
         cwd=str(ctx.root),
-        text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        start_new_session=True,
     )
-    if cp.stdout:
-        log_lines.append(cp.stdout.rstrip())
-    log_lines.append(f"退出码：{cp.returncode}")
-    return cp.returncode == 0
+    if process.stdout is None:  # pragma: no cover - PIPE always provides stdout
+        stop_process_group(process)
+        log_lines.append("终止原因：无法捕获验证命令输出。")
+        return False
+
+    chunks: List[bytes] = []
+    stop_reason: Optional[str] = None
+    selector = selectors.DefaultSelector()
+    selector.register(process.stdout, selectors.EVENT_READ)
+    try:
+        while True:
+            remaining_time = budget.deadline - time.monotonic()
+            if remaining_time <= 0:
+                budget.timed_out += 1
+                stop_reason = "终止原因：验证命令超过总超时预算。"
+                break
+            events = selector.select(timeout=min(remaining_time, 0.2))
+            if not events:
+                if process.poll() is not None:
+                    continue
+                continue
+            chunk = os.read(process.stdout.fileno(), min(
+                65536,
+                budget.output_limit_bytes - budget.output_used_bytes + 1,
+            ))
+            if not chunk:
+                break
+            available = budget.output_limit_bytes - budget.output_used_bytes
+            if len(chunk) > available:
+                if available:
+                    chunks.append(chunk[:available])
+                    budget.output_used_bytes += available
+                budget.output_limited += 1
+                stop_reason = (
+                    "终止原因：验证输出超过总上限 "
+                    f"{budget.output_limit_bytes} bytes。"
+                )
+                break
+            chunks.append(chunk)
+            budget.output_used_bytes += len(chunk)
+    finally:
+        selector.close()
+
+    if stop_reason:
+        stop_process_group(process)
+    else:
+        remaining_time = max(0.01, budget.deadline - time.monotonic())
+        try:
+            process.wait(timeout=remaining_time)
+        except subprocess.TimeoutExpired:
+            budget.timed_out += 1
+            stop_reason = "终止原因：验证命令超过总超时预算。"
+            stop_process_group(process)
+
+    output = b"".join(chunks).decode("utf-8", errors="replace")
+    if output:
+        log_lines.append(output.rstrip())
+    if stop_reason:
+        log_lines.append(stop_reason)
+    log_lines.append(f"退出码：{process.returncode}")
+    return stop_reason is None and process.returncode == 0
 
 
-def run_validations(ctx: Context, paths: Paths, task: Task, is_last_task: bool) -> Tuple[bool, List[str], List[str]]:
+def run_validations(
+    ctx: Context,
+    paths: Paths,
+    task: Task,
+    is_last_task: bool,
+    timeout_seconds: int,
+    output_limit_bytes: int,
+) -> Tuple[bool, List[str], List[str], Dict[str, int]]:
     log_lines: List[str] = []
     summary: List[str] = []
     ok = True
+    programmatic_runs = 0
+    programmatic_successes = 0
+    budget = ValidationBudget(
+        deadline=time.monotonic() + timeout_seconds,
+        output_limit_bytes=output_limit_bytes,
+    )
 
     log_lines.append(f"# 验证日志：issue {paths.issue_id} / task {task.task_id}")
     log_lines.append(f"时间：{utc_now()}")
@@ -1190,7 +1584,9 @@ def run_validations(ctx: Context, paths: Paths, task: Task, is_last_task: bool) 
             summary.append(f"跳过程序化验证：{command}")
             log_lines.append(f"[review-only] {command}")
             continue
-        passed = run_shell_command(ctx, command, log_lines)
+        programmatic_runs += 1
+        passed = run_shell_command(ctx, command, log_lines, budget)
+        programmatic_successes += int(passed)
         summary.append(f"task 验证：{'通过' if passed else '失败'}：{command}")
         ok = ok and passed
         log_lines.append("")
@@ -1207,7 +1603,9 @@ def run_validations(ctx: Context, paths: Paths, task: Task, is_last_task: bool) 
             summary.append(f"shared check review-only：{check_id}")
             log_lines.append(f"[review-only shared {check_id}] {command}")
             continue
-        passed = run_shell_command(ctx, command, log_lines)
+        programmatic_runs += 1
+        passed = run_shell_command(ctx, command, log_lines, budget)
+        programmatic_successes += int(passed)
         summary.append(f"shared check {check_id}：{'通过' if passed else '失败'}")
         ok = ok and passed
         log_lines.append("")
@@ -1224,14 +1622,23 @@ def run_validations(ctx: Context, paths: Paths, task: Task, is_last_task: bool) 
                     summary.append(f"最终验证 review-only：{command}")
                     log_lines.append(f"[review-only final] {command}")
                     continue
-                passed = run_shell_command(ctx, command, log_lines)
+                programmatic_runs += 1
+                passed = run_shell_command(ctx, command, log_lines, budget)
+                programmatic_successes += int(passed)
                 summary.append(f"最终验证：{'通过' if passed else '失败'}：{command}")
                 ok = ok and passed
                 log_lines.append("")
 
     paths.state_dir.mkdir(parents=True, exist_ok=True)
     paths.validation_log.write_text("\n".join(log_lines) + "\n", encoding="utf-8")
-    return ok, summary, log_lines
+    return ok, summary, log_lines, {
+        "programmatic_runs": programmatic_runs,
+        "programmatic_successes": programmatic_successes,
+        "timeout_seconds": timeout_seconds,
+        "output_limit_bytes": output_limit_bytes,
+        "timed_out": budget.timed_out,
+        "output_limited": budget.output_limited,
+    }
 
 
 def mark_task_complete(paths: Paths, task: Task) -> None:
@@ -1281,6 +1688,8 @@ def command_seal(
 ) -> None:
     if not paths.plan_file.exists() or not paths.task_file.exists():
         die("缺少 plan.md 或 tasks.md。请先运行 init 并填写计划。")
+    if paths.seal_file.exists() and load_seal(paths).get("implementation") is not None:
+        die("当前 task 已开始 implementation，不能重新 seal 或重置 task-start baseline。")
     if bool(expected_bundle_scheme) != bool(expected_bundle_fingerprint):
         die("selected profile seal 必须同时提供 expected bundle scheme 和 fingerprint。")
     bundle_identity = None
@@ -1374,6 +1783,71 @@ def command_next(ctx: Context, paths: Paths) -> None:
         info(f"约束：{c}")
 
 
+def active_implementation(ctx: Context, seal: Dict[str, Any], task: Task) -> Dict[str, Any]:
+    state = seal.get("implementation")
+    expected = (task.number, task.task_id, task.task_type)
+    if not isinstance(state, dict) or tuple(
+        state.get(key) for key in ("task_number", "task_id", "task_type")
+    ) != expected or state.get("version") != 2 or not isinstance(state.get("repo_baselines"), dict) or state.get("execution_authority") != "authorized":
+        die("缺少当前 sealed task 的 v2 task-start Git baseline；先运行 begin-implementation。")
+    baseline_repos = {name: payload.get("path") for name, payload in state["repo_baselines"].items()}
+    if baseline_repos != {repo.name: repo.rel_path for repo in ctx.repos}:
+        die("task-start 后 workspace repo 边界发生变化。")
+    expected_heads = {
+        name: payload.get("head")
+        for name, payload in state["repo_baselines"].items()
+    }
+    if state.get("repo_heads") != expected_heads or not all(isinstance(value, str) for value in expected_heads.values()):
+        die("task-start evidence 缺少 sealed repo HEAD。请重新开始当前 issue 的实现状态。")
+    scope = validate_task_scope_repos(ctx, task)
+    if state.get("task_scope") != scope:
+        die("task-start evidence 的 allowed/required target paths 与 sealed task 不一致。")
+    return state
+
+
+def command_begin_implementation(ctx: Context, paths: Paths) -> None:
+    seal = verify_seal(ctx, paths)
+    tasks = parse_tasks(paths.task_file, require_valid=True)
+    task = first_unchecked(tasks)
+    if not task:
+        info("所有任务已完成，无需进入 implementation。")
+        return
+
+    if seal.get("implementation") is not None:
+        state = active_implementation(ctx, seal, task)
+        info("当前 task 已有 task-start Git baseline；保持原 baseline，不重置。")
+        info(f"开始时间：{state.get('started_at')}")
+        return
+
+    repos = ctx.repos
+    if task.task_type in CODE_TASK_TYPES and not repos:
+        die("代码型 task 需要至少一个 Git repo，才能捕获 task-start baseline 和可归因实现 delta。")
+    scope = validate_task_scope_repos(ctx, task)
+    baseline = snapshot_repos(ctx, repos)
+    seal["implementation"] = {
+        "version": 2,
+        "task_number": task.number,
+        "task_id": task.task_id,
+        "task_type": task.task_type,
+        "started_at": utc_now(),
+        "repo_baselines": baseline,
+        "repo_heads": {name: payload["head"] for name, payload in baseline.items()},
+        "task_scope": scope,
+        "execution_authority": "authorized",
+    }
+    paths.seal_file.write_text(
+        json.dumps(seal, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    info(f"状态：implementation-ready；task={task.task_id}；type={task.task_type}")
+    info("已封存 task-start repo HEAD、Git baseline 和机器可读路径范围；execution_authority：authorized。")
+    if scope["allowed_paths"]:
+        info("allowed-path：" + ", ".join(scope["allowed_paths"]))
+    if scope["required_paths"]:
+        info("required-path：" + ", ".join(scope["required_paths"]))
+    info("立即实现当前 task；不得超出 sealed allowed-path，代码任务必须命中全部 required-path。")
+
+
 def command_notes_template(ctx: Context, paths: Paths) -> None:
     verify_seal(ctx, paths)
     tasks = parse_tasks(paths.task_file, require_valid=True)
@@ -1421,45 +1895,125 @@ def prepare_review_repos(ctx: Context, selected_repo: Optional[str]) -> List[Rep
     return repos
 
 
-def command_review_ready(ctx: Context, paths: Paths, selected_repo: Optional[str]) -> None:
-    verify_seal(ctx, paths)
+def command_review_ready(
+    ctx: Context,
+    paths: Paths,
+    selected_repo: Optional[str],
+    validation_timeout_seconds: int,
+    validation_output_bytes: int,
+) -> None:
+    seal = verify_seal(ctx, paths)
     tasks = parse_tasks(paths.task_file, require_valid=True)
     task = first_unchecked(tasks)
     if not task:
         info("所有任务已完成，无需 review-ready。")
         return
+    implementation_start = active_implementation(ctx, seal, task)
     repos = prepare_review_repos(ctx, selected_repo)
     allowed_repo_names = {repo.name for repo in repos} if ctx.cfg["workspace"]["commit"] == "auto" else None
-    tracked_files = sync_tracked_plan_docs(ctx, paths, allowed_repo_names=allowed_repo_names)
+    sync_tracked_plan_docs(ctx, paths, allowed_repo_names=allowed_repo_names)
+    implementation_frozen_at = utc_now()
+    implementation_repo_state = snapshot_repos(ctx, ctx.repos)
+    ensure_repo_heads_unchanged(
+        ctx,
+        implementation_start["repo_baselines"],
+        implementation_repo_state,
+    )
+    implementation_delta = attributable_implementation_delta_from_snapshot(
+        ctx,
+        paths,
+        implementation_start["repo_baselines"],
+        implementation_repo_state,
+    )
+    frozen_plan_hash = sha256_file(paths.plan_file)
+    frozen_task_hash = sha256_file(paths.task_file)
+    frozen_seal_hash = sha256_file(paths.seal_file)
+    outside_review = sorted(set(implementation_delta) - {repo.name for repo in repos})
+    if outside_review:
+        die("可归因实现 delta 位于未 review 的 repo：" + ", ".join(outside_review))
+    enforce_task_scope(ctx, task, implementation_start["task_scope"], implementation_delta)
+
     is_last = completed_count(tasks) == len(tasks) - 1
-    ok, summary, _ = run_validations(ctx, paths, task, is_last)
+    ok, summary, _, validation_evidence = run_validations(
+        ctx,
+        paths,
+        task,
+        is_last,
+        validation_timeout_seconds,
+        validation_output_bytes,
+    )
+    current_repo_boundary = {repo.name: repo.rel_path for repo in discover_repos(ctx.root)}
+    if current_repo_boundary != {repo.name: repo.rel_path for repo in ctx.repos}:
+        die(
+            "验证期间 workspace repo 边界发生变化；实现证据必须绑定同一组 repo。"
+            "验证日志：\n"
+            f"- {rel(ctx.root, paths.validation_log)}"
+        )
+    if (
+        not paths.plan_file.is_file()
+        or not paths.task_file.is_file()
+        or not paths.seal_file.is_file()
+        or sha256_file(paths.plan_file) != frozen_plan_hash
+        or sha256_file(paths.task_file) != frozen_task_hash
+        or sha256_file(paths.seal_file) != frozen_seal_hash
+    ):
+        die(
+            "验证期间 sealed plan/task 或 implementation-start evidence 发生变化。"
+            "验证日志：\n"
+            f"- {rel(ctx.root, paths.validation_log)}"
+        )
+    after_validation = snapshot_repos(ctx, ctx.repos)
+    if after_validation != implementation_repo_state:
+        die(
+            "验证期间 repo HEAD、index 或 Git 可见 workspace 发生变化；"
+            "实现证据必须在验证前冻结且验证只读。验证日志：\n"
+            f"- {rel(ctx.root, paths.validation_log)}"
+        )
     if not ok:
         info("验证失败，未生成 review-ready。验证日志：")
         info(f"- {rel(ctx.root, paths.validation_log)}")
         raise SystemExit(1)
+    if task.task_type in CODE_TASK_TYPES and validation_evidence["programmatic_successes"] < 1:
+        die(
+            f"代码型任务 [{task.task_id}] 没有真实程序化验证成功记录；"
+            "review-only marker 不能让代码实现进入 review-ready。"
+        )
 
-    snapshot = snapshot_repos(ctx, repos)
-    changed_snapshot = non_empty_snapshot(snapshot)
     if ctx.cfg["workspace"]["commit"] == "auto":
         repo = repos[0]
-        names = sorted(snapshot.get(repo.name, {}).get("files", {}).keys())
+        names = sorted(implementation_repo_state.get(repo.name, {}).get("files", {}).keys())
         unexpected = staged_non_allowed(repo, names)
         if unexpected:
             die("检测到不属于当前 review snapshot 的 staged 文件，不能继续：\n" + "\n".join(f"- {repo.name}:{x}" for x in unexpected))
+        git_add(repo, names)
+        info(f"已 stage 当前 review snapshot 的变更文件：{repo.name}")
+    else:
+        info(f"{ctx.cfg['workspace']['commit']} 模式：未 stage 文件，只记录 review snapshot hash。")
+
+    snapshot = snapshot_repos(ctx, repos)
+    changed_snapshot = non_empty_snapshot(snapshot)
     review = {
-        "version": 3,
+        "version": 5,
         "issue_id": paths.issue_id,
         "task_number": task.number,
         "task_id": task.task_id,
         "task_summary": task.summary,
+        "task_type": task.task_type,
         "commit_type": task_commit_type(ctx, task),
         "created_at": utc_now(),
-        "plan_hash": sha256_file(paths.plan_file),
-        "task_hash": sha256_file(paths.task_file),
+        "plan_hash": frozen_plan_hash,
+        "task_hash": frozen_task_hash,
         "workspace_repos": repo_payload(ctx),
         "reviewed_repos": [repo.name for repo in repos],
         "repo_snapshots": snapshot,
         "changed_repos": changed_snapshot,
+        "implementation_started_at": implementation_start["started_at"],
+        "implementation_seal_hash": frozen_seal_hash,
+        "implementation_frozen_at": implementation_frozen_at,
+        "implementation_repo_state": implementation_repo_state,
+        "implementation_scope": implementation_start["task_scope"],
+        "implementation_delta": implementation_delta,
+        "validation_evidence": validation_evidence,
         "validation_summary": summary,
         "validation_log": rel(ctx.root, paths.validation_log),
         "commit_mode": ctx.cfg["workspace"]["commit"],
@@ -1468,16 +2022,9 @@ def command_review_ready(ctx: Context, paths: Paths, selected_repo: Optional[str
     paths.state_dir.mkdir(parents=True, exist_ok=True)
     paths.review_state_file.write_text(json.dumps(review, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-    if ctx.cfg["workspace"]["commit"] == "auto":
-        repo = repos[0]
-        names = sorted(snapshot.get(repo.name, {}).get("files", {}).keys())
-        git_add(repo, names)
-        info(f"已 stage 当前 review snapshot 的变更文件：{repo.name}")
-    else:
-        info(f"{ctx.cfg['workspace']['commit']} 模式：未 stage 文件，只记录 review snapshot hash。")
-
     info("状态：review-ready")
     info(f"当前任务：[{task.task_id}] {task.summary}")
+    info(f"任务类型：{task.task_type}")
     if task.commit_type:
         info(f"提交类型：{task.commit_type}")
     info("验证结果：")
@@ -1490,13 +2037,19 @@ def command_review_ready(ctx: Context, paths: Paths, selected_repo: Optional[str
             info(f"- {line}")
     else:
         info("变更文件快照：无代码文件变更。")
+    implementation_text = changed_files_text(implementation_delta)
+    if implementation_text:
+        info("验证前冻结的可归因实现 delta：\n" + implementation_text)
+    else:
+        info(f"{task.task_type} 无 Git 可见实现 delta；验证期间 Git 状态保持不变。")
+    info(f"真实程序化验证：{validation_evidence['programmatic_successes']}/{validation_evidence['programmatic_runs']} 成功")
     info(f"验证日志：{rel(ctx.root, paths.validation_log)}")
     info("用户 review 通过后运行：")
     info(f"scripts/issue-workflow.sh complete {paths.issue_id}")
 
 
 def verify_review_snapshot(ctx: Context, review: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
-    if review.get("version") != 3:
+    if review.get("version") != 5:
         die("review-ready 快照版本已过期。请重新运行 review-ready。")
     repos_by_name = {repo.name: repo for repo in ctx.repos}
     if review.get("commit_mode") in {"manual", "none"}:
@@ -1526,6 +2079,8 @@ def verify_review_snapshot(ctx: Context, review: Dict[str, Any]) -> Dict[str, Di
         files = payload.get("files", {})
         if not isinstance(files, dict):
             die(f"review-ready 中 repo {repo_name} 的 files 格式错误。")
+        if not isinstance(payload.get("head"), str) or not isinstance(payload.get("index_fingerprint"), str):
+            die(f"review-ready 中 repo {repo_name} 缺少 HEAD/index 快照。")
         if payload.get("path") != repos_by_name[repo_name].rel_path:
             die(f"review-ready 中 repo {repo_name} 的路径与当前 workspace 不一致。请重新 review-ready。")
 
@@ -1637,7 +2192,7 @@ def resume_auto_pending_if_ready(ctx: Context, paths: Paths) -> bool:
 def command_complete(ctx: Context, paths: Paths) -> None:
     if resume_auto_pending_if_ready(ctx, paths):
         return
-    verify_seal(ctx, paths)
+    seal = verify_seal(ctx, paths)
     tasks = parse_tasks(paths.task_file, require_valid=True)
     task = first_unchecked(tasks)
     if not task:
@@ -1650,6 +2205,44 @@ def command_complete(ctx: Context, paths: Paths) -> None:
         die("review-ready 的任务与当前第一个未完成任务不一致。请重新 review-ready。")
     if review.get("plan_hash") != sha256_file(paths.plan_file) or review.get("task_hash") != sha256_file(paths.task_file):
         die("review-ready 后 plan.md 或 tasks.md 发生变化。请重新 review-ready。")
+    implementation_start = active_implementation(ctx, seal, task)
+    if review.get("implementation_started_at") != implementation_start.get("started_at"):
+        die("review-ready 后 implementation-start evidence 发生变化。请重新 review-ready。")
+    if review.get("implementation_seal_hash") != sha256_file(paths.seal_file):
+        die("review-ready 后 sealed implementation-start evidence 文件发生变化。请重新 review-ready。")
+    implementation_delta = review.get("implementation_delta")
+    implementation_repo_state = review.get("implementation_repo_state")
+    validation_evidence = review.get("validation_evidence")
+    if (
+        not isinstance(implementation_delta, dict)
+        or not isinstance(implementation_repo_state, dict)
+        or not isinstance(validation_evidence, dict)
+    ):
+        die("review-ready 缺少冻结的 implementation evidence 或 validation evidence。")
+    if review.get("implementation_scope") != implementation_start.get("task_scope"):
+        die("review-ready 的 allowed/required target paths 与 task-start evidence 不一致。")
+    ensure_repo_heads_unchanged(
+        ctx,
+        implementation_start["repo_baselines"],
+        implementation_repo_state,
+    )
+    frozen_delta = attributable_implementation_delta_from_snapshot(
+        ctx,
+        paths,
+        implementation_start["repo_baselines"],
+        implementation_repo_state,
+    )
+    if implementation_delta != frozen_delta:
+        die("review-ready 的验证前实现 delta 与冻结 repo state 不一致。")
+    enforce_task_scope(ctx, task, implementation_start["task_scope"], implementation_delta)
+    if implementation_delta != attributable_implementation_delta(ctx, paths, implementation_start["repo_baselines"]):
+        die("review-ready 后可归因实现 delta 发生变化。请重新 review-ready。")
+    if task.task_type in CODE_TASK_TYPES and (
+        not implementation_delta or validation_evidence.get("programmatic_successes", 0) < 1
+    ):
+        die("代码型 task 缺少可归因实现 delta 或真实程序化验证成功记录。")
+    if validation_evidence.get("timed_out", 0) or validation_evidence.get("output_limited", 0):
+        die("review-ready 包含超时或输出超限的验证，不能 complete。")
     mode = ctx.cfg["workspace"]["commit"]
     if review.get("commit_mode") != mode:
         die("当前 workspace.commit 与 review-ready 时不一致。请重新 review-ready。")
@@ -1739,13 +2332,35 @@ def command_complete(ctx: Context, paths: Paths) -> None:
         info("所有任务已完成。")
 
 
+def bounded_cli_int(raw: str, label: str, maximum: int) -> int:
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"{label} 必须是整数。") from exc
+    if value < 1 or value > maximum:
+        raise argparse.ArgumentTypeError(f"{label} 必须在 1..{maximum} 之间。")
+    return value
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Software Plan-First 中文工作流")
     parser.add_argument("--root", help="workspace root；默认向上查找 .plan-first/config.toml，找不到则使用当前 Git root；init 可在非 Git cwd bootstrap")
     parser.add_argument("--repo", help="仅 auto 模式可用；限制 review-ready 的 Git repo，多 repo auto commit 时必填")
     parser.add_argument("--expected-bundle-scheme", help="selected profile seal：strict receipt 绑定的 bundle fingerprint scheme")
     parser.add_argument("--expected-bundle-fingerprint", help="selected profile seal：strict receipt 绑定的 bundle fingerprint")
-    parser.add_argument("command", nargs="?", help="init|bundle-fingerprint|seal|status|next|notes-template|review-ready|complete，或直接传 issue-id 查看 status")
+    parser.add_argument(
+        "--validation-timeout-seconds",
+        type=lambda raw: bounded_cli_int(raw, "validation timeout", MAX_VALIDATION_TIMEOUT_SECONDS),
+        default=DEFAULT_VALIDATION_TIMEOUT_SECONDS,
+        help=f"review-ready 全部验证命令的总超时秒数（默认 {DEFAULT_VALIDATION_TIMEOUT_SECONDS}，最大 {MAX_VALIDATION_TIMEOUT_SECONDS}）",
+    )
+    parser.add_argument(
+        "--validation-output-bytes",
+        type=lambda raw: bounded_cli_int(raw, "validation output", MAX_VALIDATION_OUTPUT_BYTES),
+        default=DEFAULT_VALIDATION_OUTPUT_BYTES,
+        help=f"review-ready 全部验证命令可捕获的总输出 bytes（默认 {DEFAULT_VALIDATION_OUTPUT_BYTES}，最大 {MAX_VALIDATION_OUTPUT_BYTES}）",
+    )
+    parser.add_argument("command", nargs="?", help="init|bundle-fingerprint|seal|status|next|begin-implementation|notes-template|review-ready|complete，或直接传 issue-id 查看 status")
     parser.add_argument("issue_id", nargs="?")
     args = parser.parse_args()
 
@@ -1753,7 +2368,7 @@ def main() -> None:
         print("用法：scripts/issue-workflow.sh [--root ROOT] [--repo NAME] <command> <issue-id>")
         raise SystemExit(2)
 
-    commands = {"init", "bundle-fingerprint", "seal", "status", "next", "notes-template", "review-ready", "complete"}
+    commands = {"init", "bundle-fingerprint", "seal", "status", "next", "begin-implementation", "notes-template", "review-ready", "complete"}
     if args.command in commands:
         command = args.command
         issue_id = args.issue_id
@@ -1776,10 +2391,18 @@ def main() -> None:
         command_status(ctx, paths)
     elif command == "next":
         command_next(ctx, paths)
+    elif command == "begin-implementation":
+        command_begin_implementation(ctx, paths)
     elif command == "notes-template":
         command_notes_template(ctx, paths)
     elif command == "review-ready":
-        command_review_ready(ctx, paths, args.repo)
+        command_review_ready(
+            ctx,
+            paths,
+            args.repo,
+            args.validation_timeout_seconds,
+            args.validation_output_bytes,
+        )
     elif command == "complete":
         command_complete(ctx, paths)
     else:

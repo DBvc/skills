@@ -1,0 +1,6 @@
+interface:
+  display_name: "DBX Implementation-Bound Workflow"
+  short_description: "Bound one reviewed plan to a real first code slice."
+  default_prompt: "Use $dbx-implementation-bound-workflow to run one bounded plan review and continue this authorized feature into its first attributable code slice."
+policy:
+  allow_implicit_invocation: false

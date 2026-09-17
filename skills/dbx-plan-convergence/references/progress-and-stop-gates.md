@@ -179,9 +179,9 @@ Examples:
 
 When both exist, select the action that can reduce uncertainty first. Record any later action as `follow_up_if` rather than an action list.
 
-## 9. Scoped re-review
+## 9. Post-revision verification
 
-After a local revision, re-review only:
+For ordinary `handoff_ready`, use one scoped re-review covering only:
 
 1. accepted finding closure;
 2. direct regressions;
@@ -191,21 +191,23 @@ After a local revision, re-review only:
 
 The review pass must bind to the revised artifact type/scheme/version/fingerprint/content ref and reference the revision contract.
 
-A full re-review is justified only when revision materially changed direction, scope, contract, ownership, migration, or validation topology. Such a change usually means the previous revision was not local and should be reclassified or moved to a new epoch.
+A full re-review outside `strict_acceptance` is justified only when revision materially changed direction, scope, contract, ownership, migration, or validation topology. Such a change usually means the previous revision was not local and should be reclassified or moved to a new epoch.
 
-Scoped closure alone never proves strict acceptance.
+For `strict_acceptance`, skip the scoped pass and run exactly one fresh final full review. That pass checks the accepted findings, direct regressions, anchor/evidence drift, scope/bloat, and the complete declared acceptance scope. Scoped closure alone never proves strict acceptance.
 
 ## 10. Strict acceptance gate
 
 Apply only when `completion_profile: strict_acceptance` and the artifact is otherwise a completion candidate.
 
+Before requesting review, reuse a current passed receipt when it matches the exact artifact identity and no material reopen trigger exists. Valid triggers are limited to artifact identity, contradictory evidence, a frozen decision, declared scope, or acceptance-policy changes. A new invocation, reviewer/model, elapsed time, or reassurance request is not a trigger.
+
 - Missing a controller/artifact-provider-computed fingerprint matching `^sha256:[0-9a-f]{64}$`, a placeholder, an unknown or identity-mismatched scheme, a bundle `file_bundle` ref with both exact paths, or a hash that cannot be verified from the exact artifact bytes under its recognized scheme: `obtain-artifact + needs-artifact`.
 - Missing reviewer binding or current qualifying review: `obtain-review + needs-review`.
 - Initial full review may qualify when it is independent, bound to the current artifact, and no artifact revision followed it.
-- After any artifact revision, invalidate the old acceptance basis and receipt. Run scoped closure, then a fresh independent full review of the completion candidate.
-- Any open `blocker` or `high`, or a judgment other than `accept` / `accept_with_advisories`, returns to normal finding triage.
+- After any artifact revision, invalidate the old acceptance basis and receipt. Run exactly one fresh independent final full review of the completion candidate; it also checks accepted-finding closure. Do not add a scoped pass first.
+- Any open `blocker` or `high`, or a judgment other than `accept` / `accept_with_advisories`, fails the terminal post-revision gate. If the blocker requires a decision owner, return `request-decision + needs-decision`; otherwise return `stop + blocked-final-review`. Never issue another revision contract or request another review in the same session.
 - A `medium` must be fixed or explicitly marked non-blocking by the reviewer; a product, architecture, compatibility, or risk-acceptance choice must also be resolved by the decision owner.
-- Acceptance budget exhausted without a qualifying pass: `stop + stopped-budget`.
+- Acceptance budget exhausted without a qualifying pass: `stop + stopped-budget` only when the unique legal next action still requires that final full review.
 - Only a qualifying pass may issue the identity-bound `strict_acceptance_receipt` and reach ready under this profile.
 
 Do not silently downgrade to `handoff_ready`.
@@ -214,7 +216,11 @@ Do not silently downgrade to `handoff_ready`.
 
 Soft budget is a checkpoint. Continue beyond it only with progress credit and no disqualifier.
 
-Hard budget ends the current run:
+Before starting a revision, reserve one revision plus its one profile-appropriate verification as an atomic round. A grant that funds only the edit but not the required verification cannot start that revision.
+
+That verification closes the atomic round even when it finds a blocker. Extra budget cannot convert its result into a second correction inside the same session; continued editing happens outside this controller result and requires a new explicit bounded session for the materially changed artifact.
+
+Hard budget forbids another operation that consumes the exhausted dimension. Use the stop state only when the current artifact is incomplete and its unique legal next action requires that operation:
 
 ```yaml
 transition:
@@ -222,7 +228,7 @@ transition:
   final_state: stopped-budget
 ```
 
-An override requires an explicit new bounded budget. “继续直到完美” is invalid.
+It does not block receipt reuse, `finalize` after the completion gate already passes, or an evidence/decision/pivot handoff that consumes no review or revision budget. An override requires an explicit new bounded budget. “继续直到完美” is invalid.
 
 ## 12. Ready gate
 
@@ -245,7 +251,7 @@ oscillation_signal: false
 bloat_signal: false
 ```
 
-A non-directional implementation unknown may remain only when it is explicit, bounded, and paired with a stop condition before affected work.
+A non-directional implementation unknown may remain only when it is explicit, bounded, and paired with a stop condition before affected work. An unknown that affects only a later slice does not block handoff when the first executable slice has concrete scope, invariant, validation, and stop conditions; an unknown that can flip the first slice still blocks.
 
 Ready is relative to evidence boundary. It is not proof that implementation will succeed.
 

@@ -20,10 +20,11 @@ Store trigger evals in `evals/triggers.json` when using the DBX repo runner.
 
 ### Runner evals
 
-Use `evals/evals.json` for output and process assertions. The v7 runner schema uses:
+Use `evals/evals.json` for output and process assertions. New suites use schema v8:
 
 ```json
 {
+  "schema_version": 8,
   "skill_name": "example-skill",
   "pass_threshold": 0.85,
   "evals": [
@@ -61,7 +62,9 @@ Each check must include `required: true|false`. Newer DBX evals should also incl
 - `safety`: checks refusal, escalation, consent, privacy, or authority boundaries;
 - `validation`: checks proof, schema, runner compatibility, or regression behavior.
 
-A case must have at least one required non-marker quality check. A suite that only checks `## Summary`, `SKILL.md`, `scripts/`, or `route: full_skill` should fail schema validation.
+A v8 case must have at least one required **positive-evidence** check with a non-structural quality. A positive-evidence check uses `must_contain`, `must_start_with`, or `regex` to observe behavior, an artifact, state, validation, placement, safety, specificity, domain content, or collection behavior. `must_not_contain` is useful as a second boundary check but does not prove that the expected behavior happened.
+
+Unversioned suites retain v7 compatibility. Migrate them by adding a required positive-evidence check to every case, then set `schema_version: 8`. Do not add the version first and weaken validation just to make the file pass.
 
 ### Human rubrics
 
@@ -114,6 +117,7 @@ Good assertions are observable:
 - output includes `patch_hypothesis` for non-trivial improvements;
 - eval JSON uses only canonical `kind` values;
 - marker-only outputs fail unless they also satisfy behavior, artifact, specificity, domain, safety, or validation assertions;
+- arbitrary non-empty output fails a v8 negative case unless the required reroute, refusal, artifact, state, or validation behavior is positively observed;
 - generated full-skill packages provide real file bodies, not filename lists.
 
 Weak assertions are vague or brittle:

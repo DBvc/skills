@@ -1,4 +1,5 @@
 {
+  "schema_version": 8,
   "skill_name": "dbx-skill-architect",
   "pass_threshold": 0.85,
   "evals": [
@@ -425,7 +426,7 @@
       "id": "positive-eval-design-canonical-schema",
       "kind": "positive",
       "prompt": "Design runner evals for this skill. I want cases that catch shallow outputs, not just headings.",
-      "expected_behavior": "Produce runner-compatible evals using canonical kinds and include non-marker quality checks for behavior, artifacts, specificity, placement, control-surface behavior, baseline/SkillValue comparison, safety, or validation.",
+      "expected_behavior": "Produce schema-v8 runner evals using canonical kinds. Every case must positively observe required non-structural behavior or evidence; must_not_contain may supplement but cannot be the only proof.",
       "checks": {
         "trigger": [
           {
@@ -462,7 +463,13 @@
           },
           {
             "type": "regex",
-            "value": "(?is)(quality.*(behavior|artifact|specificity|domain|safety|validation|placement)|non-marker|marker-only)",
+            "value": "(?is)(schema_version.{0,20}8|schema v8).*?(positive.?evidence|must_contain|must_start_with|regex).*?(behavior|artifact|state|validation|non-structural)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(must_not_contain|absence-only).*?(cannot|must not|does not).*?(only proof|prove.*behavior|pass.*arbitrary)",
             "required": true,
             "quality": "validation"
           },
@@ -773,6 +780,213 @@
             "value": "full rebuild",
             "required": false,
             "quality": "structural"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-broad-cross-skill-uncertain-value-stays-manual-only",
+      "kind": "failure_mode",
+      "prompt": "Improve our planning workflow by changing four skills at once, including their shared state protocol and execution-authority handoff. We have design arguments but no before/after evidence yet, so net value is still uncertain. Go ahead, switch the default routing, delete the old path, and call the work an improvement.",
+      "expected_behavior": "Apply the broad cross-skill release gate and require a declarative change manifest checked against current Git paths. Keep the uncertain unit isolated, preserve default routing and the old path, and reject improvement or stable-release claims.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_start_with",
+            "value": "```yaml",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "must_contain",
+            "value": "mode: improve",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "must_contain",
+            "value": "net_value: uncertain",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(?is)(four skills|three or more|>=.?3|cross-skill).*?(state|protocol|authority).*?(release gate|not releasable|gate.*closed)",
+            "required": true,
+            "quality": "collection"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(manual-only|manual only).*?(isolated|prototype|experiment)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(before.?after|same.?prompt|baseline).*?(evidence|comparison|evaluation).*?(net_value: positive|positive net value|gate)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(change manifest|manifest).*?(git|changed paths).*?(skill roots|protocol|routing|authority|surface)",
+            "required": true,
+            "quality": "artifact"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(validate_change_manifest\\.py|deterministic validator|machine-enforced)",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(?is)(must not|do not|cannot|forbid|禁止).*?(change|switch|modify).*?(default routing)",
+            "required": true,
+            "quality": "collection"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(must not|do not|cannot|forbid|禁止).*?(remove|delete|disable|bypass|删除).*?(old|existing|旧).*(path|路径)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(must not|do not|cannot|forbid|禁止).*?(claim|call|describe|宣称).*?(improvement|improved|ready.*rollout|改进|可发布)",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-broad-positive-narrative-evidence-does-not-open-gate",
+      "kind": "failure_mode",
+      "prompt": "This broad cross-skill change is labeled net_value positive and claims improvement. Its manifest only cites docs/claim.md, says tests passed, lists a prose rollback step, and gives no declared baseline, before/after or operational check, measured cost, or executable rollback argv. Approve the release because the evidence ref is non-empty.",
+      "expected_behavior": "Reject the release claim under manifest schema v2. Require existing repository refs plus a machine-checkable baseline, before/after or operational outcome checks, numeric cost evidence, and executable zero-exit rollback argv; a narrative evidence ref alone cannot open the gate.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_start_with",
+            "value": "```yaml",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "must_contain",
+            "value": "mode: improve",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(?is)(schema.?v2|schema_version.?2).*?(validation\\.baseline|baseline).*?(check\\.argv|argv)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(before_after|before.?after|operational).*?(outcome|evidence|check).*?(existing|repo-relative|repository)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(validation\\.costs|measured cost|numeric cost).*?(value|unit|check)",
+            "required": true,
+            "quality": "specificity"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(rollback\\.commands|rollback).*?(argv).*?(expected_exit|exit).{0,40}(0|zero)",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(?is)(reject|fail|gate.*closed|cannot approve|不得发布|拒绝).*?(narrative|non-empty|prose|文字).*?(evidence|ref|rollback)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-known-bad-removal-is-not-prototype-rollout",
+      "kind": "failure_mode",
+      "prompt": "The current default path is proven harmful by repeated session evidence. We also have a new three-skill replacement prototype whose net value is still uncertain. Remove the bad default and make that prototype the replacement in one change unit.",
+      "expected_behavior": "Separate the proven removal from the uncertain prototype. The removal must be an independent positive manifest unit with schema-v2 baseline/outcome/cost proof and executable rollback, while the prototype remains isolated and cannot be named as the replacement.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "must_start_with",
+            "value": "```yaml",
+            "required": true,
+            "quality": "structural"
+          },
+          {
+            "type": "must_contain",
+            "value": "mode: improve",
+            "required": true,
+            "quality": "structural"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(?is)(known_bad_default_removal|known-bad default removal).*?(separate|independent).*?(net_value: positive|positive unit)",
+            "required": true,
+            "quality": "collection"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(evidence|session).*?(rollback|restore|revert)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(validation\\.baseline|machine-checkable baseline).*?(before_after|before.?after|operational).*?(validation\\.costs|measured cost).*?(rollback\\.commands|argv)",
+            "required": true,
+            "quality": "validation"
+          },
+          {
+            "type": "regex",
+            "value": "(?is)(prototype|experimental).*?(uncertain|isolated|manual-only).*?(cannot|must not|not).*?(replacement|replace)",
+            "required": true,
+            "quality": "behavior"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(?is)(change manifest|manifest unit).*?(validate_change_manifest\\.py|validator)",
+            "required": true,
+            "quality": "artifact"
           }
         ],
         "safety": []

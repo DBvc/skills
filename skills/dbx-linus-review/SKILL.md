@@ -102,6 +102,10 @@ Rules:
 - Missing review id, declared independence, artifact identity, clear scope, evidence boundary, or read-only write prohibition fails closed. Ask the parent for the smallest missing envelope fields.
 - A scoped re-review must include the revision contract id and current artifact version.
 - Delegation does not permit ordinary implementation requests to activate this skill.
+- Receipt reuse, reopen policy, budgets, and terminal transitions belong to the parent controller. This reviewer neither accepts those fields nor changes that state.
+- `standalone_audit` reports an independent judgment about the supplied artifact only. It does not revoke another workflow's acceptance.
+- Review scope and requested dimensions are frozen by the envelope. “Full” means full inside that declared artifact/scope boundary, not permission to add new speculative dimensions after required coverage is complete.
+- This reviewer judges the plan artifact. It may judge whether the first executable slice is specified, but the implementer owns repository/worktree/seal/authority preflight and the final `implementation_status: ready` decision.
 
 Delegated reviews append this machine-readable block after the human review:
 
@@ -133,48 +137,16 @@ delegated_review_result:
 Result rules:
 
 - `S0` and `S1` are always blocking. `S3` is non-blocking unless the review explains otherwise.
-- `S2` is non-blocking only when the reviewer explicitly establishes that it cannot change direction, a required decision, the evidence boundary, or critical validation. Product, architecture, compatibility, or risk-acceptance `S2` remains blocking and sets `decision_owner_required: true` until resolved.
+- `S2` is non-blocking only when the reviewer explicitly establishes that it cannot change direction, a decision/evidence boundary/critical validation required before entering the declared first executable slice, or that slice itself. Product, architecture, compatibility, or risk-acceptance `S2` remains blocking only when it changes the readiness target, that first slice, its public/data/state contract, or cannot be contained by a stop condition that prevents entry into the affected later slice; then it sets `decision_owner_required: true` until resolved. A sentence saying “stop later” is not containment unless the affected slice is actually gated. Later-slice or implementation-discoverable detail is residual advisory, not a reason to keep expanding the plan.
 - `accept` requires no findings. `accept_with_advisories` requires every finding to have `blocking: false` and `residual: true`. Any blocking finding requires `changes_required`, `reject`, or `insufficient_evidence` as appropriate.
 - A strict-acceptance full review of a single artifact requires a readable `content_ref.kind: path`; recompute `exact-bytes-sha256` from that file before reviewing. `inline` and `current_context` may still support ordinary `handoff_ready` review, but under `strict_acceptance` they return `insufficient_evidence` and cannot qualify.
 - A strict-acceptance full review must echo the assigned review id, declared reviewer provider id and capability, exact artifact type, recognized fingerprint scheme, version, structured content ref, and a verified fingerprint matching `^sha256:[0-9a-f]{64}$`, and must report `independence: independent` to qualify. Reviewer capability is copied from the parent binding, never inferred from this skill's name. Missing, unreadable, mismatched, or ambiguous fields fail closed.
 - For `implementation_plan_bundle`, verified means receiving `content_ref.kind: file_bundle` with non-empty `plan` and `tasks`, then recomputing `plan-first-bundle-sha256-v1` from those exact bytes. Report both component SHA-256 values as verification evidence before the structured result. A missing ref, unreadable file, unknown scheme, or fingerprint mismatch fails closed; the reviewer does not guess a bundle representation or directory convention.
-- This block is the review provider result only; it never authorizes workflow completion.
-
-For a clean `strict_acceptance` full review of an `implementation_plan_bundle`, use one machine-only exception: emit raw YAML from `verification` through `delegated_review_result`, with no Markdown fence, provenance header, or surrounding prose. The fixed top-level order is:
-
-```yaml
-verification:
-  recomputation: recompute plan.md and tasks.md
-  fingerprint_scheme: plan-first-bundle-sha256-v1
-  plan_sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  tasks_sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-  review_scope: full
-  human_summary: 未发现 S0/S1 blocker
-material_findings: none
-delegated_review_result:
-  review_id: R-final
-  reviewer_provider_id: bound-reviewer
-  reviewer_capability: bound-capability
-  artifact_type: implementation_plan_bundle
-  artifact_version: v1
-  artifact_fingerprint_scheme: plan-first-bundle-sha256-v1
-  artifact_fingerprint: sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-  artifact_content_ref:
-    kind: file_bundle
-    value: null
-    plan: path/to/plan.md
-    tasks: path/to/tasks.md
-  scope: full
-  independence: independent
-  judgment: accept
-  findings: []
-```
-
-The fence above documents the schema; do not emit the fence. Any finding, non-accept judgment, scoped review, or non-bundle artifact uses the normal human review plus appended machine result instead.
+- This block is the review provider result only; it never authorizes workflow completion. Use this same result shape for clean, finding-bearing, single-file, and bundle reviews; do not introduce a machine-only exception.
 
 ### Delegated full plan review
 
-Use `plan_strict`. Review the current artifact version across only the requested dimensions. Echo the artifact version and review scope before findings so the parent can bind provenance.
+Use `plan_strict`. Review the current artifact version across only the requested dimensions and declared implementation boundary. Echo the artifact version and review scope before findings so the parent can bind provenance. After required dimensions are covered, do not invent another lens merely because a fresh reviewer is available.
 
 ### Delegated scoped plan re-review
 
@@ -295,6 +267,8 @@ Use only the lenses that matter for the current artifact.
 - Are tests, rollout, and rollback proportional?
 - Does the system become easier to operate and change?
 - Is the proposed direction locally fixable, or is the model itself wrong?
+- Can the first executable slice begin after a bounded implementer preflight, or is the plan only document-complete?
+- Would the concern actually flip that first slice? If not, keep it advisory or defer it to the affected later slice.
 
 ## Finding schema
 
@@ -323,7 +297,7 @@ For architecture or plan review, adapt Evidence to proposal sections, assumption
 
 Default output in Chinese. Fill the structure with concrete evidence; omit sections that do not apply.
 
-For a delegated review, prepend this minimal provenance header, except for the clean strict-acceptance bundle exception defined above:
+For a delegated review, prepend this minimal provenance header:
 
 ```markdown
 ## Review target
@@ -336,6 +310,8 @@ For a delegated review, prepend this minimal provenance header, except for the c
 ```
 
 This header does not authorize a `convergence_signals` block or replace the parent controller's transition output.
+
+For a standalone plan audit performed while another workflow result is present, say only that this review does not mutate that external state. Do not interpret its run, receipt, budget, or reopen policy.
 
 ### For diff/code review
 
@@ -423,6 +399,8 @@ You may say the review is complete when:
 - each finding has evidence, impact, fix direction, and confidence;
 - the reviewer did not modify the artifact or claim convergence completion;
 - the reviewer did not choose policy for the decision owner;
+- any standalone audit left external workflow state untouched;
+- plan-document acceptance was not presented as final repository/worktree/authority preflight;
 - limitations or missing validation are stated.
 
 You may not claim tests passed, behavior was verified, or the change is safe unless the evidence exists in the current session.

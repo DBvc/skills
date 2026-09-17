@@ -1,6 +1,8 @@
 # dbx-plan-convergence
 
-Explicit-only、provider-agnostic 的技术方案收敛控制器。
+Explicit-only、provider-agnostic 的 standalone 技术方案收敛 gate / stall diagnosis skill。
+
+它只控制当前显式 convergence session，不拥有跨 skill collection run、implementation authority 或默认 implementation-bound trajectory。
 
 它不负责“把方案写好”，而负责判断：
 
@@ -11,14 +13,17 @@ Explicit-only、provider-agnostic 的技术方案收敛控制器。
 - 何时可以 handoff，何时只是文档变胖；
 - 高影响方案如何提高严谨度，而不是盲目增加相同轮数。
 
-## v4 status
+## v5 status
 
-v4 保留 v2 state model，但增加显式 `strict_acceptance` completion profile 与 final full review 协调能力：
+v5 保留 v2 state model 和显式 `strict_acceptance`，并收缩为 standalone gate：
 
 - strict path 要求 artifact type、recognized fingerprint scheme、structured content ref、可重算的 exact-artifact SHA-256、fresh independent full review 和 identity-bound receipt；
-- bundle 局部修订在 request/result、scoped re-review 与 final full review 间保留 scheme、两文件引用和前后 identity；
+- bundle 局部修订在 request/result 与唯一 post-revision verification 间保留 scheme、两文件引用和前后 identity；strict 使用一次 final full，普通 handoff 才使用 scoped re-review；
+- 唯一 post-revision verification 会关闭 correction round；decision-owner blocker 交接为 `needs-decision`，其余 blocker 终止为 `blocked-final-review`，绝不开始第二次修订；
 - delegated reviewer 输出机器可读 judgment 与 per-finding blocking/residual 状态；
 - generic `handoff_ready` 仍是默认 profile，不承担严格验收语义；
+- matching receipt 直接复用；budget 只在唯一下一步需要消费已耗尽额度时阻塞；
+- direction pivot 不创建新 run、不重置总预算；默认单 epoch 用完后，新方向需要用户显式追加有界 grant；
 - `convergence_state_version` 仍为 `2`；旧 v2 state 在 resume 时只补 additive defaults，不推断 strict acceptance，无需版本迁移。
 
 ## v2 foundation
@@ -100,7 +105,7 @@ artifact identity
   -> one transition decision
   -> optional revision contract
   -> bounded revision
-  -> scoped review bound to new artifact
+  -> one profile-appropriate verification bound to new artifact
   -> progress gate
   -> continue / handoff / pivot / finalize / stop
 ```
@@ -113,7 +118,7 @@ transition:
   final_state: null
 ```
 
-“同一方向两轮”是默认 soft checkpoint，不是质量上限。Pivot 关闭旧 epoch，但总预算不会清零。
+默认只允许一个原子 correction：一次批量修订和一次对应 verification。Pivot 在同一 standalone session 内关闭旧 epoch、等待新候选方向，但不创建新 run、不清零总预算；继续新 epoch 需要显式有界 grant。
 
 ## Typical use
 
@@ -185,18 +190,14 @@ skills/dbx-plan-convergence/
 
 ## DBX collection workflow
 
-在 DBX collection 中，implementation-bound technical plan 的默认 provider binding、
-Plan-First pre-seal gate 和未来 Auto 边界见：
-[`docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md`](../../docs/DBX_IMPLEMENTATION_BOUND_PLANNING.md)。
-
-该绑定属于 collection workflow，不进入本 controller kernel。
+Collection workflow 可以显式调用本技能作为一个有界 gate，但“是否调用、之后是否实现、执行权限如何传递、状态如何持久化”都由外层 workflow 决定。本技能不声明自己是 implementation-bound 默认路径，也不以 receipt 授予代码修改权限。
 
 ## Suggested repository entries
 
 ### README stable skills
 
 ```markdown
-| `dbx-plan-convergence` | 显式触发、provider-agnostic 的技术方案收敛控制器：绑定 review 与 artifact 版本，区分探索与收敛，triage findings，用 evidence / decision / direction / progress gates 控制局部 revision loop，并在 stale、打转、膨胀或方向错误时 handoff 或停止。 |
+| `dbx-plan-convergence` | 显式触发、provider-agnostic 的 standalone 技术方案收敛 gate：绑定 review 与 artifact 版本，区分探索与收敛，triage findings，用 evidence / decision / direction / progress gates 控制局部 revision loop，并在 stale、打转、膨胀或方向错误时 handoff 或停止。 |
 ```
 
 ### DBX skill index
@@ -204,7 +205,7 @@ Plan-First pre-seal gate 和未来 Auto 边界见：
 ```markdown
 ### `dbx-plan-convergence`
 
-- Position: explicit-only, provider-agnostic plan convergence controller.
+- Position: explicit-only, provider-agnostic standalone plan convergence gate and stall diagnosis.
 - Trigger: explicit 方案收敛 / plan convergence / 方案棘轮，或已授权父 workflow 的显式委托。
 - Near miss: first-draft planning, standalone review, brainstorming, code repair, implementation.
 - Main risk controlled: stale review, action/state ambiguity, false convergence, evidence invention, decision substitution, oscillation, and document bloat.

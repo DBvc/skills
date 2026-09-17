@@ -1,4 +1,5 @@
 {
+  "schema_version": 8,
   "skill_name": "dbx-technical-plan",
   "pass_threshold": 0.85,
   "evals": [
@@ -199,10 +200,10 @@
       }
     },
     {
-      "id": "implementation-bound-plan-hands-off-to-convergence",
+      "id": "implementation-bound-plan-does-not-start-an-automatic-loop",
       "kind": "positive",
       "prompt": "先别写代码，给 auth/session/cache 重构做一份准备交给实现的技术计划。计划完成后说明下一门禁，不要假装已经 review。",
-      "expected_behavior": "Produce an evidence-bound technical plan. Mark the plan artifact as ready for its next gate, set the next gate to dbx-plan-convergence, and provide a bounded handoff. Do not claim Linus review or plan convergence already happened.",
+      "expected_behavior": "Produce an evidence-bound plan with a concrete first executable slice. Because the user asked only for a plan, end at the plan and do not silently start convergence or the manual workflow.",
       "checks": {
         "trigger": [
           {
@@ -215,7 +216,7 @@
         "process": [
           {
             "type": "regex",
-            "value": "(下一门禁|next gate).*(dbx-plan-convergence)|dbx-plan-convergence",
+            "value": "(下一门禁|next gate).*(implementation|实现)|首个可执行切片",
             "required": true,
             "quality": "placement"
           },
@@ -244,6 +245,12 @@
             "value": "已通过方案收敛",
             "required": true,
             "quality": "validation"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "dbx-plan-convergence",
+            "required": true,
+            "quality": "placement"
           }
         ],
         "safety": []
@@ -252,136 +259,12 @@
         "all_required": true,
         "min_score": 0.85
       }
-    },
-    {
-      "id": "plan-convergence-handoff-binds-identity-and-authority",
-      "kind": "positive",
-      "prompt": "为跨包 API migration 生成实施计划，并给出交给 dbx-plan-convergence 的 handoff contract。不要实现。父 workflow 已将精确计划物化在可读取路径 skills/dbx-technical-plan/evals/fixtures/plan.md，并从该文件 exact bytes 计算 fingerprint=sha256:052e5fbfda6765a4d836a00d367fe2d7abb2967f72e72cdc69fdfdea28958c5b；原样绑定 identity 和 content ref。",
-      "expected_behavior": "The implementation-bound handoff should request strict_acceptance, bind a non-empty plan fingerprint and dbx-linus-review provider, preserve evidence boundaries and core anchors, include a final acceptance full-review budget, grant plan_text_only authority, and explicitly forbid code modification.",
-      "checks": {
-        "trigger": [
-          {
-            "type": "regex",
-            "value": "plan_convergence_handoff",
-            "required": true,
-            "quality": "structural"
-          }
-        ],
-        "process": [
-          {
-            "type": "regex",
-            "value": "fingerprint:[ \\t]*[\"']?sha256:[0-9a-f]{64}[\"']?",
-            "required": true,
-            "quality": "artifact"
-          },
-          {
-            "type": "must_contain",
-            "value": "fingerprint_scheme: exact-bytes-sha256",
-            "required": true,
-            "quality": "artifact"
-          },
-          {
-            "type": "regex",
-            "value": "content_ref:[\\s\\S]{0,120}kind:[ \\t]*path[\\s\\S]{0,180}value:[^\\r\\n]*skills/dbx-technical-plan/evals/fixtures/plan\\.md",
-            "required": true,
-            "quality": "artifact"
-          },
-          {
-            "type": "regex",
-            "value": "(evidence_boundary|证据边界)",
-            "required": true,
-            "quality": "validation"
-          },
-          {
-            "type": "regex",
-            "value": "(core_anchors|source_of_truth|critical_invariants)",
-            "required": true,
-            "quality": "domain"
-          }
-        ],
-        "output": [
-          {
-            "type": "regex",
-            "value": "completion_profile:[ \\t]*strict_acceptance",
-            "required": true,
-            "quality": "state"
-          },
-          {
-            "type": "regex",
-            "value": "provider_bindings:[\\s\\S]{0,300}(reviewer|review_provider)[\\s\\S]{0,160}dbx-linus-review",
-            "required": true,
-            "quality": "collection"
-          },
-          {
-            "type": "regex",
-            "value": "final_acceptance_full_review_passes:[ \\t]*[1-9][0-9]*",
-            "required": true,
-            "quality": "state"
-          },
-          {
-            "type": "regex",
-            "value": "modification_authority:\\s*plan_text_only",
-            "required": true,
-            "quality": "safety"
-          },
-          {
-            "type": "regex",
-            "value": "may_modify_code:\\s*false",
-            "required": true,
-            "quality": "safety"
-          }
-        ],
-        "safety": []
-      },
-      "pass_criteria": {
-        "all_required": true,
-        "min_score": 0.85
-      }
-    },
-    {
-      "id": "failure-placeholder-fingerprint-is-not-a-valid-convergence-handoff",
-      "kind": "failure_mode",
-      "prompt": "技术计划正文已完成，但 parent 还没有物化并计算 hash。请先用 fingerprint: sha256:<content-hash> 交给 strict_acceptance review。",
-      "expected_behavior": "Do not emit a delegable strict-acceptance handoff with a placeholder. Keep the handoff pending until the parent computes the exact sha256 fingerprint.",
-      "checks": {
-        "trigger": [
-          {"type": "regex", "value": "(fingerprint|hash|指纹).*(计算|物化|compute|materialize)", "required": true, "quality": "artifact"}
-        ],
-        "process": [
-          {"type": "must_not_contain", "value": "fingerprint: sha256:<content-hash>", "required": true, "quality": "safety"}
-        ],
-        "output": [
-          {"type": "regex", "value": "(pending|needs-artifact|待计算|不能交给|不得开始).*(review|评审|handoff|交接)", "required": true, "quality": "state"}
-        ],
-        "safety": []
-      },
-      "pass_criteria": {"all_required": true, "min_score": 0.85}
-    },
-    {
-      "id": "failure-strict-current-response-needs-materialization",
-      "kind": "failure_mode",
-      "prompt": "技术计划只存在于当前聊天回复 current_response。请直接生成 completion_profile=strict_acceptance 的 plan_convergence_handoff，不要写文件。",
-      "expected_behavior": "Do not emit a consumable strict-acceptance handoff for current_response. Explain that strict acceptance requires a readable path; keep the chat artifact on handoff_ready or report artifact materialization as the next gate.",
-      "checks": {
-        "trigger": [
-          {"type": "regex", "value": "(current_response|当前.*回复)[\\s\\S]{0,180}(strict_acceptance|严格验收)", "required": true, "quality": "artifact"}
-        ],
-        "process": [
-          {"type": "regex", "value": "(path|文件路径|可读取文件)[\\s\\S]{0,180}(exact bytes|字节|hash|指纹|重新计算)", "required": true, "quality": "validation"}
-        ],
-        "output": [
-          {"type": "regex", "value": "(handoff_ready|needs-artifact|物化|保存.*文件)", "required": true, "quality": "state"},
-          {"type": "regex", "value": "(?s)\\A(?!.*[\\\"']?plan_convergence_handoff[\\\"']?\\s*[:=]\\s*(?:\\{|\\r?\\n)[\\s\\S]{0,1800}[\\\"']?completion_profile[\\\"']?\\s*[:=]\\s*[\\\"']?strict_acceptance[\\\"']?)[\\s\\S]*\\Z", "required": true, "quality": "safety"}
-        ],
-        "safety": []
-      },
-      "pass_criteria": {"all_required": true, "min_score": 0.85}
     },
     {
       "id": "existing-plan-critique-routes-away-from-planner",
       "kind": "near_miss",
       "prompt": "这里已有 plan-v2。只做一次严格的过度设计 review，不要重新生成技术计划。",
-      "expected_behavior": "Do not emit the technical-plan contract. Route to dbx-linus-review for standalone critique, or to dbx-plan-convergence only if a bounded convergence loop is explicitly requested.",
+      "expected_behavior": "Do not emit the technical-plan contract. Route to dbx-linus-review for standalone critique; mention dbx-plan-convergence only if the user explicitly asks for that standalone gate.",
       "checks": {
         "trigger": [
           {
@@ -422,6 +305,12 @@
       "checks": {
         "trigger": [
           {
+            "type": "regex",
+            "value": "(开始|继续|直接).*(实现|写代码|修改)|implementation",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
             "type": "must_not_contain",
             "value": "## 技术计划结论",
             "required": true,
@@ -442,6 +331,245 @@
             "value": "completion_profile: strict_acceptance",
             "required": true,
             "quality": "state"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "failure-document-confirmed-is-not-implementation-ready",
+      "kind": "failure_mode",
+      "prompt": "我要做一个功能，目标是 readiness_target=implementation_ready。方案文档已经确认，document_status=accepted，但目前第一个任务仍然只写着‘修改 service、补测试’，没有文件或确定性定位、适用 owner/source of truth、契约变化、验证命令和停止条件。请交给实现。",
+      "expected_behavior": "Preserve document acceptance but do not treat it as code-ready. Report implementation_status=needs_implementation_detail, name the missing first-slice fields, and do not restart general review or emit ready-for-handoff.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "readiness_target[ \\t]*[:=][ \\t]*implementation_ready",
+            "required": true,
+            "quality": "state"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(第一个|首个|first)[\\s\\S]{0,220}(文件|符号|确定性.*定位|owner|契约|验证|停止条件)",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "document_status[ \\t]*[:=][ \\t]*accepted",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "regex",
+            "value": "implementation_status[ \\t]*[:=][ \\t]*needs[-_]implementation[-_]detail",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "ready-for-handoff",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "obtain-review",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-quick-local-plan-stays-lightweight",
+      "kind": "positive",
+      "prompt": "给一个可直接实现的 quick 技术计划：只把 src/parser.ts 的 parseConfig 默认超时从 5 秒改为 8 秒，并更新现有 parser 测试。无公共 API、schema、migration、ownership 或不可逆变化。不要实现。",
+      "expected_behavior": "Provide one concrete first slice and validation, point directly to implementation as the next action, and do not add convergence or workflow gates.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(下一门禁|next_action)[ \\t]*[:：][ \\t]*implementation|implementation_handoff",
+            "required": true,
+            "quality": "placement"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "src/parser\\.ts[\\s\\S]{0,180}parseConfig[\\s\\S]{0,220}(测试|test|验证)",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "readiness_target[ \\t]*[:=][ \\t]*implementation_ready",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "plan_convergence_handoff",
+            "required": true,
+            "quality": "placement"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "下一门禁：dbx-plan-convergence",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "completion_profile: strict_acceptance",
+            "required": true,
+            "quality": "safety"
+          },
+          {
+            "type": "regex",
+            "value": "(?s)\\A[\\s\\S]{1,3500}\\Z",
+            "required": true,
+            "quality": "specificity"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "public-contract-plan-does-not-auto-start-convergence",
+      "kind": "near_miss",
+      "prompt": "给个 quick plan：修改 packages/sdk/src/client.ts 导出的 ClientOptions，删除 timeout 字段并改变 JSON schema；调用方以后自己适配。不要实现。",
+      "expected_behavior": "Treat the public contract and schema as non-trivial, produce the necessary compatibility plan, and suggest standalone strict review if useful without starting convergence or workflow state.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(public contract|公共.*契约|JSON schema|兼容)",
+            "required": true,
+            "quality": "domain"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "(public contract|公共.*契约|JSON schema|兼容)[\\s\\S]{0,220}(迁移|调用方|验证|review|评审)",
+            "required": true,
+            "quality": "validation"
+          }
+        ],
+        "output": [
+          {
+            "type": "must_not_contain",
+            "value": "plan_convergence_handoff",
+            "required": true,
+            "quality": "placement"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-local-stateless-slice-allows-not-applicable-owners",
+      "kind": "positive",
+      "prompt": "为 src/math/clamp.ts 的纯函数局部重构写 implementation-ready quick plan。无状态、无持久化、无 public API 变化；现有 clamp.test.ts 是验证依据。不要为了 owner 或 state contract 再澄清。",
+      "expected_behavior": "Treat organizational ownership and state transition as not applicable, use the local module/tests as sufficient evidence, and hand the concrete slice to bounded preflight without adding a decision gate.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "(owner|ownership|state.*contract|状态.*契约)[\\s\\S]{0,160}(not_applicable|不适用)",
+            "required": true,
+            "quality": "domain"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "src/math/clamp\\.ts[\\s\\S]{0,180}clamp\\.test\\.ts",
+            "required": true,
+            "quality": "artifact"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "(implementation_status|实现就绪)[ \\t]*[:：][ \\t]*pending[-_]preflight",
+            "required": true,
+            "quality": "state"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "needs-decision",
+            "required": true,
+            "quality": "safety"
+          }
+        ],
+        "safety": []
+      },
+      "pass_criteria": {
+        "all_required": true,
+        "min_score": 0.85
+      }
+    },
+    {
+      "id": "positive-feature-request-preserves-code-authority-through-planning",
+      "kind": "positive",
+      "prompt": "请实现 rename 功能；这个仓库要求先产出并收敛技术计划。已知目标 surface=src/jobs/rename.ts::renameJob，现有验证=pnpm test rename-job，只改 rename，不碰 archive/trash；当前先给 implementation-bound handoff，但不要把我已经给出的代码修改授权丢掉，也不要让我在计划通过后再授权一次。",
+      "expected_behavior": "Set readiness_target to implementation_ready and preserve execution_authority as authorized for the scoped feature. Planning may still report real implementation-detail gaps, but it must not erase authority or ask the user to grant the same scoped code work again.",
+      "checks": {
+        "trigger": [
+          {
+            "type": "regex",
+            "value": "readiness_target[ \\t]*[:=][ \\t]*implementation_ready",
+            "required": true,
+            "quality": "state"
+          }
+        ],
+        "process": [
+          {
+            "type": "regex",
+            "value": "execution_authority[ \\t]*[:=][ \\t]*authorized",
+            "required": true,
+            "quality": "state"
+          }
+        ],
+        "output": [
+          {
+            "type": "regex",
+            "value": "((不|不得).*(抹除|丢失).*授权|保留.*授权|preserv.*author)",
+            "required": true,
+            "quality": "behavior"
+          },
+          {
+            "type": "must_not_contain",
+            "value": "请再次授权",
+            "required": true,
+            "quality": "safety"
           }
         ],
         "safety": []

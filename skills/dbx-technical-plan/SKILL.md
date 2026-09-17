@@ -38,8 +38,8 @@ Use this skill before implementation when the user wants a technical execution p
 - Use `dbx-decision-framing` first when the real task is go/no-go, option selection, prioritization, or whether to invest in a direction.
 - Use `dbx-product-judgment` when the central question is product correctness, value, IA, roadmap, or feature fit.
 - Use `dbx-design-judgment` when the central question is UI, flow, visual hierarchy, interaction design, or design-system fit.
-- Use `dbx-plan-convergence` when an implementation-bound technical plan should undergo a bounded review-revision-scoped-re-review loop before implementation.
-- Use `dbx-linus-review` directly when the user already has a plan/proposal and wants standalone one-pass strict pragmatic critique. In the DBX implementation-bound planning profile, it is normally bound as a reviewer provider through `dbx-plan-convergence`, not used as the convergence controller.
+- Use `dbx-plan-convergence` only for a standalone convergence gate or diagnostic request. It is not the default bridge from planning to implementation.
+- Use `dbx-linus-review` directly when the user already has a plan/proposal and wants standalone one-pass strict pragmatic critique.
 - Use `dbx-diff-review` when there is a concrete PR, diff, commit, staged change, working tree change, or selected file change to review.
 - Use `dbx-code-ratchet` only when the user explicitly asks for bounded review-repair-revalidation and code modification is allowed.
 - Use `dbx-software-plan-first-*` when the user explicitly wants the stateful plan-first phase chain with `plan.md`, `tasks.md`, and a workflow seal.
@@ -142,7 +142,8 @@ Run this workflow in order.
 7. **Run adversarial plan check**: try to break the plan using `references/adversarial-plan-check.md`.
 8. **Slice implementation**: produce bounded tasks with allowed scope, forbidden scope, dependencies, invariant, validation, review focus, and stop condition.
 9. **Define validation model**: map each important invariant or risk to automated, manual, review-only, or currently uncovered validation.
-10. **Prepare handoff**: state whether the plan artifact is ready for downstream convergence, needs grounding, needs a decision, can proceed directly only by explicit policy, or should be promoted to Plan-First. An implementation-bound plan is not automatically implementation-ready merely because the planning artifact is complete.
+10. **Set the readiness target**: use `document_acceptance` only when the user wants an accepted document/proposal; use `implementation_ready` when the plan is meant to let an implementer begin the feature. Keep technical readiness separate from current code-write authority.
+11. **Prepare handoff**: state whether the plan needs grounding, a decision, implementation detail, standalone review, direct implementation, or promotion to Plan-First. An implementation-bound plan is not complete at document confirmation: its first executable slice must satisfy the implementation-readiness gate below.
 
 ## Plan shape selection
 
@@ -218,6 +219,27 @@ Bad slices:
 - cross-cutting changes with no inventory or rollback;
 - tasks that require product, architecture, or compatibility decisions but pretend they are implementation.
 
+## Readiness target
+
+Readiness is not one linear status. Track these separately:
+
+- **document status**: whether the current plan artifact is internally coherent and accepted for its declared review scope;
+- **implementation status**: whether an implementer can begin the first code slice without another planning round;
+- **execution authority**: whether the current user or parent workflow authorizes code changes now. Preserve an explicit originating request to implement the feature as `authorized`; planning does not erase that authority or require the user to repeat it.
+
+For `readiness_target: implementation_ready`, the first executable slice is `implementation-ready` only when:
+
+- its goal, allowed scope, forbidden scope, applicable source of truth/owner, and invariants are concrete; for a local leaf change, the current module and its tests may be sufficient—do not invent an organizational owner;
+- the target code surface is known, or the plan gives a deterministic repository lookup that resolves it before the first edit;
+- public/data/state transitions touched by that slice are settled, or explicitly `not_applicable` for a grounded stateless/local change;
+- validation names a runnable test/check path and the protected behavior;
+- stop conditions cover the bounded facts that may still be discovered during implementation;
+- no open evidence, decision, compatibility, or risk item can flip that first slice.
+
+Do not require every later slice, edge case, optimization, or rollout detail to be fully designed before implementation starts. A bounded unknown that cannot change the first slice belongs in residual risk or a later slice, not in a new planning round.
+
+If the document is acceptable but the first slice fails this gate, report `needs-implementation-detail`; do not call it implementation-ready. Execution authority is reported separately and never changes this technical judgment.
+
 ## Output contracts
 
 ### Quick plan
@@ -226,8 +248,11 @@ Use for `quick_plan`.
 
 ```markdown
 ## 快速技术计划
-- 状态：ready / needs-grounding / needs-decision / blocked
-- 下一门禁：dbx-plan-convergence / implementation-by-explicit-policy / none
+- 状态：ready / needs-grounding / needs-decision / needs-implementation-detail / blocked
+- 就绪目标：document_acceptance / implementation_ready
+- 实现就绪：pending-preflight / needs-implementation-detail / needs-evidence / needs-decision / not-requested
+- 执行权限：authorized / not-authorized / not-assessed
+- 下一门禁：implementation / dbx-linus-review / none
 - 推荐路径：
 - 关键假设：
 - 最高风险：
@@ -245,8 +270,12 @@ Use for normal `grounded_plan`, `bug_fix_strategy`, `validation_plan`, and moder
 
 ```markdown
 ## 技术计划结论
-- 状态：ready / needs-grounding / needs-decision / blocked
-- 下一门禁：dbx-plan-convergence / implementation-by-explicit-policy / dbx-software-plan-first-* / none
+- 状态：ready / needs-grounding / needs-decision / needs-implementation-detail / blocked
+- 就绪目标：document_acceptance / implementation_ready
+- 实现就绪：pending-preflight / needs-implementation-detail / needs-evidence / needs-decision / not-requested
+- 首个可执行切片：<slice id or none>
+- 执行权限：authorized / not-authorized / not-assessed
+- 下一门禁：implementation / dbx-linus-review / dbx-software-plan-first-* / none
 - 推荐方向：
 - 最高风险：
 - 不建议直接做的事：
@@ -293,7 +322,7 @@ Use for normal `grounded_plan`, `bug_fix_strategy`, `validation_plan`, and moder
 
 ## Handoff
 - 下一步建议：
-- 可交给：dbx-plan-convergence / implementation-by-explicit-policy / dbx-linus-review / dbx-software-plan-first-* / dbx-diff-review / dbx-code-ratchet
+- 可交给：implementation / dbx-linus-review / dbx-plan-convergence / dbx-software-plan-first-* / dbx-diff-review / dbx-code-ratchet
 - Handoff contract:
 ```
 
@@ -342,10 +371,10 @@ Use `references/handoff-contracts.md`.
 
 Default handoff decisions:
 
-- If the generated plan is intended to guide implementation, hand off to `dbx-plan-convergence` unless the user or an authorized parent workflow explicitly selects a direct low-risk policy or supplies a current convergence `ready-for-handoff` result.
-- A plan that exists only inline or in `current_response` uses `completion_profile: handoff_ready`. Request `strict_acceptance` only after the exact single-artifact bytes are available through a readable `content_ref.kind: path`; compute `exact-bytes-sha256` from that file. If strict acceptance is required but no readable path exists, report that artifact materialization is the next gate instead of emitting a consumable strict handoff.
-- In the DBX implementation-bound planning profile, bind `dbx-linus-review` as the initial strict reviewer through the collection workflow. Do not make `dbx-technical-plan` run or emulate the reviewer.
-- Use `dbx-linus-review` directly for standalone one-pass critique when no convergence loop is requested.
+- An ordinary request for a technical plan ends with the smallest useful plan and its next action. Do not silently start a convergence loop or create workflow state.
+- If the plan's first slice is concrete and the originating request already authorizes implementation, return `implementation_handoff.status: pending_preflight`. The current implementer may perform bounded repository/worktree/permission checks and start that slice without another planning round.
+- Use `dbx-plan-convergence` only when the user explicitly asks for that standalone gate/diagnostic. Do not route through it merely because a plan is implementation-bound.
+- Use `dbx-linus-review` directly for standalone one-pass critique. Do not make `dbx-technical-plan` run or emulate the reviewer.
 - If the user wants a formal persistent workflow, promote to `dbx-software-plan-first-plan-issue` or `dbx-software-plan-first-ground-plan` rather than writing ad hoc state.
 - If a concrete diff already exists, hand off to `dbx-diff-review` instead of continuing plan speculation.
 - If the plan is implemented and bounded review-repair is explicitly requested, hand off to `dbx-code-ratchet`.
@@ -363,7 +392,9 @@ You may say the plan is ready only when:
 - adversarial check did not reveal an unresolved blocker;
 - handoff and stop conditions are clear.
 
-“Plan is ready” means the planning artifact is complete enough for its declared next gate. It does not mean implementation may begin when the output declares `下一门禁: dbx-plan-convergence`. Only `dbx-plan-convergence` may produce `ready-for-handoff`.
+If `readiness_target: implementation_ready`, readiness additionally requires the first executable slice to pass the implementation-readiness gate. Document acceptance, a review verdict, or a completed planning template is not enough.
+
+“Plan is ready” means the plan is concrete enough for its declared next action. When that action is implementation and existing authority covers the same scope, do not add another general planning or review gate. Repository/worktree/permission preflight may still stop on concrete contradictory evidence. Code-write authority remains a separate downstream check.
 
 You may not say the plan is safe, verified, tested, green, or repo-grounded unless the relevant evidence exists in the current session.
 

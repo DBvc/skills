@@ -11,6 +11,21 @@ from pathlib import Path
 from issue_workflow import plan_bundle_identity
 
 SCRIPT = Path(__file__).with_name("issue_workflow.py")
+PLAN_FIRST_PACKAGES = (
+    "dbx-software-plan-first-finalize-plan",
+    "dbx-software-plan-first-ground-plan",
+    "dbx-software-plan-first-implement-feature",
+    "dbx-software-plan-first-plan-issue",
+    "dbx-software-plan-first-showhand",
+)
+GATE_SHARED_FILES = (
+    "scripts/issue_workflow.py",
+    "references/control-model.md",
+    "references/implement-notes.md",
+    "references/review-checks.md",
+    "references/tasks-template.md",
+    "references/workflow-rules.md",
+)
 
 
 class PlanBundleFingerprintTest(unittest.TestCase):
@@ -29,10 +44,24 @@ class PlanBundleFingerprintTest(unittest.TestCase):
             "- [ ] [t1] Do\n"
             "验收: 任务类型=step; done\n"
             "验证: # 无程序化验证: fixture\n"
-            "依赖: none\n",
+            "依赖: none\n"
+            "约束: allowed-path=src/app.py\n"
+            "约束: required-path=src/app.py\n",
             encoding="utf-8",
         )
         return plan, tasks
+
+    def test_gate_shared_files_are_byte_identical_across_all_packages(self) -> None:
+        skills_root = Path(__file__).resolve().parents[2]
+        canonical = skills_root / PLAN_FIRST_PACKAGES[0]
+        for relative in GATE_SHARED_FILES:
+            expected = (canonical / relative).read_bytes()
+            for package in PLAN_FIRST_PACKAGES[1:]:
+                self.assertEqual(
+                    (skills_root / package / relative).read_bytes(),
+                    expected,
+                    f"{package}/{relative} drifted from the canonical Plan-First bundle",
+                )
 
     def test_known_fixture_and_content_change(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
