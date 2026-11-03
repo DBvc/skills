@@ -70,6 +70,7 @@ L5 here means eval artifacts exist, not that model behavior or baseline benefit 
 
 | Skill | Primary role | Shape | Maturity | Main risk | Routing note | Next useful improvement |
 | --- | --- | --- | --- | --- | --- | --- |
+| `dbx-explain` | On-demand clarity for Chinese explanations, advice, rewrites, and engineering reports. | taste + interaction_mode | L5 artifacts; 0.1.0-preview candidate | Over-triggering, losing facts or conditions through compression, treating smoke checks as semantic proof. | Explicit invocation or clear expression-improvement request; task-local by default. Reading, learning, writing, and review skills retain their workflows and evidence requirements. | Verify live activation and composition; run blinded baseline comparisons and reader comprehension checks. |
 | `dbx-epistemic-audit` | Bounded claim/evidence audit and material blind-spot checks. | research + decision + procedure | L5 artifacts; 0.1.0 candidate, not L6 | False balance, unsupported inference, user diagnosis, premature stopping, lexical-eval gaming. | Explicit-only selection/naming or express delegation from a user-authorized workflow; read-only and stateless; source reading and action decisions retain their own owners. | Run blinded same-model comparisons against direct answers and the strong short prompt, including paired and retrieval tests. |
 
 ## Collection-Level Relationships
@@ -78,6 +79,7 @@ See `docs/DBX_ROUTING_MATRIX.md` and `docs/DBX_COLLECTION_DESIGN.md` for precede
 
 Important relationships:
 
+- `dbx-explain` improves expression only when requested; it does not replace source reading, learning plans, article writing, or technical review. Other task skills keep their evidence, execution, and validation requirements. It is not a global writing policy.
 - `dbx-code-ratchet` is explicit-only and may modify code. It composes `dbx-diff-review` for primary review/re-review and conditionally `dbx-linus-review` for direction/complexity gates. It should not replace read-only review or open-ended implementation workflows.
 - `dbx-architecture-health` diagnoses repository/module architecture decay as a read-only audit. It hands off concrete diffs to `dbx-diff-review`, strict proposal critique to `dbx-linus-review`, implementation plans to `dbx-technical-plan`, and bounded repair to `dbx-code-ratchet`.
 - `dbx-technical-plan` handles lightweight, stateless technical planning before implementation; implementation-bound plans hand off to `dbx-plan-convergence`, standalone strict critique routes to `dbx-linus-review`, concrete diffs to `dbx-diff-review`, and formal persistent workflows to `dbx-software-plan-first-*`.

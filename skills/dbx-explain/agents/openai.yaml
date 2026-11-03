@@ -1,0 +1,6 @@
+interface:
+  display_name: "dbx-explain"
+  short_description: "讲清复杂概念、方案取舍和开发结果，减少阅读负担并保留关键事实与边界"
+  default_prompt: "使用 $dbx-explain 讲明白当前问题：直接给答案，补足关键原因，保留必要条件，答完就停。"
+policy:
+  allow_implicit_invocation: true

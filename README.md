@@ -49,6 +49,7 @@ Stable skills use the `dbx-` prefix to avoid naming conflicts with third-party s
 
 | Skill | 描述 / Description |
 | --- | --- |
+| [`dbx-explain`](skills/dbx-explain/) | 按需改善中文解释、建议、改写和工程汇报，保留事实、条件与验证边界。0.1.0-preview 候选，真实触发与理解收益待验证。 On-demand clarity for Chinese explanations and reports. |
 | [`dbx-epistemic-audit`](skills/dbx-epistemic-audit/) | 手动调用的观点与证据审计：检验关键盲点、证据依赖与推理范围，给出可更新的有界判断。0.1.0 候选，净效果待基线验证；不诊断用户。 Explicit-only claim/evidence audit; baseline benefit not yet established. |
 
 ## Repository Governance

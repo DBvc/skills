@@ -19,6 +19,7 @@ Read it when:
 | Write open-source commit/PR artifact | `dbx-open-source-commit-pr` | `dbx-linus-review`, unless review is requested. |
 | Write work/internal commit/PR artifact | `dbx-work-commit-pr` | `dbx-open-source-commit-pr`. |
 | Write viewpoint-driven prose, technical blog, personal essay, Markdown article, article edit, or English transcreation | `dbx-write` | Commit/PR skills, product/design judgment, conversation alignment, direct implementation, or plain summarization. |
+| Explicitly invoke `dbx-explain`, request clearer/plain-language expression, or flag a confusing or verbose answer | `dbx-explain`, 0.1.0-preview candidate, alongside the task skill when needed | Mere mention or review of the skill; ordinary reading, learning, article writing, code-only output, or translation without expression-improvement intent. |
 | Read, summarize, extract, deep-read, compare, or capture explicit source material such as URL/PDF/paper/doc/GitHub/local file/pasted text | `dbx-read` | `dbx-learn` for durable learning, `dbx-attention-routing` for noisy queues, `dbx-write` for public prose, judgment/review/planning skills for decisions or implementation. |
 | Read, query, create, update, comment on, attach to, or transition Feishu Project / Lark Project / Meegle work items | `dbx-feishu-project` | `dbx-feishu-doc` for documents, generic project advice, or code implementation without an external project operation. |
 | Read, summarize, create, append to, or safely update Feishu Docx / Wiki documents | `dbx-feishu-doc` | `dbx-feishu-project` for work items, generic writing without a Feishu document target, or Sheets/Base/Drive resources treated as plain text. |
@@ -160,6 +161,10 @@ Use `dbx-learn` when the user wants durable understanding, active recall, practi
 ### Source reading
 
 Use `dbx-read` when the user provides or points to one or a few concrete sources and asks to read, summarize, skim, extract Markdown, deep-read, compare, translate for understanding, or create a local reading note. Do not use it for ordinary factual Q&A without a source, noisy inbox routing, durable learning plans, public article writing, product/design/code review, or implementation planning. It may produce a source digest or handoff for those downstream skills.
+
+### Clear expression
+
+`dbx-explain` may improve a task's explanation or report when the user asks for it. `dbx-read` still owns source evidence, `dbx-learn` learning goals and practice, `dbx-write` viewpoint prose, and review skills severity, findings, and verification. Preserve required formats, citations, conditions, and unverified status. Default scope is the current task; a longer scope requires the user's request and never implies a global configuration change. Refuse requests to disguise failed or missing checks as success.
 
 ### Feishu IM operations
 
